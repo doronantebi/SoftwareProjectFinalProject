@@ -1,9 +1,10 @@
 #include "utilities.h"
-#include "game.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 /* GENERAL METHODS */
+
+
 /*
  * This function calculates the row's lower bound of the block.
  */
@@ -146,4 +147,23 @@ int neighbourContains(struct sudokuManager *manager, int i, int j, int val){
  */
 int isLegalCell(struct sudokuManager *manager, int i, int j){
     return !neighbourContains(manager, i, j, manager->board[matIndex(manager, i, j)]);
+}
+
+/*
+ * Checks that the val
+ */
+int isLegalCellValue(struct sudokuManager *manager, int x){
+    return ((x > 0)&&(x <= boardLen(manager)));
+}
+
+/*
+ * counts the empty cells in the board
+ */
+int amountOfEmptyCells(struct sudokuManager *manager){
+    int i, count = 0;
+    for(i=0; i<boardArea(manager); i++){
+        if(manager->board[i] == 0)
+            count ++;
+    }
+    return count;
 }

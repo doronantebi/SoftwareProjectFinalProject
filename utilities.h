@@ -1,8 +1,40 @@
-
 #ifndef SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
 #define SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
 
+
 #endif //SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
+
+enum Mode {
+    Init = 0,
+    Edit = 1,
+    Solve = 2
+};
+struct sudokuManager {
+    int n;
+    int m;
+    int *board;
+    int *fixed;
+    struct movesList *linkedList;
+    int addMarks;
+};
+
+enum action{
+    startCommand = 0,
+    command = 1,
+    finishCommand = 2
+};
+
+struct movesList{
+    struct sudokuManager **board;
+    struct movesList *next;
+    struct movesList *prev;
+    int row;
+    int col;/* */
+    int prevValue;
+    int newValue;
+    enum action action;
+};
+
 
 /* GENERAL METHODS */
 /*
@@ -76,3 +108,13 @@ int neighbourContains(struct sudokuManager *manager, int i, int j, int val);
  * otherwise, returns 0.
  */
 int isLegalCell(struct sudokuManager *manager, int i, int j);
+
+/*
+ * This function returns True if 1 <= x <= n*m
+ */
+int isLegalValue(struct sudokuManager *manager, int x);
+
+/*
+* counts the empty cells in the board
+*/
+int amountOfEmptyCells(struct sudokuManager *manager);

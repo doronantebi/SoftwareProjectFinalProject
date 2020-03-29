@@ -10,6 +10,7 @@ void printGameTitle(){
 }
 
 
+
 void printNoNextMoveError(){
     printf("There is no next move\n");
 }
