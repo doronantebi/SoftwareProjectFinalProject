@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "main_aux.h"
-#include "utilities.h"
+
 #include "game.h"
 #define title "                              ,,                               \n .M\"\"\"bgd                   `7MM              `7MM                  \n,MI    \"Y                     MM                MM                  \n`MMb.   `  7MM  `7MM     ,M\"\"bMM    ,pW\"Wq.     MM  ,MP'  `7MM  `7MM  \n  `YMMNq.   MM    MM   ,AP    MM   6W'   `Wb    MM ;Y       MM    MM  \n.     `MM   MM    MM   8MI    MM   8M     M8    MM;Mm       MM    MM  \nMb     dM   MM    MM   `Mb    MM   YA.   ,A9    MM `Mb.     MM    MM  \nP\"Ybmmd\"    `Mbod\"YML.  `Wbmd\"MML.  `Ybmd9'.   JMML. YA.    `Mbod\"YML."
 #define creators "Din Moshe and Doron Antebi"
@@ -44,11 +44,11 @@ void printCellRow(){
 void printCell(struct sudokuManager *manager, int row, int col){
     int* puzzle = manager->board;
     int addErrors = 0;
-    int i, j, k;
+    int index;
     if (manager->addMarks == 1 || mode == Edit){
         addErrors = 1;
     }
-    int index = matIndex(manager,row,col);
+    index = matIndex(manager,row,col);
     if(isFixedCell(manager, row, col)){
         printf("%2d.",puzzle[index]);
         return;
@@ -57,7 +57,7 @@ void printCell(struct sudokuManager *manager, int row, int col){
         printf("%2d*",puzzle[index]);
     } else {
         if(puzzle[index] == 0){
-            printf("%2");
+            printf("  ");
         } else{
             printf("%2d",puzzle[index]);
         }
@@ -80,3 +80,4 @@ void printSudokuGrid(struct sudokuManager *manager) {
         }
     }
 }
+

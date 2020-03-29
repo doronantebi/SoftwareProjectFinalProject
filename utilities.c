@@ -64,18 +64,6 @@ int isFixedCell(struct sudokuManager *manager, int row, int col){
     return manager->fixed[matIndex(manager, row, col)];
 }
 
-/*
-  * IDK what to do with this function
-  */
-int goOverBlock(struct sudokuManager *manager, int i, int j){
-    int rowLowerBound = rowLowBound(manager, i);
-    int colLowerBound = colLowBound(manager,j);
-    int rowHigherBound = rowHighBound(manager, i);
-    int colHigherBound = colHighBound(manager,j);
-}
-
-
-
 
 /*
  * Returns the amount of times that the row contains val.

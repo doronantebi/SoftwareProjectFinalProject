@@ -55,13 +55,26 @@ void freeBoard(struct sudokuManager *board){
     free(board);
 }
 
+int convertFileFormat(struct sudokuManager *board, char *fileName){
+    FILE *ifp = NULL;
+    ifp = fopen(fileName, "r");
+
+    if(1)
+        return 0;
+
+    fclose(ifp);
+    return 1;
+}
+
 /*
  * This function loads a file and creates a sudoku board for it.
+ * if the file format is illegal returns NULL
  */
 struct sudokuManager* createBoardFromFile(char *fileName){
+    int res;
+    struct movesList *linkedList = (struct movesList*)malloc(sizeof(struct movesList));
     struct sudokuManager *board = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
     board->addMarks = 1;
-    struct movesList *linkedList = (struct movesList*)malloc(sizeof(struct movesList));
     linkedList->prev = NULL, linkedList->next = NULL, linkedList->prevValue = 0, linkedList->newValue = 0, linkedList->col = 0, linkedList->row = 0;
     linkedList->board = &board;
     if((mode == Edit)&&(fileName == NULL)){
@@ -70,14 +83,13 @@ struct sudokuManager* createBoardFromFile(char *fileName){
         board->board = calloc(9 * 9, sizeof(int));
     }
     else {
-        FILE *ifp = NULL;
-        ifp = fopen(fileName, "r");
-
-        convertFileFormat(&board, ifp);
-        /* HOW TO LOAD A FILE AND CONVERT IT ? */
-        fclose(ifp);
+        res = convertFileFormat(board, fileName); /* updates board according to format */
+        if(res == 0){
+            printFileFormatIllegal(); /* CHECK FOR DUPLICATION */
+            return NULL;
+        }
     }
-    return &board;
+    return board;
 
 }
 
@@ -130,8 +142,8 @@ void undo(struct sudokuManager *board){
  * This function uploads a file of a game to solve.
  */
 struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName){
-    changeMode(Solve);
     struct sudokuManager *board = createBoardFromFile(fileName);
+    changeMode(Solve);
     if (board == NULL){ /* if board creation was unsuccessful */
         printErrorCreateBoard();
         free(board);
@@ -147,8 +159,8 @@ struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName){
  * This function uploads a file of a game to edit.
  */
 struct sudokuManager* edit(struct sudokuManager *prevBoard, char *fileName){
-    changeMode(Edit);
     struct sudokuManager *board = createBoardFromFile(fileName);
+    changeMode(Edit);
     if (board == NULL){ /* board creation was unsuccessful */
         printErrorCreateBoard();
         free(board);
@@ -175,7 +187,7 @@ void createNextNode(struct sudokuManager *board, enum action action, int X, int 
     board->linkedList->next = (struct movesList*)malloc(sizeof(struct movesList)); /* allocates memory for the new node, and point our current node to the next one */
     board->linkedList->next->next = NULL;
     board->linkedList->next->prev = board->linkedList; /* points the new node's prev to the node */
-    board->linkedList->next->board = board; /* sets the board pointer to our sudokuManager */
+    board->linkedList->next->board = &board; /* sets the board pointer to our sudokuManager */
     board->linkedList->next->action = action; /* sets the given enum function action */
     if(action == command){ /* fills the values of the action changes */
         board->linkedList->col = Y, board->linkedList->row = X, board->linkedList->prevValue = prevVal, board->linkedList->newValue = Z;
@@ -234,7 +246,7 @@ void set(struct sudokuManager *manager, int X, int Y, int Z){
  * returns 1 if valid and 0 otherwise.
  */
 int validate(struct sudokuManager *board){
-    int isValid = validateBoard(&(board->board), board->n, board->m);
+    int isValid = validateBoard(board->board, board->n, board->m);
     if(!isValid){
         printBoardNotValidError();
     }
@@ -266,7 +278,7 @@ struct sudokuManager* generate(struct sudokuManager *prevBoard, int X, int Y){
     else {
         newBoard = doGenerate(prevBoard, newBoard, X, Y);
     }
-    return &newBoard;
+    return newBoard;
 }
 
 /*

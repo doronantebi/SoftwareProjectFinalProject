@@ -2,6 +2,7 @@
 #define SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 
 #endif //SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
+#include "utilities.h"
 
 /*
  * This method prints the game title
@@ -73,3 +74,8 @@ void printErrorCreateBoard();
  * Error message of illegal input value.
  */
 void printGenerateInputError();
+
+/*
+ * This function prints error message if the loaded file format is illegal
+ */
+void printFileFormatIllegal();
