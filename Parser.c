@@ -52,15 +52,45 @@ void printInvalidCommand(){
  */
 void printFewParams(int numOfParams, int indexCommand){
     printf("Error: not enough parameters were entered.\n"
-           "The number of parameters expected for the %s command is %d", commandList[indexCommand], numOfParams);
+           "The number of parameters expected for the %s command is %d.\n", commandList[indexCommand], numOfParams);
 }
 
 /*
- * The function prints a message to the user saying that not enough parameters were entered.
+ * The function prints a message to the user saying that too many parameters were entered.
+ * Assumes only one possibility for a valid number of parameters.
  */
 void printExtraParams(int numOfParams, int indexCommand){
+    int *arrNumOfParams[1] = {numOfParams};
+    printExtraParams(arrNumOfParams, 1, indexCommand);
+}
+
+/*
+ * The function prints a message to the user saying that too many parameters were entered.
+ * There are some possibilities for a valid number of parameters, all of which are in the array arrNumOfParams.
+ */
+void printExtraParams(int *arrNumOfParams, int len, int indexCommand){
+    int i;
+
     printf("Error: too many parameters were entered.\n"
-           "The number of parameters expected for the %s command is %d", commandList[indexCommand], numOfParams);
+           "The number of parameters expected for the %s command is ", commandList[indexCommand]);
+    for (i = 0; i < len; i++){
+        if (i == len - 1){
+            if (i == 0){
+                printf("%d.\n", arrNumOfParams[i]);
+            }
+            else{
+                printf(" or %d.\n", arrNumOfParams[i]);
+            }
+        }
+        else {
+            if (i == 0) {
+                printf("%d", arrNumOfParams[i]);
+            }
+            else{
+                printf(", %d", arrNumOfParams[i]);
+            }
+        }
+    }
 }
 
 /*
@@ -75,10 +105,10 @@ char* modeToString(Mode mode){
  * The function prints a message to the user saying that the command is not available in the current mode.
  * It receives an array of modes in which the command is available and its length.
  */
-void printUnavailableMode(int index, Mode mode, Mode *availableModes, int length){
+void printUnavailableMode(int indexCommand, Mode mode, Mode *availableModes, int length){
     int i;
     printf("Error: the %s command is unavailable in % mode.\n"
-           "It is available in these modes: ", commandList[index], modeToString(mode));
+           "It is available in these modes: ", commandList[indexCommand], modeToString(mode));
     for (i = 0; i < length; i++){
         if (i == 0){
             printf("%s", availableModes[i]);
@@ -122,7 +152,12 @@ void printNotAFloat(int indexParam){
     printf("Error: a float was expected for parameter %d, but was not received.\n", indexParam);
 }
 
+/*
+ * This method checks if there is another argument. If there is, it returns 1, o.w. it returns 0.
+ */
+int checkForArgument(char **token){
 
+}
 
 /*
  * This method assumes the command entered is solve,
@@ -149,8 +184,25 @@ int interpretSolve(char *token, struct Board *board){
     }
 }
 
+/*
+ * This method assumes the command entered is edit,
+ * checks the validity of the rest of the command and executes it.
+ * Available in every mode.
+ * It returns
+ */
 int interpretEdit(char *token, struct Board *board, Mode mode){
+    int arrNumOfParams[2];
 
+    token = strtok(NULL, " \t\r\n");
+
+    if (strtok(NULL, " \t\r\n") != NULL){ /*Too many parameters*/
+        arrNumOfParams = {0, 1};
+        printExtraParams(arrNumOfParams, 2, 1);
+        return 0;
+    }
+    else{
+        return edit(board, token); /* Sending Null in token if no parameters were entered. */
+    }
 }
 
 /*
@@ -370,6 +422,63 @@ int interpretGuess(char *token, struct Board *board, Mode mode) {
                 }
                 else{
                     return guess(input, board);
+                }
+            }
+        }
+    }
+}
+
+/*
+ * This method assumes the command entered is generate,
+ * checks the validity of the rest of the command and executes it.
+ * Available only in Edit mode.
+ * It returns
+ */
+int interpretGenerate(char *token, struct Board *board, Mode mode) {
+    int i = 0;
+    Mode availableModes[1] = {Edit};
+    int arrInput[2], arrCheck[2];  /*arrCheck saves whether we succeeded in converting
+                                    * the string into a number for every parameter*/
+
+    if (mode != Edit){
+        printUnavailableMode(7, mode, availableModes, 1);
+        return 0;
+    }
+
+    while ((token = strtok(NULL, " \t\r\n")) != NULL && i < 2){
+        arrCheck[i] = sscanf(token, "%d", &arrInput[i]);
+        i++;
+    }
+    if (i < 2){ /* Not enough parameters*/
+        printFewParams(2, 7);
+        return 0;
+    }
+    else {
+        if (strtok(NULL, " \t\r\n") != NULL) { /*Too many parameters*/
+            printExtraParams(2, 7);
+            return 0;
+        } else {
+            if (arrCheck[0] != 1) {
+                printNotANumber(1);
+                return 0;
+            } else {
+                if (!(arrInput[0] >= 0)) {
+                    printWrongRangeInt(7, arrInput[0], 1);
+                    printf("The parameter should be an integer greater than or equal to 0.\n");
+                    return 0;
+                } else {
+                    if (arrCheck[1] != 1) {
+                        printNotANumber(2);
+                        return 0;
+                    } else {
+                        if (!(arrInput[1] > 0)) {
+                            printWrongRangeInt(7, arrInput[1], 2);
+                            printf("The parameter should be an integer greater than 0.\n");
+                            return 0;
+                        } else { /* All parameters are valid */
+                            return generate(arrInput[0], arrInput[1]);
+                        }
+                    }
                 }
             }
         }
