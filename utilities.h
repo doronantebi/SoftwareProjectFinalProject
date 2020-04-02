@@ -14,6 +14,7 @@ struct sudokuManager {
     int m;
     int *board;
     int *fixed;
+    int *erroneous;
     struct movesList *linkedList;
     int addMarks;
 };
