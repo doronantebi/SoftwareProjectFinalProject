@@ -1,8 +1,8 @@
 
 #include "solver.h"
 
-#ifndef SP___HW3_PARSER_H
-#define SP___HW3_PARSER_H
+#ifndef SOFTWAREPROJECTFINALPROJECT_PARSER_H
+#define SOFTWAREPROJECTFINALPROJECT_PARSER_H
 
 /*
  * The function prints a message to the user that the command is invalid.

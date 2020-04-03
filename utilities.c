@@ -1,9 +1,10 @@
 #include "utilities.h"
-#include "game.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 /* GENERAL METHODS */
+
+
 /*
  * This function calculates the row's lower bound of the block.
  */
@@ -62,18 +63,6 @@ int matIndex(struct sudokuManager *manager, int i, int j){
 int isFixedCell(struct sudokuManager *manager, int row, int col){
     return manager->fixed[matIndex(manager, row, col)];
 }
-
-/*
-  * IDK what to do with this function
-  */
-int goOverBlock(struct sudokuManager *manager, int i, int j){
-    int rowLowerBound = rowLowBound(manager, i);
-    int colLowerBound = colLowBound(manager,j);
-    int rowHigherBound = rowHighBound(manager, i);
-    int colHigherBound = colHighBound(manager,j);
-}
-
-
 
 
 /*
@@ -139,11 +128,102 @@ int neighbourContains(struct sudokuManager *manager, int i, int j, int val){
     return 0;
 }
 
+int updateErroneousBlock(struct sudokuManager *manager, int i, int j){
+    int blockRowLowBound = rowLowBound(manager, i);
+    int blockRowHighBound = rowHighBound(manager, i);
+    int blockColLowBound = colLowBound(manager, j);
+    int blockColHighBound = colHighBound(manager, j);
+    int row, col;
+    for(row = blockRowLowBound; row < blockRowHighBound; row++){
+        for(col = blockColLowBound ; col < blockColHighBound ; col++) {
+            if(neighbourContains(manager, row, col, manager->board[matIndex(manager, row, col)])){
+                manager->erroneous[matIndex(manager, row, col)] = 1;
+            }
+            else {
+                manager->erroneous[matIndex(manager, row, col)] = 0;
+            }
+        }
+    }
+    return 1;
+}
+
+int updateErroneousRow(struct sudokuManager *manager, int j){
+    int row, length = boardLen(manager);
+    for (row = 0; row < length; row++) {
+        if(neighbourContains(manager, row, j, manager->board[matIndex(manager, row, j)])){
+            manager->erroneous[matIndex(manager, row, j)] = 1;
+        }
+        else {
+            manager->erroneous[matIndex(manager, row, j)] = 0;
+        }
+    }
+    return 1;
+}
+
+int updateErroneousCol(struct sudokuManager *manager, int i){
+    int col, length = boardLen(manager);
+    for (col = 0; col < length; col++) {
+        if(neighbourContains(manager, i, col, manager->board[matIndex(manager, i, col)])){
+            manager->erroneous[matIndex(manager, i, col)] = 1;
+        }
+        else {
+            manager->erroneous[matIndex(manager, i, col)] = 0;
+        }
+    }
+    return 1;
+}
+
+/*
+ * This updates the erroneous board for a sudokuBoard
+ * Will be used when Loading a file in Edit mode
+ * or when loading a file in Solve mode when setting addMarks to be 1
+ */
+int updateErroneousBoard(struct sudokuManager *manager){
+    int row, col, length = boardLen(manager);
+    for(row = 0; row < length; row++){
+        for (col = 0; col < length; col++) {
+            if(neighbourContains(manager, row, col, manager->board[matIndex(manager, row, col)])){
+                manager->erroneous[matIndex(manager, row, col)] = 1;
+            }
+            else {
+                manager->erroneous[matIndex(manager, row, col)] = 0;
+            }
+        }
+    }
+    return 1;
+}
+
+int updateErroneousBoardCell(struct sudokuManager *manager, int i, int j){
+    updateErroneousBlock(manager,i,j);
+    updateErroneousCol(manager,i);
+    updateErroneousRow(manager,j);
+    return 1;
+}
+
 /*
  * This method returns if the value of the cell is legal,
  * if it is, returns 1,
  * otherwise, returns 0.
  */
 int isLegalCell(struct sudokuManager *manager, int i, int j){
-    return !neighbourContains(manager, i, j, manager->board[matIndex(manager, i, j)]);
+    return manager->erroneous[matIndex(manager, i, j)];
+}
+
+/*
+ * Checks that the val
+ */
+int isLegalCellValue(struct sudokuManager *manager, int x){
+    return ((x > 0)&&(x <= boardLen(manager)));
+}
+
+/*
+ * counts the empty cells in the board
+ */
+int amountOfEmptyCells(struct sudokuManager *manager){
+    int i, count = 0;
+    for(i=0; i<boardArea(manager); i++){
+        if(manager->board[i] == 0)
+            count ++;
+    }
+    return count;
 }
