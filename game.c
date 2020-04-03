@@ -20,15 +20,69 @@ struct movesList{
     enum action action;
 };
 
+/*
+ * This function attempts to receive an integer from file.
+ * file is a valid pointer to an existing file.
+ * If it fails, it returns 0, otherwise it returns 1.
+ */
+int inputNumFromFile(FILE *file){
+    int check, num;
+    check = fscanf(file, "%d", &num);
+    if (check != 1) {
+        if (check == EOF) {
+            printNoInput();
+            return 0;
+        }
+        if (check == 0) {
+            printNotANumber();
+            return 0;
+        }
+    }
+    return num;
+}
 
 
 /*
  * This function loads a file and creates a sudoku board for it.
  */
-struct sudokuManager* createBoardFromFile(char *fileName){
-    struct sudokuManager *board = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
+sudokuManager* createBoardFromFile(char *fileName) {
+    FILE *file;
+    int check, n, m;
+    sudokuManager *board;
+    board = (sudokuManager *) malloc(sizeof(sudokuManager));
+    if (board == NULL) {
+        printAllocFailed();
+        return NULL;
+    }
+    file = fopen(fileName, "r");
+    if (file == NULL) {
+        prinf("Error: no such file exists.\n");
+        free(board);
+        return NULL;
+    }
+    m = inputNumFromFile(file);
+    if(m == 0){ /*No integer was received*/
+        return NULL;
+    }
+    board->m = m;
+    n = inputNumFromFile(file);
+    if(n == 0){ /*No integer was received*/
+        return NULL;
+    }
+    board->n = n;
+
+    board->board = (int *)(malloc(sizeof(int)*boardLen(board)));
+
+    if (board->board == NULL){
+        printAllocFailed();
+        free(board);
+        return NULL;
+    }
+
+
+
     /* HOW TO LOAD A FILE AND CONVERT IT ? */
-    return &board;
+    return board;
 
 }
 

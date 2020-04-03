@@ -2,8 +2,6 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
 #define SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
 
-#endif //SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
-
 /* GENERAL METHODS */
 /*
  * This function calculates the row's lower bound of the block.
@@ -76,3 +74,5 @@ int neighbourContains(struct sudokuManager *manager, int i, int j, int val);
  * otherwise, returns 0.
  */
 int isLegalCell(struct sudokuManager *manager, int i, int j);
+
+#endif

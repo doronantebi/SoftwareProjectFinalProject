@@ -2,23 +2,21 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_GAME_H
 #define SOFTWAREPROJECTFINALPROJECT_GAME_H
 
-#endif //SOFTWAREPROJECTFINALPROJECT_GAME_H
-
 enum Mode {
     Init = 0,
     Edit = 1,
     Solve = 2
 };
 
-struct sudokuManager {
+typedef struct {
     int n;
     int m;
     int *board;
     int *fixed;
     struct movesList *linked_list;
     enum mode;
-    int addMarks;
-};
+    int addMarks;  /*1 if we need to mark erroneous cells, 0 otherwise*/
+}sudokuManager;
 
 static enum Mode mode = Init;
 
@@ -45,3 +43,5 @@ void markErrors(struct sudokuManager *board, int X);
 void printBoard(struct sudokoManager *board);
 
 void changeMode(enum Mode newMode);
+
+#endif
