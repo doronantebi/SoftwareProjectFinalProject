@@ -40,18 +40,16 @@ int inputNumFromFile(FILE *file, int *pNum){
 }
 
 
-
-
-
 /*
  * This function loads a file and creates a sudoku board for it.
  * if the file format is illegal returns NULL
  */
-struct sudokuManager* createBoardFromFile(char *fileName){
-    int res, check, n, m;
+struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
+    int res, check, n, m, i, j, index, success;
     FILE *file;
     struct movesList *linkedList;
     struct sudokuManager *board;
+    char nextChar;
 
     linkedList = (struct movesList*)malloc(sizeof(struct movesList));
     if (linkedList == NULL) {
@@ -65,29 +63,48 @@ struct sudokuManager* createBoardFromFile(char *fileName){
         return NULL;
     }
     board->addMarks = 1;
-    linkedList->prev = NULL, linkedList->next = NULL, linkedList->prevValue = 0, linkedList->newValue = 0, linkedList->col = 0, linkedList->row = 0;
+    board->linkedList = linkedList;
+    initList(linkedList);
     linkedList->board = board;
-    if((mode == Edit)&&(fileName == NULL)){
+    if((mode1 == Edit) && (fileName == NULL)){
         board->n = 3, board->m = 3; board->linkedList = linkedList;
         board->fixed = calloc(9 * 9, sizeof(int));
+        if (board->fixed = NULL){
+            printAllocFailed();
+            free(board);
+            free(linkedList);
+            return NULL;
+        }
         board->board = calloc(9 * 9, sizeof(int));
+        if (board->board = NULL){
+            printAllocFailed();
+            free(board);
+            free(linkedList);
+            return NULL;
+        }
     }
     else {
         file = fopen(fileName, "r");
         if (file == NULL) {
             prinf("Error: no such file exists.\n");
             freeBoard(board);
+            free(linkedList);
             return NULL;
         }
-        m = inputNumFromFile(file);
-        if(m == 0){ /*No integer was received*/
+        success = inputNumFromFile(file, &m);
+        if(success == 0){ /*No integer was received*/
             freeBoard(board);
+            free(linkedList);
+            fclose(file);
             return NULL;
         }
         board->m = m;
-        n = inputNumFromFile(file);
-        if(n == 0){ /*No integer was received*/
+
+        success = inputNumFromFile(file, &n);
+        if(success == 0){ /*No integer was received*/
             freeBoard(board);
+            free(linkedList);
+            fclose(file);
             return NULL;
         }
         board->n = n;
@@ -97,13 +114,43 @@ struct sudokuManager* createBoardFromFile(char *fileName){
         if (board->board == NULL){
             printAllocFailed();
             freeBoard(board);
+            free(linkedList);
+            fclose(file);
             return NULL;
         }
+
+
+
+        for (i = 0; i < boardLen(board); i++){ /*Row*/
+            for (j = 0; j < boardLen(board); j++){ /*Column*/
+                index = matIndex(board->m, board->n, i, j);
+                success = inputNumFromFile(file, &(board->board[index]));
+                if(success == 0){ /*No integer was received*/
+                    freeBoard(board);
+                    free(linkedList);
+                    fclose(file);
+                    return NULL;
+                }
+                if (!isLegalCellValue(board, board->board[index])){
+
+                }
+                nextChar = fgetc(file);
+                if (nextChar == EOF){
+                    printNotEnoughNumbers();
+                    freeBoard(board);
+                    free(linkedList);
+                    fclose(file);
+                    return NULL;
+                }
+                board->fixed[index] = board->board[index];
+            }
+        }
     }
+
+    fclose(file);
     return board;
 
 }
-
 
 
 

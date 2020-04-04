@@ -22,7 +22,6 @@ struct sudokuManager {
 
 
 
-
 /* GENERAL METHODS */
 /*
  * This function calculates the row's lower bound of the block.

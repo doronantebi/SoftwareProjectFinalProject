@@ -4,6 +4,22 @@
 #include "utilitiesLinkedList.h"
 
 /*
+ * This method initializes list with default values.
+ * Requires: linkedList != NULL.
+ */
+void initList(struct movesList *linkedList){
+    linkedList->board = NULL;
+    linkedList->prev = NULL;
+    linkedList->next = NULL;
+    linkedList->prevValue = 0;
+    linkedList->newValue = 0;
+    linkedList->col = 0;
+    linkedList->row = 0;
+    linkedList->action = seperator;
+}
+
+
+/*
  * This function destroys all the next moves the user have done.
  * when it's done - board->linked_list->next == NULL
  * assumes the linked list is not empty

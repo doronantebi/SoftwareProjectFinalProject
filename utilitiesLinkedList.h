@@ -20,6 +20,13 @@ struct movesList{
 };
 
 /*
+ * This method initializes list with default values.
+ * Requires: linkedList != NULL.
+ */
+void initList(struct movesList *linkedList);
+
+
+/*
  * This function destroys all the next moves the user have done.
  * when it's done - board->linked_list->next == NULL
  * assumes the linked list is not empty
