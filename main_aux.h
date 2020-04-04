@@ -1,7 +1,7 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 #define SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 
-#include "utilities.h"
+#include "utilitiesBoardManager.h"
 
 /*
  * This method prints the game title

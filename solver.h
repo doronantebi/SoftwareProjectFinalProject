@@ -3,7 +3,7 @@
 #define SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 
 #endif //SOFTWAREPROJECTFINALPROJECT_SOLVER_H
-#include "utilities.h"
+#include "utilitiesBoardManager.h"
 
 /*
  * This function validates a board using ILP

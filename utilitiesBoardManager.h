@@ -1,6 +1,8 @@
 
-#ifndef SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
-#define SOFTWAREPROJECTFINALPROJECT_UTILITIES_H
+#ifndef SOFTWAREPROJECTFINALPROJECT_UTILITIESBOARDMANAGER_H
+#define SOFTWAREPROJECTFINALPROJECT_UTILITIESBOARDMANAGER_H
+
+#include "utilitiesLinkedList.h"
 
 enum Mode {
     Init = 0,
@@ -18,22 +20,7 @@ struct sudokuManager {
     int addMarks;
 };
 
-enum action{
-    startCommand = 0,
-    command = 1,
-    finishCommand = 2
-};
 
-struct movesList{
-    struct sudokuManager *board;
-    struct movesList *next;
-    struct movesList *prev;
-    int row;
-    int col;/* */
-    int prevValue;
-    int newValue;
-    enum action action;
-};
 
 
 /* GENERAL METHODS */
@@ -103,15 +90,15 @@ int blockContains(int *board, int m, int n, int i, int j, int val);
 int neighbourContains(int *board, int m, int n, int i, int j, int val);
 
 /*
- * This method returns if the value of the cell is legal,
+ * This method returns if the value of the cell is not legal,
  * if it is, returns 1,
  * otherwise, returns 0.
  */
-int isLegalCell(struct sudokuManager *manager, int i, int j);
+int isErroneous(struct sudokuManager *manager, int i, int j);
 
 
 /*
- * This function returns True if 1 <= x <= n*m
+ * This function returns True if 0 <= x <= n*m
  */
 int isLegalCellValue(struct sudokuManager *manager, int x);
 
@@ -119,5 +106,34 @@ int isLegalCellValue(struct sudokuManager *manager, int x);
 * counts the empty cells in the board
 */
 int amountOfEmptyCells(struct sudokuManager *manager);
+
+/*
+ * This updates the erroneous board for a sudokuBoard
+ * input is a pointer to the board typed *int.
+ * Will be used when Loading a file in Edit mode
+ * or when loading a file in Solve mode when setting addMarks to be 1
+ * UPDATES THE WHOLE BOARD
+ * will be used when scanning a file.
+ * can be used for the original board or for the fixed board.
+ */
+int updateErroneousBoard(int* board, int* erroneous, int m, int n);
+
+/*
+ * This function updates the erronous board of a sudokuManager.
+* it will update all row i, column j, and the block that (i,j) is in.
+ * will be used in functions like set.
+*/
+int updateErroneousBoardCell(int* board, int* erroneous, int m, int n, int i, int j);
+
+
+/*
+ * This method frees a given board.
+ */
+void freeBoard(struct sudokuManager *board);
+
+/*
+ * This method sets manager->board[row][col] = val
+ */
+void changeCellValue(struct sudokuManager *manager, int row, int col, int val);
 
 #endif

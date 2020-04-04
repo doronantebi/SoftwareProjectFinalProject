@@ -1,4 +1,4 @@
-#include "utilities.h"
+#include "utilitiesBoardManager.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -180,7 +180,6 @@ int updateErroneousCol(int* board, int* erroneous, int m, int n, int i){
 /*
  * This updates the erroneous board for a sudokuBoard
  * input is a pointer to the board typed *int.
- *
  * Will be used when Loading a file in Edit mode
  * or when loading a file in Solve mode when setting addMarks to be 1
  * UPDATES THE WHOLE BOARD
@@ -216,7 +215,7 @@ int updateErroneousBoardCell(int* board, int* erroneous, int m, int n, int i, in
  * if it is, returns 1,
  * otherwise, returns 0.
  */
-int isLegalCell(struct sudokuManager *manager, int i, int j){
+int isErroneous(struct sudokuManager *manager, int i, int j){
     return manager->erroneous[matIndex(manager->m, manager->n, i, j)];
 }
 
@@ -238,3 +237,28 @@ int amountOfEmptyCells(struct sudokuManager *manager){
     }
     return count;
 }
+
+
+/*
+ * This method frees a given board.
+ */
+void freeBoard(struct sudokuManager *board){
+    pointToFirstMoveInMovesList(board); /* points the move's list to first move */
+    killNextMoves(board); /* frees all next moves */
+    free(board->fixed);
+    free(board->erroneous);
+    free(board->board);
+    free(board->linkedList);
+    free(board);
+}
+
+
+/*
+ * This function changes the value in cell <X,Y> to Z
+ * assumes all input is legal
+ */
+void changeCellValue(struct sudokuManager *manager, int row, int col, int val){
+    manager->board[matIndex(manager->m, manager->n,row,col)] = val;
+}
+
+
