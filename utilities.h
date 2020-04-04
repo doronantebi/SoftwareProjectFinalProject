@@ -7,6 +7,7 @@ enum Mode {
     Edit = 1,
     Solve = 2
 };
+
 struct sudokuManager {
     int n;
     int m;
@@ -24,7 +25,7 @@ enum action{
 };
 
 struct movesList{
-    struct sudokuManager **board;
+    struct sudokuManager *board;
     struct movesList *next;
     struct movesList *prev;
     int row;
@@ -39,22 +40,22 @@ struct movesList{
 /*
  * This function calculates the row's lower bound of the block.
  */
-int rowLowBound(struct sudokuManager *manager, int i);
+int rowLowBound(int m, int i);
 
 /*
  * This function calculates the row's higher bound of the block.
  */
-int rowHighBound(struct sudokuManager *manager, int i);
+int rowHighBound(int m, int i);
 
 /*
  * This function calculates the column's lower bound of the block.
  */
-int colLowBound(struct sudokuManager *manager, int j);
+int colLowBound(int n, int j);
 
 /*
  * This function calculates the column's higher bound of the block.
  */
-int colHighBound(struct sudokuManager *manager, int j);
+int colHighBound(int n, int j);
 
 /*
  * This method returns the length of the sudoku board
@@ -69,7 +70,7 @@ int boardArea(struct sudokuManager *manager);
 /*
  * This method returns the matrix index in the array of the board
  */
-int matIndex(struct sudokuManager *manager, int i, int j);
+int matIndex(int m, int n, int i, int j);
 
 /*
  * This method returns if a cell is a fixed cell,
@@ -81,25 +82,25 @@ int isFixedCell(struct sudokuManager *manager, int row, int col);
 /*
  * Returns the amount of times that the row contains val.
  */
-int rowContains(struct sudokuManager *manager, int i, int val);
+int rowContains(int *board, int m, int n, int i, int val);
 
 /*
  * Returns the amount of times that the column contains val
  */
-int colContains(struct sudokuManager *manager, int j, int val);
+int colContains(int *board, int m, int n, int j, int val);
 
 
 /*
  * Returns the amount of times that the block of (i,j)
  * contains val.
  */
-int blockContains(struct sudokuManager *manager, int i, int j, int val);
+int blockContains(int *board, int m, int n, int i, int j, int val);
 
 /*
  * This method returns 1 if a row/col/block contains
  * val more than once.
  */
-int neighbourContains(struct sudokuManager *manager, int i, int j, int val);
+int neighbourContains(int *board, int m, int n, int i, int j, int val);
 
 /*
  * This method returns if the value of the cell is legal,
@@ -112,7 +113,7 @@ int isLegalCell(struct sudokuManager *manager, int i, int j);
 /*
  * This function returns True if 1 <= x <= n*m
  */
-int isLegalValue(struct sudokuManager *manager, int x);
+int isLegalCellValue(struct sudokuManager *manager, int x);
 
 /*
 * counts the empty cells in the board

@@ -95,7 +95,7 @@ struct sudokuManager* createBoardFromFile(char *fileName){
     }
     board->addMarks = 1;
     linkedList->prev = NULL, linkedList->next = NULL, linkedList->prevValue = 0, linkedList->newValue = 0, linkedList->col = 0, linkedList->row = 0;
-    linkedList->board = &board;
+    linkedList->board = board;
     if((mode == Edit)&&(fileName == NULL)){
         board->n = 3, board->m = 3; board->linkedList = linkedList;
         board->fixed = calloc(9 * 9, sizeof(int));
@@ -143,7 +143,7 @@ struct sudokuManager* createBoardFromFile(char *fileName){
  */
 void undoCommand (struct sudokuManager *board){
     while (board->linkedList->next->action != startCommand) {
-        board->board[matIndex(board, board->linkedList->row, board->linkedList->col)] = board->linkedList->prevValue;
+        board->board[matIndex(board->m, board->n, board->linkedList->row, board->linkedList->col)] = board->linkedList->prevValue;
         board->linkedList = board->linkedList->prev;
     }
 }
@@ -224,7 +224,7 @@ void createNextNode(struct sudokuManager *board, enum action action, int X, int 
     board->linkedList->next = (struct movesList*)malloc(sizeof(struct movesList)); /* allocates memory for the new node, and point our current node to the next one */
     board->linkedList->next->next = NULL;
     board->linkedList->next->prev = board->linkedList; /* points the new node's prev to the node */
-    board->linkedList->next->board = &board; /* sets the board pointer to our sudokuManager */
+    board->linkedList->next->board = board; /* sets the board pointer to our sudokuManager */
     board->linkedList->next->action = action; /* sets the given enum function action */
     if(action == command){ /* fills the values of the action changes */
         board->linkedList->col = Y, board->linkedList->row = X, board->linkedList->prevValue = prevVal, board->linkedList->newValue = Z;
@@ -245,7 +245,7 @@ void goToNextNode(struct sudokuManager *board){
  * assumes all input is legal
  */
 void changeCellValue(struct sudokuManager *manager, int row, int col, int val){
-    manager->board[matIndex(manager,row,col)] = val;
+    manager->board[matIndex(manager->m, manager->n,row,col)] = val;
 }
 
 /*
@@ -253,7 +253,7 @@ void changeCellValue(struct sudokuManager *manager, int row, int col, int val){
  * is called after verifying that all values are legal.
  */
 void doSet(struct sudokuManager *manager, int X, int Y, int Z){
-    int prevVal =  manager->board[matIndex(manager,X,Y)];
+    int prevVal =  manager->board[matIndex(manager->m, manager->n, X, Y)];
     changeCellValue(manager, X, Y, Z);
     if (manager->linkedList->next != NULL){
         killNextMoves(manager);
@@ -281,9 +281,10 @@ void set(struct sudokuManager *manager, int X, int Y, int Z){
  * This function validates the current board using ILP,
  * ensuring it's solvable.
  * returns 1 if valid and 0 otherwise.
+ *  * CHECK!!!!!!!! DO WITH GUROBI
  */
 int validate(struct sudokuManager *board){
-    int isValid = validateBoard(board->board, board->n, board->m);
+    int isValid = validateBoard(board->board, board->m, board->n);
     if(!isValid){
         printBoardNotValidError();
     }
@@ -305,6 +306,8 @@ void guess(struct sudokuManager *board, float X){
 
 /*
  * This function generates a board with Y random cells
+ *  * CHECK!!!!!!!! check MALLOC ALLOCATION SUCCESS
+ *  CREATE DOGENERATE IN GUROBI
  */
 struct sudokuManager* generate(struct sudokuManager *prevBoard, int X, int Y){
     struct sudokuManager *newBoard = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
@@ -321,9 +324,16 @@ struct sudokuManager* generate(struct sudokuManager *prevBoard, int X, int Y){
 
 /*
  * This method is used for saving your game.
+ * need to validate the board!!!
  */
-void saveGame(){
+void saveGame(struct sudokuManager *board,char* fileName){
+    if(validate(board)){
 
+    } else{
+        printBoardNotValidError();
+        /* MUST SAVE ONLY VALID BOARD */
+    }
+}
 }
 
 /*
@@ -354,3 +364,5 @@ void startGame(){
     title();
     /* NOT DONE */
 }
+
+

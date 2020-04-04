@@ -9,7 +9,7 @@
  * This function validates a board using ILP
  * return 1 if valid and 0 otherwise.
  */
-int validateBoard(int *board, int n, int m);
+int validateBoard(int *board, int m, int n);
 
 
 /*
