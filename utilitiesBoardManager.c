@@ -138,43 +138,48 @@ int updateErroneousBlock(int* board, int* erroneous, int m, int n, int i, int j)
     int blockRowHighBound = rowHighBound(m, i);
     int blockColLowBound = colLowBound(n, j);
     int blockColHighBound = colHighBound(n, j);
-    int row, col;
+    int row, col, ret = 0;
     for(row = blockRowLowBound; row < blockRowHighBound; row++){
         for(col = blockColLowBound ; col < blockColHighBound ; col++) {
             if(neighbourContains(board, m, n, row, col, board[matIndex(m, n, row, col)])){
                 erroneous[matIndex(m, n, row, col)] = 1;
+                ret = 1;
             }
             else {
                 erroneous[matIndex(m, n, row, col)] = 0;
             }
         }
     }
-    return 1;
+    return ret;
 }
 
 int updateErroneousRow(int* board, int* erroneous, int m, int n, int j){
-    int row, length = n*m;
+    int row, length = n*m, ret = 0;
     for (row = 0; row < length; row++) {
         if(neighbourContains(board, m, n, row, j, board[matIndex(m, n, row, j)])){
             erroneous[matIndex(m, n, row, j)] = 1;
+            ret = 1;
         }
         else {
             erroneous[matIndex(m, n, row, j)] = 0;
         }
     }
-    return 1;
+    return ret;
 }
+
+
 int updateErroneousCol(int* board, int* erroneous, int m, int n, int i){
-    int col, length = n*m;
+    int col, length = n*m, ret = 0;
     for (col = 0; col < length; col++) {
         if(neighbourContains(board, m, n, i, col, board[matIndex(m, n, i, col)])){
             erroneous[matIndex(m, n, i, col)] = 1;
+            ret = 1;
         }
         else {
             erroneous[matIndex(m, n, i, col)] = 0;
         }
     }
-    return 1;
+    return ret;
 }
 
 /*
@@ -183,31 +188,43 @@ int updateErroneousCol(int* board, int* erroneous, int m, int n, int i){
  * Will be used when Loading a file in Edit mode
  * or when loading a file in Solve mode when setting addMarks to be 1
  * UPDATES THE WHOLE BOARD
+ * the function returns 1 if one of the cells is illegal
+ * and 0 otherwise.
  */
 int updateErroneousBoard(int* board, int* erroneous, int m, int n){
-    int row, col, length = n*m;
+    int row, col, length = n*m, ret = 0;
     for(row = 0; row < length; row++){
         for (col = 0; col < length; col++) {
             if(neighbourContains(board, m, n, row, col, board[matIndex(m, n, row, col)])){
                 erroneous[matIndex(m, n, row, col)] = 1;
+                ret = 1;
             }
             else {
                 erroneous[matIndex(m, n, row, col)] = 0;
             }
         }
     }
-    return 1;
+    return ret;
 }
 
 /*
  * This function updates the erronous board of a sudokuManager.
  * it will update all row i, column j, and the block that (i,j) is in.
+ * the function returns 1 if one of the cells is illegal
+ * and 0 otherwise.
  */
 int updateErroneousBoardCell(int* board, int* erroneous, int m, int n, int i, int j){
-    updateErroneousBlock(board, erroneous, m, n, i,j);
-    updateErroneousCol(board, erroneous, m, n, i);
-    updateErroneousRow(board, erroneous, m, n, j);
-    return 1;
+    int ret = 0;
+    if (updateErroneousBlock(board, erroneous, m, n, i,j)){
+        ret = 1;
+    }
+    if(updateErroneousCol(board, erroneous, m, n, i)){
+        ret = 1;
+    }
+    if(updateErroneousRow(board, erroneous, m, n, j)){
+        ret = 1;
+    }
+    return ret;
 }
 
 /*
