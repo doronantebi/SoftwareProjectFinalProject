@@ -2,7 +2,7 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 #define SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 
-#endif //SOFTWAREPROJECTFINALPROJECT_SOLVER_H
+
 #include "utilitiesBoardManager.h"
 
 /*
@@ -18,3 +18,5 @@ int validateBoard(int *board, int m, int n);
  * if fails, returns prevBoard
  */
 struct sudokuManager* doGenerate(struct sudokuManager *prevBoard, struct sudokuManager *newBoard, int X, int Y);
+
+#endif

@@ -134,6 +134,6 @@ void freeBoard(struct sudokuManager *board);
 /*
  * This method sets manager->board[row][col] = val
  */
-void changeCellValue(struct sudokuManager *manager, int row, int col, int val);
+void changeCellValue(int *board, int m, int n, int row, int col, int val);
 
 #endif

@@ -257,8 +257,8 @@ void freeBoard(struct sudokuManager *board){
  * This function changes the value in cell <X,Y> to Z
  * assumes all input is legal
  */
-void changeCellValue(struct sudokuManager *manager, int row, int col, int val){
-    manager->board[matIndex(manager->m, manager->n,row,col)] = val;
+void changeCellValue(int *board, int m, int n, int row, int col, int val){
+    board[matIndex(m, n,row,col)] = val;
 }
 
 
