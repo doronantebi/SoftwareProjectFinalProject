@@ -279,3 +279,26 @@ int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed){
 
     return onlyFixed;
 }
+
+/*
+ * This method checks if the current cell in last is row, assuming length of row is size.
+ */
+int isLastInRow(int size, int j){
+    return j == size - 1;
+}
+
+/*
+ * This method checks if the current cell is last in column, assuming length of column is size.
+ */
+int isLastInCol(int size, int i){
+    return i == size - 1;
+}
+
+
+/*
+* This method checks if the current cell is last in the matrix, assuming the matrix is size X size.
+*/
+int isLastCellInMatrix(int size, int i, int j){
+    return isLastInCol(size, i) && isLastInRow(size, j);
+}
+

@@ -142,4 +142,16 @@ void changeCellValue(int *board, int m, int n, int row, int col, int val);
  */
 int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed);
 
+/*
+ * This method checks if the current cell in last is row, assuming length of row is size.
+ */
+int isLastInRow(int size, int j);
+
+
+/*
+* This method checks if the current cell is last in the matrix, assuming the matrix is size X size.
+*/
+int isLastCellInMatrix(int size, int i, int j);
+
+
 #endif
