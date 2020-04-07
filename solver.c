@@ -48,15 +48,8 @@ int isEmpty(Stack *s){
 
 /*
  * This method pushes a new node to the stack.
- * It returns -1 if memory allocation failed. Otherwise, it returns 0.
  */
-int push(Stack *s, int value, int row, int col){
-    Node *node = malloc(sizeof(Node));
-     if (node == NULL){
-         printAllocFailed();
-         return -1;
-     }
-     initNode(node, value, row, col);
+void push(Stack *s, Node *node){
      if (isEmpty(s)){
         s->first = node;
     }
@@ -64,18 +57,17 @@ int push(Stack *s, int value, int row, int col){
          node->next = s->first;
          s->first = node;
      }
-     return 0;
 }
 
 /*
  * This method pops the first element out of the stack.
  * It assumes !isEmpty(s).
  */
-Node *pop(Stack *s){
+void pop(Stack *s){
     Node *node = s->first;
     s->first = s->first->next;
     node->next = NULL;
-    return  node;
+    free(node);
 }
 
 /*
@@ -110,6 +102,7 @@ int getNextIndex(struct sudokuManager *manager, int *pRow, int *pCol){
 /*
  * This method updates pRow and pCol to point to the next cell which if free.
  * If there is no free next cell, it returns 1. Otherwise, it returns 0.
+ * Namely, it returns 1 iff the board is completely full.
  */
 int findNextFreeCell(struct sudokuManager *manager, int *pRow, int *pCol){
     int m = manager->m, n = manager->n;
@@ -122,115 +115,126 @@ int findNextFreeCell(struct sudokuManager *manager, int *pRow, int *pCol){
     return 0;
 }
 
+/*
+ * This method finds the next legal value in solutionBoard for cell (row, col)
+ */
+int findNextLegalValue(int m, int n, int row, int col, int *solutionBoard){
+    int i;
+    int currValue = solutionBoard[matIndex(m, n, row, col)];
+    for (i = currValue + 1; i <= n*m; i++){
+        if (!neighbourContains(solutionBoard, m, n, row, col, i)){
+            return i;
+        }
+    }
+    return i;
+}
 
 
 /*
  * This method performs backtracking. state determines if it is deterministic or random.
  */
 int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
-    int nextVal, numLegalValues;
-    int res, *allValues, *onlyLegalValues, *toBeFreed;
-    int *usersBoard = manager->board;
     int n = manager->n;
     int m = manager->m;
-    int row = 0, col = 0, numSolutions = 0, N = boardLen(manager);
+    int row = 0, col = 0, numSolutions = 0, N = boardLen(manager), value;
     int *pRow = &row, *pCol = &col;
     Node *node;
 
-    Stack *s = {0};
-
-    initStack(s);
-
-    if (findNextFreeCell(manager, pRow, pCol)){ /* There are no cells to fill */
-        return numSolutions;
-    }
-
-
-    if (push(s, 1, row, col) == -1){ /* memory allocation failed */
+    Stack *s = (Stack *) malloc(sizeof(Stack));
+    if (s == NULL) {
+        printAllocFailed();
         return -1;
     }
 
-    while (!isEmpty(s) && top(s)->value < N + 1){ /* while the stack is not empty and there are more
+    initStack(s);
+
+    if (findNextFreeCell(manager, pRow, pCol)) { /* There are no cells to fill */
+        return 0;
+    }
+
+    value = findNextLegalValue(m, n, row, col, solutionBoard);
+
+    if (value == N + 1) { /* the board is invalid */
+        return 0;
+    }
+
+    node = (Node *) malloc(sizeof(Node));
+    if (node == NULL) { /* memory allocation failed */
+        printAllocFailed();
+        return -1;
+    }
+
+    initNode(node, value, *pRow, *pCol);
+    push(s, node);
+
+    changeCellValue(solutionBoard, m, n, row, col, value);
+
+    while (!isEmpty(s)) { /* while the stack is not empty and there are more
                                                     * possible values for the current cell */
         node = top(s);
+        *pRow = node->row;
+        *pCol = node->col;
 
+        /*if (isLastCellInMatrix(N, node->row, node->col)) {
+            numSolutions++;
+            changeCellValue(solutionBoard, m, n, node->row, node->col, 0); if we filled the last cell,
+                                                                                * it has only one legal value
+            pop(s);
+
+        } else {*/
+            getNextIndex(manager, pRow, pCol); /* we can't be in the last cell of the matrix */
+            if (findNextFreeCell(manager, pRow, pCol)) { /* */
+                numSolutions++;
+                value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
+                if (value == N + 1) {
+                    changeCellValue(solutionBoard, m, n, node->row, node->col, 0);
+                    pop(s);
+                } else {
+                    changeCellValue(solutionBoard, m, n, node->row, node->col, value);
+                }
+            } else {
+                value = findNextLegalValue(m, n, *pRow, *pCol, solutionBoard);
+                if (value == N + 1) {
+                    changeCellValue(solutionBoard, m, n, node->row, node->col, 0);
+                    pop(s);
+                } else { /* value < N + 1*/
+                    node = (Node *) malloc(sizeof(Node));
+                    if (node == NULL) {
+                        printAllocFailed();
+                        return -1;
+                    }
+                    initNode(node, value, *pRow, *pCol);
+                    changeCellValue(solutionBoard, m, n, node->row, node->col, value);
+                    push(s, node);
+                }
+            }
     }
 
+    free(s);
     return numSolutions;
-
-
-
-    allValues = findLegalInput(manager, row, col);  /* returns a binary array that specifies which value is
-                                                            * legal to the (i, j) cell in solutionBoard */
-    if (allValues == NULL){
-        return 0;
-    }
-
-    numLegalValues = countZeros(allValues, boardLen(manager));     /* counts how  many legal values there
-                                                                * are for the (i, j) cell*/
-
-    if (numLegalValues == 0){
-        free(allValues);
-        return 0;
-    }
-
-    onlyLegalValues = malloc(numLegalValues * sizeof(int)); /* array of legal values */
-
-    if (onlyLegalValues == NULL){
-        free(allValues);
-        manager->status = MALLOC_ERROR;
-        return 0;
-    }
-
-    fillLegalValues(allValues, n * m, onlyLegalValues, numLegalValues);  /* fills onlyLegalValues with
-                                                                        * legal values only*/
-
-    free(allValues);
-
-    while (numLegalValues > 1){
-        nextVal = getNextVal(onlyLegalValues, numLegalValues;
-        solutionBoard[matIndex(m, n, row, col)] = nextVal;
-        res = doNextBacktrack(manager, row, col);
-        if (res == 1){
-            free(onlyLegalValues);
-            return 1;
-        }
-        solutionBoard[row * (m * n) + col] = 0;
-        toBeFreed = removeFromArray(&onlyLegalValues, numLegalValues, nextVal);
-        if (toBeFreed == NULL){ /* realloc failed */
-            free(onlyLegalValues);
-            manager->status = REALLOC_ERROR;
-            return 0;
-        }
-        onlyLegalValues = toBeFreed;
-        numLegalValues--;
-    }
-
-    if (numLegalValues == 1){
-        nextVal = onlyLegalValues[0];
-        solutionBoard[row * (m * n) + col] = nextVal;
-        free(onlyLegalValues);
-        res = doNextBacktrack(manager, row, col);
-        if (res == 1){
-            return 1;
-        }
-        solutionBoard[matIndex(m, n, row, col)] = 0;
-    }
-
-    return 0;
-
 }
 
+
+
 /*
- *
+ * This method returns the number of possible solutions of the current board using the backtracking algorithm.
+ * If there is memory allocation error, it returns -1.
  */
 int backtracking(struct sudokuManager *manager){
-    int res;
-    manager->status = CAN_BE_SOLVED;
-    res = recBacktracking(manager, 0, 0);
-    if (manager->status == CAN_BE_SOLVED){
-        manager->status = CANNOT_BE_SOLVED;
+    int res, len = boardLen(manager), *solutionBoard;
+    if (isAnyErroneousCell(manager)){
+        return 0;
     }
+
+    solutionBoard = (int *)calloc(boardArea(manager), sizeof(int));
+    if (solutionBoard == NULL){
+        printAllocFailed();
+        return -1;
+    }
+
+    copyBoard(solutionBoard, manager->board, len);
+    res = recBacktracking(manager, solutionBoard);
+
     return res;
 }
 

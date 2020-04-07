@@ -82,7 +82,8 @@ int interpretMarkErrors(char *token, struct sudokuManager *board, enum Mode mode
             check = sscanf(token, "%d", &input);
             if (check == 1){
                 if (input == 0 || input == 1){
-                    return markErrors(board, input);
+                    markErrors(board, input);
+                    return 0;
                 }
                 else{
                     printWrongRangeInt(2, input, 1);
@@ -508,7 +509,7 @@ int interpretAutofill(char *token, struct sudokuManager *board, enum Mode mode) 
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mode) {
+int interpretReset(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};
     if (interpretNoArguments(token, mode, 15, availableModes, 2) == -1){
         return 0;
@@ -520,19 +521,19 @@ int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mo
 }
 
 /*
- * This method assumes the command entered is reset,
+ * This method assumes the command entered is exit,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0 if the command is invalid. Otherwise, it returns 2.
  */
-int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mode) {
-    enum Mode availableModes[2] = {Init, Solve, Edit};
+int interpretExit(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[3] = {Init, Solve, Edit};
     if (interpretNoArguments(token, mode, 16, availableModes, 3) == -1){
         return 0;
     }
     else{
-        reset(board);
-        return 0;
+        exitGame(board);
+        return 2;
     }
 }
 /*

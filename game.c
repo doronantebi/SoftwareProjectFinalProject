@@ -95,7 +95,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
     else {
         file = fopen(fileName, "r");
         if (file == NULL) {
-            printf("Error: no such file exists.\n");
+            printFilePathIllegal();
             freeBoard(board);
             free(linkedList);
             return NULL;
@@ -154,7 +154,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
                     return NULL;
                 }
 
-                if (nextChar == '.'){
+                if (nextChar == '.' && mode1 == Solve){
                     if (value != 0){
                         changeCellValue(board->fixed, board->m, board->n, i, j, value);
                     }
