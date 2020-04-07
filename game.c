@@ -335,6 +335,7 @@ int doSet(struct sudokuManager *manager, int X, int Y, int Z){
  * Sets in board at location [Y,X] ( X column, Y row ) value Z
  */
 int set(struct sudokuManager *manager, int X, int Y, int Z){
+    X--, Y--;
     if(isFixedCell(manager, Y, X)){
         printErrorCellXYIsFixed(X,Y);
         return 0;
@@ -347,6 +348,24 @@ int set(struct sudokuManager *manager, int X, int Y, int Z){
         printBoard(manager);
         return 0;
     }
+}
+
+/*
+ * This function automatically fill "obvious" values – cells which contain a single legal value.
+ * Available only in Solve mode.
+ */
+int autofill(struct sudokuManager *board){
+    if(isAnyErroneousCell(board)){
+        printBoardIsErroneous();
+    }
+    else{
+        if(updateAutofillValuesBoard(board)== -1){
+            return -1;
+        }
+        printBoard(board);
+        return 0;
+    }
+    return 0;
 }
 
 /* GUROBI RELATED FUNCTIONS */
