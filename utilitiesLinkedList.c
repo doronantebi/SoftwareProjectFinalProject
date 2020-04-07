@@ -4,6 +4,22 @@
 #include "utilitiesLinkedList.h"
 
 /*
+ * This method initializes list with default values.
+ * Requires: linkedList != NULL.
+ */
+void initList(struct movesList *linkedList){
+    linkedList->board = NULL;
+    linkedList->prev = NULL;
+    linkedList->next = NULL;
+    linkedList->prevValue = 0;
+    linkedList->newValue = 0;
+    linkedList->col = 0;
+    linkedList->row = 0;
+    linkedList->action = separator;
+}
+
+
+/*
  * This function destroys all the next moves the user have done.
  * when it's done - board->linked_list->next == NULL
  * assumes the linked list is not empty
@@ -67,7 +83,7 @@ void pointToFirstMoveInMovesList(struct sudokuManager *board){
  */
 void undoCommand (struct sudokuManager *board) {
     goToPrevNode(board); /* board after every action is always at seperator, we change it to previous node so now action==command */
-    while (board->linkedList->prev->action != seperator) {
+    while (board->linkedList->prev->action != separator) {
         changeCellValue(board->board,  board->m,board->n, board->linkedList->row, board->linkedList->col, board->linkedList->prevValue); /* sets back the previous value */
         goToPrevNode(board);
     }
@@ -78,7 +94,7 @@ void undoCommand (struct sudokuManager *board) {
  */
 void redoCommand (struct sudokuManager *board){
     goToNextNode(board); /* board after every action is always at finishCommand */
-    while (board->linkedList->next->action != seperator) {
+    while (board->linkedList->next->action != separator) {
         changeCellValue(board->board, board->m, board->n, board->linkedList->row, board->linkedList->col, board->linkedList->newValue); /* sets back the new value*/
         goToNextNode(board);
     }

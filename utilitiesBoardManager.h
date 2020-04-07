@@ -22,7 +22,6 @@ struct sudokuManager {
 
 
 
-
 /* GENERAL METHODS */
 /*
  * This function calculates the row's lower bound of the block.
@@ -139,5 +138,24 @@ void freeBoard(struct sudokuManager *board);
  * This method sets manager->board[row][col] = val
  */
 void changeCellValue(int *board, int m, int n, int row, int col, int val);
+
+
+/*
+ * This method fills onlyFixed of integers containing only the fixed values in board.
+ * If there is an error allocating memory, it returns NULL and prints a message to the user.
+ */
+int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed);
+
+/*
+ * This method checks if the current cell in last is row, assuming length of row is size.
+ */
+int isLastInRow(int size, int j);
+
+
+/*
+* This method checks if the current cell is last in the matrix, assuming the matrix is size X size.
+*/
+int isLastCellInMatrix(int size, int i, int j);
+
 
 #endif

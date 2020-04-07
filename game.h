@@ -4,12 +4,11 @@
 
 #include "solver.h"
 
-static enum Mode mode = Init;
 
 /*
  * This method is used for starting to play sudoku.
  */
-void startGame();
+int startGame();
 
 /*
  * This function uploads a file of a game to solve.
@@ -34,7 +33,7 @@ void printBoard(struct sudokuManager *board);
 /*
  * Sets in board at location [Y,X] ( X column, Y row ) value Z
  */
-void set(struct sudokuManager *board, int X, int Y, int Z);
+int set(struct sudokuManager *board, int X, int Y, int Z);
 
 /*
  * This function validates the current board using ILP, ensuring it's solvable.
@@ -47,7 +46,7 @@ int validate(struct sudokuManager *board);
  * Valid only in Solve mode.
  * X value is between 0 and 1.
  */
-void guess(struct sudokuManager *board, float X);
+int guess(struct sudokuManager *board, float X);
 
 /*
  * This function randomly creates a sudoku puzzle.
@@ -75,41 +74,41 @@ void redo(struct sudokuManager *board);
  * This function saves the board to fileName
  * Valid only in Edit and Solve modes.
  */
-void save(struct sudokuManager *board, char* fileName);
+int save(struct sudokuManager *board, char* fileName);
 
 /*
  * This function shows the solution to cell <X,Y>
  * Valid only in Solve mode.
  */
-void hint(struct sudokuManager *board, int X, int Y);
+int hint(struct sudokuManager *board, int X, int Y);
 
 /*
  * This function shows the solution to cell <X,Y>
  * Valid only in Solve mode.
  */
-void guessHint(struct sudokuManager *board, int X, int Y);
+int guessHint(struct sudokuManager *board, int X, int Y);
 
 /*
  * Prints the amount of possible solutions of the board.
  * Valid only in Edit and Solve modes.
  */
-void numSolutions(struct sudokuManager *board);
+int numSolutions(struct sudokuManager *board);
 
 /*
  * Automatically fills obvious values.
  * Valid only in Solve mode.
  */
-void autofill(struct sudokuManager *board);
+int autofill(struct sudokuManager *board);
 
 /*
  * Undo all moves.
  * Valid only in Edit and Solve mode.
  */
-void reset(struct sudokuManager *board);
+int reset(struct sudokuManager *board);
 
 /*
  * Terminates the program
  */
-void exitGame(struct sudokuManager *board);
+int exitGame(struct sudokuManager *board);
 
 #endif

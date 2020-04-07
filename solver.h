@@ -2,7 +2,6 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 #define SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 
-
 #include "utilitiesBoardManager.h"
 
 /*

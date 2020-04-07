@@ -4,7 +4,7 @@
 #include "utilitiesBoardManager.h"
 
 enum action{
-    seperator = 0,
+    separator = 0,
     command = 1
 };
 
@@ -18,6 +18,13 @@ struct movesList{
     int newValue;
     enum action action;
 };
+
+/*
+ * This method initializes list with default values.
+ * Requires: linkedList != NULL.
+ */
+void initList(struct movesList *linkedList);
+
 
 /*
  * This function destroys all the next moves the user have done.

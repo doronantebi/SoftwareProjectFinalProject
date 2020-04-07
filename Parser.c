@@ -2,162 +2,11 @@
 #include "Parser.h"
 #include <stdio.h>
 #include <string.h>
-#include "Game.h"
-#define LENGTH 257
+#include "game.h"
+#include "main_aux.h"
+#include "utilitiesBoardManager.h"
+
 #define commandListLength 17
-
-static char* commandList[] = {"solve", "edit", "mark_errors", "print_board", "set", "validate",
-                               "guess", "generate", "undo", "redo", "save", "hint", "guess_hint",
-                               "num_solutions", "autofill", "reset", "exit"};
-/*
- * This method performs a whole game. It initializes the  board,
- * receives commands from the user and executes them.
- * It returns -1 when we need to terminate.
- */
-int playGame(int numFixed){
-    char command[LENGTH];  /*Last cell is '\0'*/
-    int res;
-    struct Board *board;
-
-    if (initializeBoard(numFixed, &board) == -1){  /* we should terminate*/
-        return -1;
-    }
-
-    while (fgets(command, LENGTH, stdin) != NULL){  /* We have not reached EOF*/
-        if (command[0] == '\n'){ /* Line is empty. */
-            continue;
-        }
-        /*The line is not blank*/
-        res = interpret(command, &board);
-        if (res == -1){
-            return -1;
-        }
-        if (res == 2) { /* exit command was entered*/
-            return 0;
-        }
-    }
-    /* We have reached EOF, there are no more commands to execute*/
-    return exitGame(&board);
-}
-
-/*
- * The function prints a message to the user saying that the command is invalid.
- */
-void printInvalidCommand(){
-    printf("Error: invalid command\n");
-}
-
-/*
- * The function prints a message to the user saying that not enough parameters were entered.
- */
-void printFewParams(int numOfParams, int indexCommand){
-    printf("Error: not enough parameters were entered.\n"
-           "The number of parameters expected for the %s command is %d.\n", commandList[indexCommand], numOfParams);
-}
-
-/*
- * The function prints a message to the user saying that too many parameters were entered.
- * Assumes only one possibility for a valid number of parameters.
- */
-void printExtraParams(int numOfParams, int indexCommand){
-    int *arrNumOfParams[1] = {numOfParams};
-    printExtraParams(arrNumOfParams, 1, indexCommand);
-}
-
-/*
- * The function prints a message to the user saying that too many parameters were entered.
- * There are some possibilities for a valid number of parameters, all of which are in the array arrNumOfParams.
- */
-void printExtraParams(int *arrNumOfParams, int len, int indexCommand){
-    int i;
-
-    printf("Error: too many parameters were entered.\n"
-           "The number of parameters expected for the %s command is ", commandList[indexCommand]);
-    for (i = 0; i < len; i++){
-        if (i == len - 1){
-            if (i == 0){
-                printf("%d.\n", arrNumOfParams[i]);
-            }
-            else{
-                printf(" or %d.\n", arrNumOfParams[i]);
-            }
-        }
-        else {
-            if (i == 0) {
-                printf("%d", arrNumOfParams[i]);
-            }
-            else{
-                printf(", %d", arrNumOfParams[i]);
-            }
-        }
-    }
-}
-
-/*
- * This method returns a string description of mode.
- */
-char* modeToString(Mode mode){
-    static const char *strings[] = {"Init", "Edit", "Solve"};
-    return strings[mode];
-}
-
-/*
- * The function prints a message to the user saying that the command is not available in the current mode.
- * It receives an array of modes in which the command is available and its length.
- */
-void printUnavailableMode(int indexCommand, Mode mode, Mode *availableModes, int length){
-    int i;
-    printf("Error: the %s command is unavailable in % mode.\n"
-           "It is available in these modes: ", commandList[indexCommand], modeToString(mode));
-    for (i = 0; i < length; i++){
-        if (i == 0){
-            printf("%s", availableModes[i]);
-        }
-        else{
-            printf(", %s", availableModes[i]);
-        }
-    }
-    printf("\n");
-}
-
-
-/*
- * This method prints a message to the user saying that the value entered is not in the correct range.
- */
-void printWrongRangeInt(int indexCommand, int value, int indexParam){
-    printf("Error: the value %d entered is in the wrong range"
-           "for parameter number %d of the %s command\n", value, indexParam, commandList[indexCommand]);
-}
-
-/*
- * This method prints a message to the user saying that the value entered is not in the correct range.
- */
-void printWrongRangeFloat(int indexCommand, float value, int indexParam){
-    printf("Error: the value %f entered is in the wrong range"
-           "for parameter number %d of the %s command\n", value, indexParam, commandList[indexCommand]);
-}
-
-
-/*
- * This method prints a message to the user saying that the received parameter is not a number.
- */
-void printNotANumber(int indexParam){
-    printf("Error: an integer was expected for parameter %d, but was not received.\n", indexParam);
-}
-
-/*
- * This method prints a message to the user saying that the received parameter is not a number.
- */
-void printNotAFloat(int indexParam){
-    printf("Error: a float was expected for parameter %d, but was not received.\n", indexParam);
-}
-
-/*
- * This method checks if there is another argument. If there is, it returns 1, o.w. it returns 0.
- */
-int checkForArgument(char **token){
-
-}
 
 /*
  * This method assumes the command entered is solve,
@@ -165,7 +14,7 @@ int checkForArgument(char **token){
  * Available in every mode.
  * It returns
  */
-int interpretSolve(char *token, struct Board *board){
+int interpretSolve(char *token, struct sudokuManager *board){
 
     token = strtok(NULL, " \t\r\n");
 
@@ -190,14 +39,14 @@ int interpretSolve(char *token, struct Board *board){
  * Available in every mode.
  * It returns
  */
-int interpretEdit(char *token, struct Board *board, Mode mode){
+int interpretEdit(char *token, struct sudokuManager *board){
     int arrNumOfParams[2];
 
     token = strtok(NULL, " \t\r\n");
 
     if (strtok(NULL, " \t\r\n") != NULL){ /*Too many parameters*/
         arrNumOfParams = {0, 1};
-        printExtraParams(arrNumOfParams, 2, 1);
+        printExtraParamsExtend(arrNumOfParams, 2, 1);
         return 0;
     }
     else{
@@ -211,8 +60,8 @@ int interpretEdit(char *token, struct Board *board, Mode mode){
  * Available in Solve mode only.
  * It returns
  */
-int interpretMarkErrors(char *token, struct Board *board, Mode mode){
-    Mode availableModes[1] = {Solve};
+int interpretMarkErrors(char *token, struct sudokuManager *board, enum Mode mode){
+    enum Mode availableModes[1] = {Solve};
     int input, check;
     if (mode != Solve){
         printUnavailableMode(2, mode, availableModes, 1);
@@ -236,7 +85,7 @@ int interpretMarkErrors(char *token, struct Board *board, Mode mode){
                     return markErrors(board, input);
                 }
                 else{
-                    printWrongRange(2, input, 1);
+                    printWrongRangeInt(2, input, 1);
                     printf("The parameter should be only 1 or 0\n");
                     return 0;
                 }
@@ -254,7 +103,7 @@ int interpretMarkErrors(char *token, struct Board *board, Mode mode){
  * If there are any other arguments it also returns -1.
  * Otherwise, it returns 0.
  */
-int interpretNoArguments(char *token, Mode mode, int indexCommand, Mode *availableModes, int len){
+int interpretNoArguments(char *token, enum Mode mode, int indexCommand, enum Mode *availableModes, int len){
     int i, isAvailable = 0;
 
     for (i = 0; i < len; i++){
@@ -283,8 +132,8 @@ int interpretNoArguments(char *token, Mode mode, int indexCommand, Mode *availab
  * Available in Solve and Edit modes.
  * It returns 0.
  */
-int interpretPrintBoard(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve, Edit};
+int interpretPrintBoard(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve, Edit};
 
     if (interpretNoArguments(token, mode, 3, availableModes, 2) == -1){
         return 0;
@@ -301,12 +150,12 @@ int interpretPrintBoard(char *token, struct Board *board, Mode mode) {
  * Available in Solve and Edit modes.
  * It returns 0.
  */
-int interpretSet(char *token, struct Board *board, Mode mode){
+int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
     int i = 0;
     int arrInput[3], arrCheck[3];  /*arrCheck saves whether we succeeded in converting
                                     * the string into a number for every parameter*/
     int len;
-    Mode availableModes[2] = {Solve, Edit};
+    enum Mode availableModes[2] = {Solve, Edit};
     if (mode == Init) {
         printUnavailableMode(4, mode, availableModes, 2);
         return 0;
@@ -347,12 +196,12 @@ int interpretSet(char *token, struct Board *board, Mode mode){
                                 printNotANumber(2);
                                 return 0;
                             } else {
-                                if (!(arrInput[2] >= 0 && arrInput[2] <= len)) {
+                                if (!(isLegalCellValue(arrInput[2]))) {
                                     printWrongRangeInt(4, arrInput[2], 3);
                                     printf("The parameter should be an integer between 0 and %d.\n", len);
                                     return 0;
                                 } else { /* All parameters are valid */
-                                    return set(arrInput[0], arrInput[1], arrInput[2], board);
+                                    return set(board, arrInput[0], arrInput[1], arrInput[2]);
                                 }
                             }
                         }
@@ -371,14 +220,13 @@ int interpretSet(char *token, struct Board *board, Mode mode){
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretValidate(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve, Edit};
+int interpretValidate(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve, Edit};
     if (interpretNoArguments(token, mode, 5, availableModes, 2) == -1){
         return 0;
     }
     else{
-        validate(board);
-        return 0;
+        return validate(board);
     }
 }
 
@@ -388,8 +236,8 @@ int interpretValidate(char *token, struct Board *board, Mode mode) {
  * Available only in Solve mode.
  * It returns
  */
-int interpretGuess(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[1] = {Solve};
+int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[1] = {Solve};
     int check;
     float input;
 
@@ -421,7 +269,7 @@ int interpretGuess(char *token, struct Board *board, Mode mode) {
                     return 0;
                 }
                 else{
-                    return guess(input, board);
+                    return guess(board, input);
                 }
             }
         }
@@ -434,26 +282,26 @@ int interpretGuess(char *token, struct Board *board, Mode mode) {
  * Available only in Edit mode.
  * It returns
  */
-int interpretGenerate(char *token, struct Board *board, Mode mode) {
-    int i = 0;
-    Mode availableModes[1] = {Edit};
+int interpretGenerate(char *token, struct sudokuManager *board, enum Mode mode) {
+    int i = 0, emptyCells;
+    enum Mode availableModes[1] = {Edit};
     int arrInput[2], arrCheck[2];  /*arrCheck saves whether we succeeded in converting
                                     * the string into a number for every parameter*/
 
-    if (mode != Edit){
+    if (mode != Edit) {
         printUnavailableMode(7, mode, availableModes, 1);
         return 0;
     }
 
-    while ((token = strtok(NULL, " \t\r\n")) != NULL && i < 2){
+    while ((token = strtok(NULL, " \t\r\n")) != NULL && i < 2) {
         arrCheck[i] = sscanf(token, "%d", &arrInput[i]);
         i++;
     }
-    if (i < 2){ /* Not enough parameters*/
+
+    if (i < 2) { /* Not enough parameters*/
         printFewParams(2, 7);
         return 0;
-    }
-    else {
+    } else {
         if (strtok(NULL, " \t\r\n") != NULL) { /*Too many parameters*/
             printExtraParams(2, 7);
             return 0;
@@ -467,16 +315,22 @@ int interpretGenerate(char *token, struct Board *board, Mode mode) {
                     printf("The parameter should be an integer greater than or equal to 0.\n");
                     return 0;
                 } else {
-                    if (arrCheck[1] != 1) {
-                        printNotANumber(2);
+                    emptyCells = amountOfEmptyCells(board);
+                    if (emptyCells < arrInput[0]) { /* checking for number of empty cells */
+                        printNotEnoughEmptyCells(emptyCells, arrInput[0]);
                         return 0;
                     } else {
-                        if (!(arrInput[1] > 0)) {
-                            printWrongRangeInt(7, arrInput[1], 2);
-                            printf("The parameter should be an integer greater than 0.\n");
+                        if (arrCheck[1] != 1) {
+                            printNotANumber(2);
                             return 0;
-                        } else { /* All parameters are valid */
-                            return generate(arrInput[0], arrInput[1]);
+                        } else {
+                            if (!(arrInput[1] > 0)) {
+                                printWrongRangeInt(7, arrInput[1], 2);
+                                printf("The parameter should be an integer greater than 0.\n");
+                                return 0;
+                            } else { /* All parameters are valid */
+                                return generate(board, arrInput[0], arrInput[1]);
+                            }
                         }
                     }
                 }
@@ -491,15 +345,14 @@ int interpretGenerate(char *token, struct Board *board, Mode mode) {
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretUndo(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve, Edit};
+int interpretUndo(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve, Edit};
 
     if (interpretNoArguments(token, mode, 8, availableModes, 2) == -1){
         return 0;
     }
     else{
-        undo(board);
-        return 0;
+        return undo(board);
     }
 }
 
@@ -510,14 +363,13 @@ int interpretUndo(char *token, struct Board *board, Mode mode) {
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretRedo(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve, Edit};
+int interpretRedo(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve, Edit};
     if (interpretNoArguments(token, mode, 9, availableModes, 2) == -1){
         return 0;
     }
     else{
-        redo(board);
-        return 0;
+        return redo(board);
     }
 }
 
@@ -527,8 +379,8 @@ int interpretRedo(char *token, struct Board *board, Mode mode) {
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretSave(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve, Edit};
+int interpretSave(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve, Edit};
     if (mode == Init) {
         printUnavailableMode(9, mode, availableModes, 2);
         return 0;
@@ -559,12 +411,12 @@ int interpretSave(char *token, struct Board *board, Mode mode) {
  * It receives a boolean parameter saying if it is hint or guess_hint.
  * It returns 0.
  */
-int interpretHintOrGuessHint(char *token, struct Board *board, int isHint){
+int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHint, enum Mode mode){
     int i = 0;
     int arrInput[2], arrCheck[2];  /*arrCheck saves whether we succeeded in converting
                                     * the string into a number for every parameter*/
     int len;
-    Mode availableModes[1] = {Solve};
+    enum Mode availableModes[1] = {Solve};
     if (mode != Solve) {
         printUnavailableMode(11, mode, availableModes, 1);
         return 0;
@@ -622,8 +474,8 @@ int interpretHintOrGuessHint(char *token, struct Board *board, int isHint){
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretNumSolutions(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve, Edit};
+int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve, Edit};
     if (interpretNoArguments(token, mode, 13, availableModes, 2) == -1){
         return 0;
     }
@@ -639,8 +491,8 @@ int interpretNumSolutions(char *token, struct Board *board, Mode mode) {
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretAutofill(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve};
+int interpretAutofill(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve};
     if (interpretNoArguments(token, mode, 14, availableModes, 1) == -1){
         return 0;
     }
@@ -656,8 +508,8 @@ int interpretAutofill(char *token, struct Board *board, Mode mode) {
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretNumSolutions(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Solve, Edit};
+int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Solve, Edit};
     if (interpretNoArguments(token, mode, 15, availableModes, 2) == -1){
         return 0;
     }
@@ -673,8 +525,8 @@ int interpretNumSolutions(char *token, struct Board *board, Mode mode) {
  * Available in Solve and Edit modes.
  * It returns
  */
-int interpretNumSolutions(char *token, struct Board *board, Mode mode) {
-    Mode availableModes[2] = {Init, Solve, Edit};
+int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mode) {
+    enum Mode availableModes[2] = {Init, Solve, Edit};
     if (interpretNoArguments(token, mode, 16, availableModes, 3) == -1){
         return 0;
     }
@@ -683,7 +535,6 @@ int interpretNumSolutions(char *token, struct Board *board, Mode mode) {
         return 0;
     }
 }
-
 /*
  * This method receives a word and returns a number unique to the
  * command if it is a legal command, or -1 if it is an invalid command.
@@ -705,9 +556,9 @@ int commandNum (char* word){
  * It returns -1 if we need to terminate. Otherwise, it returns 0.
  * If exit command has been received, it returns 2.
  */
-int interpret(char *command, struct Board **pBoard){
+int interpret(char *command, struct sudokuManager **pBoard){
     char *token;
-    struct Board *board = *pBoard;
+    struct sudokuManager *board = *pBoard;
     int index;
 
     if (strlen(command) == 257){
