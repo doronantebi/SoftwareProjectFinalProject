@@ -237,6 +237,19 @@ int isErroneous(struct sudokuManager *manager, int i, int j){
 }
 
 /*
+ * if one of the cells in the errouneous board is 1, returns 1.
+ */
+int isAnyErroneousCell(struct sudokuManager *manager){
+    int i, size = boardArea(manager);
+    for(i = 0; i < size; i++){
+        if(manager->erroneous[i] == 1){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/*
  * Checks that the val
  */
 int isLegalCellValue(struct sudokuManager *manager, int x){

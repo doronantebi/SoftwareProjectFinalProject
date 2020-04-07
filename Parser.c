@@ -82,7 +82,8 @@ int interpretMarkErrors(char *token, struct sudokuManager *board, enum Mode mode
             check = sscanf(token, "%d", &input);
             if (check == 1){
                 if (input == 0 || input == 1){
-                    return markErrors(board, input);
+                    markErrors(board, input);
+                    return 0;
                 }
                 else{
                     printWrongRangeInt(2, input, 1);

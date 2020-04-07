@@ -158,4 +158,10 @@ int isLastInRow(int size, int j);
 int isLastCellInMatrix(int size, int i, int j);
 
 
+/*
+ * if one of the cells in the errouneous board is 1, returns 1.
+ */
+int isAnyErroneousCell(struct sudokuManager *manager);
+
+
 #endif

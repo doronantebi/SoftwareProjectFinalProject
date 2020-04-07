@@ -166,7 +166,7 @@ void printCellRow(){
 /*
  * This method prints the cell (row, col)
  */
-void printCell(struct sudokuManager *manager, int row, int col){
+void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode){
     int* puzzle = manager->board;
     int addErrors = 0;
     int index;
@@ -190,7 +190,7 @@ void printCell(struct sudokuManager *manager, int row, int col){
 
 }
 
-void printSudokuGrid(struct sudokuManager *manager) {
+void printSudokuGrid(struct sudokuManager *manager, enum Mode mode) {
     int n = manager->n, m = manager->m;
     int N = boardLen(manager) ;
     int i, j, k;
@@ -199,7 +199,7 @@ void printSudokuGrid(struct sudokuManager *manager) {
         for (j = 0; j < n; j++){
             printCellRow();
             for (k = 0; k < m ; k++ ){
-                printCell(manager, i*n + j, j*m + k);
+                printCell(manager, i*n + j, j*m + k, mode);
             }
             printSeparatorRow(4*N + m + 1);
         }
@@ -225,5 +225,16 @@ void printNotEnoughNumbers(int expected, int is){
  */
 void printErrorEmptyCellFixed(int row, int col){
     printf("Cell (%d, %d) is empty but set as fixed.\n", row, col);
+}
+
+void printBoardNotValidError(){
+    printf("The board is invalid!! \n");
+}
+
+/*
+ * This function prints an error that allocation failed~
+ */
+void printAllocFailed(){
+    printf("Allocation failed!! \n");
 }
 
