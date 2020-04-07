@@ -18,7 +18,7 @@ void printExitMessage();
 /*
  * This method prints the users board
  */
-void printSudokuGrid(struct sudokuManager *manager);
+void printSudokuGrid(struct sudokuManager *manager, enum Mode mode);
 
 /* PARSER METHODS*/
 
@@ -152,5 +152,15 @@ void printNotEnoughNumbers(int expected, int is);
  * This method prints a message saying that an empty cell is set as fixed in the file loaded.
  */
 void printErrorEmptyCellFixed(int row, int col);
+
+/*
+ * This function prints an error if the path for a file, given by user, is illegal.
+ */
+void printFilePathIllegal();
+
+/*
+ * This function prints an error that allocation failed~
+ */
+void printAllocFailed();
 
 #endif

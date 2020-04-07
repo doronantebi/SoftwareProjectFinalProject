@@ -23,7 +23,7 @@ void changeMode(enum Mode newMode){
     mode = newMode;
 }
 
-
+/* FILE HANDELING - LOAD AND SAVE TO FILES */
 
 /*
  * This function attempts to receive an integer from file.
@@ -154,7 +154,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
                     return NULL;
                 }
 
-                if (nextChar == '.' && mode1 == Solve){
+                if ((nextChar == '.') && (mode1==Solve)){
                     if (value != 0){
                         changeCellValue(board->fixed, board->m, board->n, i, j, value);
                     }
@@ -197,41 +197,11 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
     return board;
 }
 
-
-
-
-
-/*
- * redo a move previously undone by the user.
- */
-void redo(struct sudokuManager *board){
-    if (board->linkedList->next == NULL){
-        printNoNextMoveError();
-    }
-    else {
-        redoCommand(board);
-    }
-}
-
-/*
- * undo a move previously undone by the user.
- */
-void undo(struct sudokuManager *board){
-    if (board->linkedList->prev == NULL){
-        printNoPrevMoveError();
-    }
-    else {
-        undoCommand(board);
-    }
-}
-
-
 /*
  * This function uploads a file of a game to solve.
  */
 struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName){
-    struct sudokuManager *board = createBoardFromFile(fileName, Solve);
-
+    struct sudokuManager *board = (struct sudokuManager *) createBoardFromFile(fileName, Solve);
     if (board == NULL){ /* if board creation was unsuccessful */
         printErrorCreateBoard();
         return prevBoard;
@@ -249,8 +219,7 @@ struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName){
  * This function uploads a file of a game to edit.
  */
 struct sudokuManager* edit(struct sudokuManager *prevBoard, char *fileName){
-    struct sudokuManager *board = createBoardFromFile(fileName, Edit);
-
+    struct sudokuManager *board = (struct sudokuManager *) createBoardFromFile(fileName, Edit);
     if (board == NULL){ /* board creation was unsuccessful */
         printErrorCreateBoard();
         return prevBoard; /* keep the previous board */
@@ -265,14 +234,82 @@ struct sudokuManager* edit(struct sudokuManager *prevBoard, char *fileName){
 }
 
 /*
- * This function sets mark error to X
- * X and mode are being checked in Parser
+ * This method is used for saving your game.
+ * need to validate the board!!!
  */
-void markErrors(struct sudokuManager* board ,int X){
-    board->addMarks = X;
+void saveGame(struct sudokuManager *board,char* fileName){
+    FILE *file;
+    int N = boardLen(board), m=board->m, n=board->n, row, col, currVal;
+    if(validate(board)){
+        file = fopen(fileName, "w");
+        if(file == NULL){
+            printFilePathIllegal();
+            return;
+        }
+        fprintf(file, "%d %d \n", m, n);
+        for (row = 0; row < N; row++) {
+            for (col = 0; col < N; col++){
+                currVal = board->board[matIndex(m, n, row, col)];
+                if(((mode == Edit)||(isFixedCell(board, row, col))) && (currVal != 0)){
+                    fprintf(file, "%d.", currVal);
+                }
+                else{
+                    fprintf(file, "%d", currVal);
+                }
+                if(col != N-1){
+                    fprintf(file, " ");
+                }
+                else if(row != N-1) {
+                    fprintf(file,"\n");
+                }
+            }
+        }
+        fclose(file);
+    }
+    else{
+        printBoardNotValidError(); /* MUST SAVE ONLY VALID BOARD */
+    }
+}
+
+/* MOVES RELATED FUNCTIONS */
+
+/*
+ * redo a move previously undone by the user.
+ */
+void redo(struct sudokuManager *board){
+    if (board->linkedList->next == NULL){
+        printNoNextMoveError();
+    }
+    else {
+        redoCommand(board);
+        printBoard(board);
+    }
+}
+
+/*
+ * undo a move previously done by the user.
+ */
+void undo(struct sudokuManager *board){
+    if (board->linkedList->prev == NULL){
+        printNoPrevMoveError();
+    }
+    else {
+        undoCommand(board);
+        printBoard(board);
+    }
+}
+
+/*
+ * This function resets the board to start position by undoing all moves.
+*/
+int reset(struct sudokuManager *board){
+    pointToFirstMoveInMovesList(board);
+    updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
+    printBoard(board);
 }
 
 
+/* BOARD CHANGING RELATED FUNCTIONS  */
 
 /*
  * this method sets Z to (X,Y),
@@ -284,9 +321,13 @@ int doSet(struct sudokuManager *manager, int X, int Y, int Z){
     if (manager->linkedList->next != NULL){
         killNextMoves(manager);
     }
-    createNextNode(manager, command, X, Y, Z, prevVal);
+    if (createNextNode(manager, command, X, Y, Z, prevVal) == -1){
+        return -1;
+    }
     goToNextNode(manager);
-    createNextNode(manager, separator, 0, 0, 0, 0);
+    if (createNextNode(manager, separator, 0, 0, 0, 0) == -1){
+        return -1;
+    }
     goToNextNode(manager);
 }
 
@@ -296,12 +337,19 @@ int doSet(struct sudokuManager *manager, int X, int Y, int Z){
 int set(struct sudokuManager *manager, int X, int Y, int Z){
     if(isFixedCell(manager, Y, X)){
         printErrorCellXYIsFixed(X,Y);
-    } else {
-        doSet(manager, Y, X, Z); /* fix the order of row and column */
+        return 0;
+    }
+    else {
+        if (doSet(manager, Y, X, Z) == -1) { /* fix the order of row and column */
+            return -1;
+        }
         updateErroneousBoardCell(manager->board, manager->erroneous, manager->m, manager->n, Y, X);
+        printBoard(manager);
+        return 0;
     }
 }
 
+/* GUROBI RELATED FUNCTIONS */
 
 /*
  * This function validates the current board using ILP,
@@ -327,6 +375,7 @@ int guess(struct sudokuManager *board, float X){
     if(!isValid){
         return -1;
     }
+
     /* THINK OF A WAY TO DO IT MORE EFFICIENTLY IN GUROBI SECTION! */
 }
 
@@ -348,49 +397,39 @@ struct sudokuManager* generate(struct sudokuManager *prevBoard, int X, int Y){
 }
 
 
-/*
- * This method is used for saving your game.
- * need to validate the board!!!
- */
-void saveGame(struct sudokuManager *board,char* fileName){
-    if(validate(board)){
 
-    } else{
-        printBoardNotValidError();
-        /* MUST SAVE ONLY VALID BOARD */
-    }
-}
 
 
 /*
  * This method is used for exiting the game.
+ * It returns 2.
  */
-int exitGame(){
+int exitGame(struct sudokuManager *board){
     printExitMessage();
-    /* NOT DONE, MUST LEARN HOW TO TERMINATE */
+    freeBoard(board);
+    return 2;
 }
 
+/* PRINT RELATED FUNCTIONS */
 
 void printBoard(struct sudokuManager *board){
-    printSudokuGrid(board);
+    printSudokuGrid(board, mode);
     /* NEED TO CHECK THE PRINTING FORMAT */
 }
 
+
 /*
- * This function resets the board to start position by undoing all moves.
-*/
-int reset(struct sudokuManager *board){
-    pointToFirstMoveInMovesList(board);
-    if(updateErroneousBoard(board->board, board->erroneous, board->m, board->n)){
-    /* not necessary to do with if, must decide what to do with the output of this function  */
-    }
+ * This function sets mark error to X
+ * X and mode are being checked in Parser
+ */
+void markErrors(struct sudokuManager* board ,int X){
+    board->addMarks = X;
 }
+
 
 
 /*
  * This method starts a game.
- */
-/*
  * This method performs a whole game. It initializes the  board,
  * receives commands from the user and executes them.
  * It returns -1 when we need to terminate.
@@ -407,7 +446,7 @@ int startGame(){
         }
         /*The line is not blank*/
         res = interpret(command, &board);
-        if (res == -1){
+        if (res == -1){ /* There is any error */
             return -1;
         }
         if (res == 2) { /* exit command was entered*/
