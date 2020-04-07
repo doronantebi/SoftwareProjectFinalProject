@@ -56,7 +56,7 @@ int boardArea(struct sudokuManager *manager);
 /*
  * This method returns the matrix index in the array of the board
  */
-int matIndex(int m, int n, int row, int column);
+int matIndex(int m, int n, int row, int col);
 
 /*
  * This method returns if a cell is a fixed cell,
@@ -68,25 +68,25 @@ int isFixedCell(struct sudokuManager *manager, int row, int column);
 /*
  * Returns the amount of times that the row contains val.
  */
-int rowContains(int *board, int m, int n, int row, int value);
+int rowContains(int *board, int m, int n, int row, int val);
 
 /*
  * Returns the amount of times that the column contains val
  */
-int colContains(int *board, int m, int n, int column, int value);
+int colContains(int *board, int m, int n, int col, int val);
 
 
 /*
  * Returns the amount of times that the block of (row,column)
  * contains value
  */
-int blockContains(int *board, int m, int n, int row, int column, int value);
+int blockContains(int *board, int m, int n, int row, int col, int val);
 
 /*
  * This method returns 1 if the row, column or relevant block contains
  * given value more than once.
  */
-int neighbourContains(int *board, int m, int n, int row, int column, int value);
+int neighbourContains(int *board, int m, int n, int row, int col, int val);
 
 
 
@@ -115,6 +115,18 @@ int isErroneous(struct sudokuManager *manager, int i, int j);
  * This function returns True if 0 <= x <= n*m
  */
 int isLegalCellValue(struct sudokuManager *manager, int x);
+
+/*
+ * This method checks if the current cell in last is row, assuming length of row is size.
+ */
+int isLastInRow(int size, int j);
+
+
+/*
+* This method checks if the current cell is last in the matrix, assuming the matrix is size X size.
+*/
+int isLastCellInMatrix(int size, int i, int j);
+
 
 /*
 * counts the empty cells in the board
@@ -162,15 +174,9 @@ void changeCellValue(int *board, int m, int n, int row, int col, int val);
 int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed);
 
 /*
- * This method checks if the current cell in last is row, assuming length of row is size.
+ * This method copies currentGrid to retGrid.
  */
-int isLastInRow(int size, int j);
-
-
-/*
-* This method checks if the current cell is last in the matrix, assuming the matrix is size X size.
-*/
-int isLastCellInMatrix(int size, int i, int j);
+void duplicateBoard(int* currentGrid, int *retGrid, int m, int n);
 
 
 /*

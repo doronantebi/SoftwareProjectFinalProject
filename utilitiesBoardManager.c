@@ -9,32 +9,32 @@
  * This function calculates the row's lower bound of the block.
  * CHECK!!!!!!!!
  */
-int rowLowBound(int m, int i){
-    return ((i/m)*m);
+int rowLowBound(int m, int row){
+    return ((row/m)*m);
 }
 
 /*
  * This function calculates the row's higher bound of the block.
  * CHECK!!!!!!!!
  */
-int rowHighBound(int m, int i){
-    return (((i/m)+1)*m);
+int rowHighBound(int m, int row){
+    return (((row/m)+1)*m);
 }
 
 /*
  * This function calculates the column's lower bound of the block.
  * CHECK!!!!!!!!
  */
-int colLowBound(int n, int j){
-    return ((j/n)*n);
+int colLowBound(int n, int column){
+    return ((column/n)*n);
 }
 
 /*
  * This function calculates the column's higher bound of the block.
  * CHECK!!!!!!!!
  */
-int colHighBound(int n, int j){
-    return (((j/n)+1)*n);
+int colHighBound(int n, int column){
+    return (((column/n)+1)*n);
 }
 
 
@@ -55,8 +55,8 @@ int boardArea(struct sudokuManager *manager){
 /*
  * This method returns the matrix index in the array of the board
  */
-int matIndex(int m, int n, int i, int j){
-    return i*(n*m)+j;
+int matIndex(int m, int n, int row, int col){
+    return row*(n*m)+col;
 }
 
 /*
@@ -73,10 +73,10 @@ int isFixedCell(struct sudokuManager *manager, int row, int col){
  * Returns the amount of times that the row contains val.
  * CHECK!!!!!!!!
  */
-int rowContains(int *board, int m, int n, int i, int val){
+int rowContains(int *board, int m, int n, int row, int val){
     int length = n*m, col, count = 0;
     for (col = 0; col < length ; col++) {
-        if(board[matIndex(m, n, i, col)] == val){
+        if(board[matIndex(m, n, row, col)] == val){
             count++;
         }
     }
@@ -86,10 +86,10 @@ int rowContains(int *board, int m, int n, int i, int val){
 /*
  * Returns the amount of times that the column contains val
  */
-int colContains(int *board, int m, int n, int j, int val){
+int colContains(int *board, int m, int n, int col, int val){
     int length = n*m, row, count = 0;
     for (row = 0; row < length ; row++) {
-        if(board[matIndex(m, n, row, j)] == val){
+        if(board[matIndex(m, n, row, col)] == val){
             count++;
         }
     }
@@ -100,15 +100,15 @@ int colContains(int *board, int m, int n, int j, int val){
  * Returns the amount of times that the block of (i,j)
  * contains val.
  */
-int blockContains(int* board, int m, int n, int i, int j, int val){
-    int blockRowLowBound = rowLowBound(m, i);
-    int blockRowHighBound = rowHighBound(m, i);
-    int blockColLowBound = colLowBound(n, j);
-    int blockColHighBound = colHighBound(n, j);
-    int row, col, count = 0;
-    for(row = blockRowLowBound ; row < blockRowHighBound ; row++){
-        for(col = blockColLowBound ; col < blockColHighBound ; col++) {
-            if(board[matIndex(m, n, row, col)] == val){
+int blockContains(int* board, int m, int n, int row, int col, int val){
+    int blockRowLowBound = rowLowBound(m, row);
+    int blockRowHighBound = rowHighBound(m, row);
+    int blockColLowBound = colLowBound(n, col);
+    int blockColHighBound = colHighBound(n, col);
+    int i, j, count = 0;
+    for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
+        for(j = blockColLowBound ; j < blockColHighBound ; j++) {
+            if(board[matIndex(m, n, i, j)] == val){
                 count++;
             }
         }
@@ -120,14 +120,14 @@ int blockContains(int* board, int m, int n, int i, int j, int val){
  * This method returns 1 if a row/col/block contains
  * val more than once.
  */
-int neighbourContainsTwice(int* board, int m, int n, int i, int j, int val){
-    if(rowContains(board, m, n, i, val)>1){
+int neighbourContainsTwice(int* board, int m, int n, int row, int col, int val){
+    if(rowContains(board, m, n, row, val)>1){
         return 1;
     }
-    if(colContains(board, m, n, j, val)>1){
+    if(colContains(board, m, n, col, val)>1){
         return 1;
     }
-    if(blockContains(board, m, n, i, j, val)>1){
+    if(blockContains(board, m, n, row, col, val)>1){
         return 1;
     }
     return 0;
@@ -325,6 +325,19 @@ int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed){
     }
 
     return onlyFixed;
+}
+
+/*
+ * This method copies currentGrid to retGrid.
+ */
+void duplicateBoard(int* currentGrid, int *retGrid, int m, int n){
+    int i,j;
+    int size = n*m;
+    for (i = 0; i < size ; i++) { /* for each row */
+        for (j = 0; j < size ; j++) { /* for each column */
+            retGrid[matIndex(m, n, i, j)] = currentGrid[matIndex(m, n, i, j)];
+        }
+    }
 }
 
 /*

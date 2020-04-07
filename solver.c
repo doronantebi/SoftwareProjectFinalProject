@@ -4,7 +4,6 @@
 #include "solver.h"
 #include "utilitiesBoardManager.h"
 
-int doNextBacktrack(struct sudokuManager *manager, int i, int j);
 int recBacktracking(struct sudokuManager *manager, int *solutionBoard);
 
 typedef struct Node {
@@ -122,7 +121,7 @@ int findNextLegalValue(int m, int n, int row, int col, int *solutionBoard){
     int i;
     int currValue = solutionBoard[matIndex(m, n, row, col)];
     for (i = currValue + 1; i <= n*m; i++){
-        if (!neighbourContains(solutionBoard, m, n, row, col, i)){
+        if (!neighbourContainsOnce(solutionBoard, m, n, row, col, i)){
             return i;
         }
     }
@@ -221,7 +220,7 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
  * If there is memory allocation error, it returns -1.
  */
 int backtracking(struct sudokuManager *manager){
-    int res, len = boardLen(manager), *solutionBoard;
+    int res, *solutionBoard;
     if (isAnyErroneousCell(manager)){
         return 0;
     }
@@ -232,7 +231,7 @@ int backtracking(struct sudokuManager *manager){
         return -1;
     }
 
-    copyBoard(solutionBoard, manager->board, len);
+    duplicateBoard(solutionBoard, manager->board, manager->m, manager->n);
     res = recBacktracking(manager, solutionBoard);
 
     return res;

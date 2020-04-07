@@ -36,7 +36,7 @@ void killNextMoves(struct sudokuManager *board);
 /*
  * This function creates a new node in the linked list of moves.
  */
-void createNextNode(struct sudokuManager *board, enum action action, int X, int Y, int Z, int prevVal);
+int createNextNode(struct sudokuManager *board, enum action action, int X, int Y, int Z, int prevVal);
 
 /*
  * This function goes to the next node. changes the pointer of the board to the linked list

@@ -38,15 +38,23 @@ void killNextMoves(struct sudokuManager *board){
 /*
  * This function creates a new node in the linked list of moves.
  */
-void createNextNode(struct sudokuManager *board, enum action action, int X, int Y, int Z, int prevVal){
-    board->linkedList->next = (struct movesList*)malloc(sizeof(struct movesList)); /* allocates memory for the new node, and point our current node to the next one */
+int createNextNode(struct sudokuManager *board, enum action action, int X, int Y, int Z, int prevVal){
+    board->linkedList->next = (struct movesList*)malloc(sizeof(struct movesList)); /* allocates memory for the new node,
+                                                                        * and point our current node to the next one */
+    if (board->linkedList->next == NULL){
+        return -1;
+    }
     board->linkedList->next->next = NULL;
     board->linkedList->next->prev = board->linkedList; /* points the new node's prev to the node */
     board->linkedList->next->board = board; /* sets the board pointer to our sudokuManager */
     board->linkedList->next->action = action; /* sets the given enum function action */
     if(action == command){ /* fills the values of the action changes */
-        board->linkedList->col = Y, board->linkedList->row = X, board->linkedList->prevValue = prevVal, board->linkedList->newValue = Z;
+        board->linkedList->col = Y;
+        board->linkedList->row = X;
+        board->linkedList->prevValue = prevVal;
+        board->linkedList->newValue = Z;
     }
+    return 0;
 }
 
 
