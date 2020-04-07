@@ -88,6 +88,21 @@ int blockContains(int *board, int m, int n, int row, int column, int value);
  */
 int neighbourContains(int *board, int m, int n, int row, int column, int value);
 
+
+
+/*
+ * This method returns 1 if a row/col/block contains
+ * val once.
+ */
+int neighbourContainsOnce(int* board, int m, int n, int i, int j, int val);
+
+/*
+ * This method returns 1 if a row/col/block contains
+ * val more than once.
+ */
+int neighbourContainsTwice(int* board, int m, int n, int i, int j, int val);
+
+
 /*
  * This method returns if the value of the cell is not legal,
  * if it is, returns 1,
@@ -162,6 +177,12 @@ int isLastCellInMatrix(int size, int i, int j);
  * if one of the cells in the errouneous board is 1, returns 1.
  */
 int isAnyErroneousCell(struct sudokuManager *manager);
+
+
+/*
+ * This function updates the board with autofilled values
+ */
+int updateAutofillValuesBoard(struct sudokuManager *board);
 
 
 #endif

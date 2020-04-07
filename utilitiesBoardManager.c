@@ -120,7 +120,7 @@ int blockContains(int* board, int m, int n, int i, int j, int val){
  * This method returns 1 if a row/col/block contains
  * val more than once.
  */
-int neighbourContains(int* board, int m, int n, int i, int j, int val){
+int neighbourContainsTwice(int* board, int m, int n, int i, int j, int val){
     if(rowContains(board, m, n, i, val)>1){
         return 1;
     }
@@ -128,6 +128,23 @@ int neighbourContains(int* board, int m, int n, int i, int j, int val){
         return 1;
     }
     if(blockContains(board, m, n, i, j, val)>1){
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * This method returns 1 if a row/col/block contains
+ * val once.
+ */
+int neighbourContainsOnce(int* board, int m, int n, int i, int j, int val){
+    if(rowContains(board, m, n, i, val)>0){
+        return 1;
+    }
+    if(colContains(board, m, n, j, val)>0){
+        return 1;
+    }
+    if(blockContains(board, m, n, i, j, val)>0){
         return 1;
     }
     return 0;
@@ -141,7 +158,7 @@ int updateErroneousBlock(int* board, int* erroneous, int m, int n, int i, int j)
     int row, col, ret = 0;
     for(row = blockRowLowBound; row < blockRowHighBound; row++){
         for(col = blockColLowBound ; col < blockColHighBound ; col++) {
-            if(neighbourContains(board, m, n, row, col, board[matIndex(m, n, row, col)])){
+            if(neighbourContainsTwice(board, m, n, row, col, board[matIndex(m, n, row, col)])){
                 erroneous[matIndex(m, n, row, col)] = 1;
                 ret = 1;
             }
@@ -156,7 +173,7 @@ int updateErroneousBlock(int* board, int* erroneous, int m, int n, int i, int j)
 int updateErroneousRow(int* board, int* erroneous, int m, int n, int j){
     int row, length = n*m, ret = 0;
     for (row = 0; row < length; row++) {
-        if(neighbourContains(board, m, n, row, j, board[matIndex(m, n, row, j)])){
+        if(neighbourContainsTwice(board, m, n, row, j, board[matIndex(m, n, row, j)])){
             erroneous[matIndex(m, n, row, j)] = 1;
             ret = 1;
         }
@@ -171,7 +188,7 @@ int updateErroneousRow(int* board, int* erroneous, int m, int n, int j){
 int updateErroneousCol(int* board, int* erroneous, int m, int n, int i){
     int col, length = n*m, ret = 0;
     for (col = 0; col < length; col++) {
-        if(neighbourContains(board, m, n, i, col, board[matIndex(m, n, i, col)])){
+        if(neighbourContainsTwice(board, m, n, i, col, board[matIndex(m, n, i, col)])){
             erroneous[matIndex(m, n, i, col)] = 1;
             ret = 1;
         }
@@ -195,7 +212,7 @@ int updateErroneousBoard(int* board, int* erroneous, int m, int n){
     int row, col, length = n*m, ret = 0;
     for(row = 0; row < length; row++){
         for (col = 0; col < length; col++) {
-            if(neighbourContains(board, m, n, row, col, board[matIndex(m, n, row, col)])){
+            if(neighbourContainsTwice(board, m, n, row, col, board[matIndex(m, n, row, col)])){
                 erroneous[matIndex(m, n, row, col)] = 1;
                 ret = 1;
             }
@@ -331,4 +348,71 @@ int isLastInCol(int size, int i){
 int isLastCellInMatrix(int size, int i, int j){
     return isLastInCol(size, i) && isLastInRow(size, j);
 }
+
+/*
+ * recieves a board, and index.
+ * if the board has only one legal value to fill, it returns it.
+ * otherwise, returns 0.
+ */
+int returnLegalValue(int* board, int m, int n, int row, int col){
+    int i, N= m*n,  value = 0;
+    if(board[matIndex(m,n,row,col)] != 0){
+        return 0; /* cell is not empty - return */
+    }
+    for(i = 1; i <= N ; i++){
+        if (!neighbourContainsOnce(board, m, n, row, col, i)){ /**/
+            if(value == 0) {
+                value = i;
+            } /* we already have updated value, we know there is more than 1 legal value*/
+            else{
+                return 0;
+            }
+        }
+    }
+    return value; /* this is the value we want to set in the board */
+}
+
+
+/*
+ * This function updates the board with autofilled values
+ */
+int updateAutofillValuesBoard(struct sudokuManager *board){
+    int* tmp;
+    int row, col, val, index;
+    int length = boardLen(board), m = board->m, n = board->n;
+    if (board->linkedList->next != NULL){
+        killNextMoves(board); /*???????????*/
+    }
+    tmp = calloc(boardArea(board), sizeof(int));
+    if(tmp == NULL){
+        return -1;
+    }
+    for(row = 0; row < length ; row++){
+        for(col = 0; col < length ; col++){
+            tmp[matIndex(m, n, row, col)] = returnLegalValue(board->board,m,n, row, col);
+        }
+    }
+    for(row = 0; row < length ; row++){
+        for(col = 0; col < length ; col++){
+            index = matIndex(m, n, row, col);
+            val = tmp[index];
+            if(val != 0){
+                board->board[index] = val;
+                if(createNextNode(board, command, row, col, val, 0) == -1){
+                    free(tmp);
+                    return -1;
+                }
+                goToNextNode(board);
+            }
+        }
+    }
+    free(tmp);
+    if(board->linkedList->action == separator){ /* no changes made */
+        return  0; /*NOT SURE YET IF IT IS A NEW ACTION OR NOT */
+    }
+    createNextNode(board, separator, 0, 0, 0, 0);
+    goToNextNode(board);
+    return 0;
+}
+
 
