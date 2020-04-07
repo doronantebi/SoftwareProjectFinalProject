@@ -223,7 +223,7 @@ int isErroneous(struct sudokuManager *manager, int i, int j){
  * Checks that the val
  */
 int isLegalCellValue(struct sudokuManager *manager, int x){
-    return ((x >= 0)&&(x <= boardLen(manager)));
+    return ((x >= 0) && (x <= boardLen(manager)));
 }
 
 /*
@@ -257,8 +257,25 @@ void freeBoard(struct sudokuManager *board){
  * This function changes the value in cell <X,Y> to Z
  * assumes all input is legal
  */
-void changeCellValue(struct sudokuManager *manager, int row, int col, int val){
-    manager->board[matIndex(manager->m, manager->n,row,col)] = val;
+void changeCellValue(int *board, int m, int n, int row, int col, int val){
+    board[matIndex(m, n,row,col)] = val;
 }
 
+/*
+ * This method creates a new matrix of integers containing only the fixed values in board.
+ * If there is an error allocating memory, it returns NULL and prints a message to the user.
+ */
+int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed){
+    int i, j, index;
 
+    for (i = 0; i < boardLen(board); i++) { /*Row*/
+        for (j = 0; j < boardLen(board); j++){ /*Column*/
+            if (isFixedCell(board, i, j)){
+                index = matIndex(board->m, board->n, i, j);
+                changeCellValue(onlyFixed, board->m, board->n, i, j, board->board[index]);
+            }
+        }
+    }
+
+    return onlyFixed;
+}

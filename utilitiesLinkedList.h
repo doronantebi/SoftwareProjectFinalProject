@@ -4,7 +4,7 @@
 #include "utilitiesBoardManager.h"
 
 enum action{
-    seperator = 0,
+    separator = 0,
     command = 1
 };
 

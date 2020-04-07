@@ -20,6 +20,65 @@ void printExitMessage();
  */
 void printSudokuGrid(struct sudokuManager *manager);
 
+/* PARSER METHODS*/
+
+/*
+ * The function prints a message to the user saying that not enough parameters were entered.
+ */
+void printFewParams(int numOfParams, int indexCommand);
+
+/*
+ * The function prints a message to the user saying that too many parameters were entered.
+ * There are some possibilities for a valid number of parameters, all of which are in the array arrNumOfParams.
+ */
+void printExtraParamsExtend(int *arrNumOfParams, int len, int indexCommand);
+
+/*
+ * The function prints a message to the user saying that too many parameters were entered.
+ * Assumes only one possibility for a valid number of parameters.
+ */
+void printExtraParams(int numOfParams, int indexCommand);
+
+/*
+ * This method returns a string description of mode.
+ */
+char* modeToString(enum Mode mode);
+
+/*
+ * The function prints a message to the user saying that the command is not available in the current mode.
+ * It receives an array of modes in which the command is available and its length.
+ */
+void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *availableModes, int length);
+
+/*
+ * This method prints a message to the user saying that the value entered is not in the correct range.
+ */
+void printWrongRangeInt(int indexCommand, int value, int indexParam);
+
+/*
+ * This method prints a message to the user saying that the value entered is not in the correct range.
+ */
+void printWrongRangeFloat(int indexCommand, float value, int indexParam);
+
+/*
+ * This method prints a message to the user saying that the received parameter is not a number.
+ */
+void printNotANumber(int indexParam);
+
+/*
+ * This method prints a message to the user saying that the received parameter is not a number.
+ */
+void printNotAFloat(int indexParam);
+
+/*
+ * This method prints a message to the user saying that there are not enough empty cells.
+ */
+void printNotEnoughEmptyCells(int emptyCells, int requiredEmptyCells);
+
+/* END OF PARSER METHODS*/
+
+
+/* GAME METHODS */
 
 /*
  * This method announces that there is no more next moves,
@@ -78,5 +137,20 @@ void printGenerateInputError();
  * This function prints error message if the loaded file format is illegal
  */
 void printFileFormatIllegal();
+
+/*
+ * This method prints that no input was received.
+ */
+void printNoInput();
+
+/*
+ * This method prints that not enough numbers were entered.
+ */
+void printNotEnoughNumbers(int expected, int is);
+
+/*
+ * This method prints a message saying that an empty cell is set as fixed in the file loaded.
+ */
+void printErrorEmptyCellFixed(int row, int col);
 
 #endif

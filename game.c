@@ -2,7 +2,13 @@
 #include <stdlib.h>
 #include "main_aux.h"
 #include "game.h"
+#include "Parser.h"
+#include "utilitiesBoardManager.h"
+#include "utilitiesLinkedList.h"
 
+#define LENGTH 257
+
+static enum Mode mode = Init;
 
 /*
  * This method is used for printing the game's title.
@@ -16,6 +22,7 @@ void title(){
 void changeMode(enum Mode newMode){
     mode = newMode;
 }
+
 
 
 /*
@@ -45,7 +52,7 @@ int inputNumFromFile(FILE *file, int *pNum){
  * if the file format is illegal returns NULL
  */
 struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
-    int res, check, n, m, i, j, index, success;
+    int n, m, i, j, success, value, *onlyFixed;
     FILE *file;
     struct movesList *linkedList;
     struct sudokuManager *board;
@@ -62,21 +69,23 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
         printAllocFailed();
         return NULL;
     }
+
     board->addMarks = 1;
     board->linkedList = linkedList;
     initList(linkedList);
     linkedList->board = board;
+
     if((mode1 == Edit) && (fileName == NULL)){
         board->n = 3, board->m = 3; board->linkedList = linkedList;
         board->fixed = calloc(9 * 9, sizeof(int));
-        if (board->fixed = NULL){
+        if (board->fixed == NULL){
             printAllocFailed();
             free(board);
             free(linkedList);
             return NULL;
         }
         board->board = calloc(9 * 9, sizeof(int));
-        if (board->board = NULL){
+        if (board->board == NULL){
             printAllocFailed();
             free(board);
             free(linkedList);
@@ -86,7 +95,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
     else {
         file = fopen(fileName, "r");
         if (file == NULL) {
-            prinf("Error: no such file exists.\n");
+            printf("Error: no such file exists.\n");
             freeBoard(board);
             free(linkedList);
             return NULL;
@@ -109,7 +118,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
         }
         board->n = n;
 
-        board->board = (int *)(malloc(sizeof(int)*boardLen(board)));
+        board->board = (int *)(calloc(sizeof(int), boardArea(board)));
 
         if (board->board == NULL){
             printAllocFailed();
@@ -119,39 +128,74 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
             return NULL;
         }
 
-
-
         for (i = 0; i < boardLen(board); i++){ /*Row*/
             for (j = 0; j < boardLen(board); j++){ /*Column*/
-                index = matIndex(board->m, board->n, i, j);
-                success = inputNumFromFile(file, &(board->board[index]));
+                success = inputNumFromFile(file, &value);
                 if(success == 0){ /*No integer was received*/
                     freeBoard(board);
                     free(linkedList);
                     fclose(file);
                     return NULL;
                 }
-                if (!isLegalCellValue(board, board->board[index])){
-
-                }
-                nextChar = fgetc(file);
-                if (nextChar == EOF){
-                    printNotEnoughNumbers();
+                if (!isLegalCellValue(board, value)){
+                    printWrongRange();
                     freeBoard(board);
                     free(linkedList);
                     fclose(file);
                     return NULL;
                 }
-                board->fixed[index] = board->board[index];
+                changeCellValue(board->board, board->m, board->n, i, j, value);
+                nextChar = fgetc(file);
+                if (nextChar == EOF){
+                    printNotEnoughNumbers(boardArea(board), i*boardLen(board) + j);
+                    freeBoard(board);
+                    free(linkedList);
+                    fclose(file);
+                    return NULL;
+                }
+
+                if (nextChar == '.'){
+                    if (value != 0){
+                        changeCellValue(board->fixed, board->m, board->n, i, j, value);
+                    }
+                    else{
+                        printErrorEmptyCellFixed(i+1, j+1);
+                        freeBoard(board);
+                        free(linkedList);
+                        fclose(file);
+                        return NULL;
+                    }
+                }
             }
         }
+
+        if (mode1 == Solve){
+            onlyFixed = (int *) (calloc(sizeof(int), boardArea(board)));
+
+            if (onlyFixed == NULL){
+                printAllocFailed();
+                freeBoard(board);
+                free(linkedList);
+                fclose(file);
+                return NULL;
+            }
+
+            copyFixedOnly(board, onlyFixed);
+
+            if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)){
+                printErroneousBoard();
+                freeBoard(board);
+                free(linkedList);
+                fclose(file);
+                return NULL;
+            }
+        }
+        
     }
 
     fclose(file);
     return board;
-
 }
-
 
 
 
@@ -170,7 +214,7 @@ void redo(struct sudokuManager *board){
 }
 
 /*
- * redo a move previously undone by the user.
+ * undo a move previously undone by the user.
  */
 void undo(struct sudokuManager *board){
     if (board->linkedList->prev == NULL){
@@ -186,13 +230,14 @@ void undo(struct sudokuManager *board){
  * This function uploads a file of a game to solve.
  */
 struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName){
-    struct sudokuManager *board = createBoardFromFile(fileName);
-    changeMode(Solve);
+    struct sudokuManager *board = createBoardFromFile(fileName, Solve);
+
     if (board == NULL){ /* if board creation was unsuccessful */
         printErrorCreateBoard();
         return prevBoard;
     }
     else{
+        changeMode(Solve);
         if (prevBoard != NULL) {
             freeBoard(prevBoard);
         }
@@ -204,13 +249,14 @@ struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName){
  * This function uploads a file of a game to edit.
  */
 struct sudokuManager* edit(struct sudokuManager *prevBoard, char *fileName){
-    struct sudokuManager *board = createBoardFromFile(fileName);
-    changeMode(Edit);
+    struct sudokuManager *board = createBoardFromFile(fileName, Edit);
+
     if (board == NULL){ /* board creation was unsuccessful */
         printErrorCreateBoard();
         return prevBoard; /* keep the previous board */
     }
     else{
+        changeMode(Edit);
         if (prevBoard != NULL) {
             freeBoard(prevBoard); /* frees the previous board if the new boars was successful */
         }
@@ -232,26 +278,27 @@ void markErrors(struct sudokuManager* board ,int X){
  * this method sets Z to (X,Y),
  * is called after verifying that all values are legal.
  */
-void doSet(struct sudokuManager *manager, int X, int Y, int Z){
+int doSet(struct sudokuManager *manager, int X, int Y, int Z){
     int prevVal = manager->board[matIndex(manager->m, manager->n, X, Y)];
-    changeCellValue(manager, X, Y, Z);
+    changeCellValue(manager->board, manager->m, manager->n, X, Y, Z);
     if (manager->linkedList->next != NULL){
         killNextMoves(manager);
     }
     createNextNode(manager, command, X, Y, Z, prevVal);
     goToNextNode(manager);
-    createNextNode(manager, seperator, 0, 0, 0, 0);
+    createNextNode(manager, separator, 0, 0, 0, 0);
     goToNextNode(manager);
 }
 
 /*
  * Sets in board at location [Y,X] ( X column, Y row ) value Z
  */
-void set(struct sudokuManager *manager, int X, int Y, int Z){
+int set(struct sudokuManager *manager, int X, int Y, int Z){
     if(isFixedCell(manager, Y, X)){
         printErrorCellXYIsFixed(X,Y);
     } else {
         doSet(manager, Y, X, Z); /* fix the order of row and column */
+        updateErroneousBoardCell(manager->board, manager->erroneous, manager->m, manager->n, Y, X);
     }
 }
 
@@ -275,10 +322,10 @@ int validate(struct sudokuManager *board){
  * X value is between 0 and 1.
  * validation of X and mode is done in Parser.
  */
-void guess(struct sudokuManager *board, float X){
+int guess(struct sudokuManager *board, float X){
     int isValid = validate(board);
     if(!isValid){
-        return;
+        return -1;
     }
     /* THINK OF A WAY TO DO IT MORE EFFICIENTLY IN GUROBI SECTION! */
 }
@@ -318,7 +365,7 @@ void saveGame(struct sudokuManager *board,char* fileName){
 /*
  * This method is used for exiting the game.
  */
-void exit(){
+int exitGame(){
     printExitMessage();
     /* NOT DONE, MUST LEARN HOW TO TERMINATE */
 }
@@ -332,7 +379,7 @@ void printBoard(struct sudokuManager *board){
 /*
  * This function resets the board to start position by undoing all moves.
 */
-void reset(struct sudokuManager *board){
+int reset(struct sudokuManager *board){
     pointToFirstMoveInMovesList(board);
     if(updateErroneousBoard(board->board, board->erroneous, board->m, board->n)){
     /* not necessary to do with if, must decide what to do with the output of this function  */
@@ -343,9 +390,31 @@ void reset(struct sudokuManager *board){
 /*
  * This method starts a game.
  */
-void startGame(){
-    title();
-    /* NOT DONE */
-}
+/*
+ * This method performs a whole game. It initializes the  board,
+ * receives commands from the user and executes them.
+ * It returns -1 when we need to terminate.
+ */
+int startGame(){
+    char command[LENGTH];  /*Last cell is '\0'*/
+    int res;
+    struct sudokuManager *board;
 
+    title();
+    while (fgets(command, LENGTH, stdin) != NULL){  /* We have not reached EOF*/
+        if (command[0] == '\n'){ /* Line is empty. */
+            continue;
+        }
+        /*The line is not blank*/
+        res = interpret(command, &board);
+        if (res == -1){
+            return -1;
+        }
+        if (res == 2) { /* exit command was entered*/
+            return 0;
+        }
+    }
+    /* We have reached EOF, there are no more commands to execute*/
+    return exitGame(board);
+}
 

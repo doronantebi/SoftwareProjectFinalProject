@@ -133,6 +133,13 @@ void freeBoard(struct sudokuManager *board);
 /*
  * This method sets manager->board[row][col] = val
  */
-void changeCellValue(struct sudokuManager *manager, int row, int col, int val);
+void changeCellValue(int *board, int m, int n, int row, int col, int val);
+
+
+/*
+ * This method fills onlyFixed of integers containing only the fixed values in board.
+ * If there is an error allocating memory, it returns NULL and prints a message to the user.
+ */
+int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed);
 
 #endif
