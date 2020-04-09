@@ -23,6 +23,13 @@ void printSudokuGrid(struct sudokuManager *manager, enum Mode mode);
 /* PARSER METHODS*/
 
 /*
+ * This method receives a word and returns a number unique to the
+ * command if it is a legal command, or -1 if it is an invalid command.
+ * It returns the index of the command in the array commandList.
+ */
+int commandNum (char* word);
+
+/*
  * The function prints a message to the user saying that not enough parameters were entered.
  */
 void printFewParams(int numOfParams, int indexCommand);
@@ -74,6 +81,11 @@ void printNotAFloat(int indexParam);
  * This method prints a message to the user saying that there are not enough empty cells.
  */
 void printNotEnoughEmptyCells(int emptyCells, int requiredEmptyCells);
+
+/*
+ * This method prints a message to the user saying that the command entered does not exist.
+ */
+void printInvalidCommand();
 
 /* END OF PARSER METHODS*/
 
@@ -182,7 +194,9 @@ void printWrongRange(struct sudokuManager *board, int value);
  */
 void printNotAnInteger();
 
-
+/*
+ * This method prints that the board is solvable (valid).
+ */
 void printBoardIsValid();
 
 #endif

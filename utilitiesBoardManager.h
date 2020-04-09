@@ -191,7 +191,11 @@ int isAnyErroneousCell(struct sudokuManager *manager);
 int updateAutofillValuesBoard(struct sudokuManager *board);
 
 
-int getFirstIndexInBlock(struct sudokuManager *board, int blockNum, int* pRow, int* pCol);
+/*
+ * This method assigns the first cell indices of the block numbered blockNum into (pRow, pCol).
+ * 0 <= blockNum < n*m
+ */
+void getFirstIndexInBlock(int m, int n, int blockNum, int* pRow, int* pCol);
 
 
 

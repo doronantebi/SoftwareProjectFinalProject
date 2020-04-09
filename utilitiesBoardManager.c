@@ -33,6 +33,14 @@ int colHighBound(int n, int column){
     return (((column/n)+1)*n);
 }
 
+/*
+ * This method assigns the first cell indices of the block numbered blockNum into (pRow, pCol).
+ * 0 <= blockNum < n*m
+ */
+void getFirstIndexInBlock(int m, int n, int blockNum, int *pRow, int *pCol){
+    *pRow = m * (blockNum / m);
+    *pCol = n * (blockNum % m);
+}
 
 /*
  * This method returns the length of the sudoku board
@@ -201,7 +209,7 @@ int updateErroneousCol(int* board, int* erroneous, int m, int n, int i){
  * Will be used when Loading a file in Edit mode
  * or when loading a file in Solve mode when setting addMarks to be 1
  * UPDATES THE WHOLE BOARD
- * the function returns 1 if one of the cells is illegal
+ * the function returns 1 if one of the cells is erroneous
  * and 0 otherwise.
  */
 int updateErroneousBoard(int* board, int* erroneous, int m, int n){
@@ -263,7 +271,7 @@ int isAnyErroneousCell(struct sudokuManager *manager){
 }
 
 /*
- * Checks that the val
+ * Checks that the val is in the correct range for the current board.
  */
 int isLegalCellValue(struct sudokuManager *manager, int x){
     return ((x >= 0) && (x <= boardLen(manager)));

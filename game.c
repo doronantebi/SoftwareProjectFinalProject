@@ -63,6 +63,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
         printAllocFailed();
         return NULL;
     }
+
     board = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
     if (board == NULL) {
         free(linkedList);
@@ -71,126 +72,146 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
     }
 
     board->addMarks = 1;
-    board->linkedList = linkedList;
     initList(linkedList);
+    board->linkedList = linkedList;
     linkedList->board = board;
 
-    if((mode1 == Edit) && (fileName == NULL)){
-        board->n = 3, board->m = 3; board->linkedList = linkedList;
-        board->fixed = calloc(9 * 9, sizeof(int));
-        if (board->fixed == NULL){
-            printAllocFailed();
-            free(board);
-            free(linkedList);
-            return NULL;
-        }
-        board->board = calloc(9 * 9, sizeof(int));
-        if (board->board == NULL){
-            printAllocFailed();
-            free(board);
-            free(linkedList);
-            return NULL;
-        }
+    /* board and linkedList are allocated */
+
+    if((mode1 == Edit) && (fileName == NULL)) { /* we have been called by edit command and no fileName was received*/
+        board->n = 3, board->m = 3;
     }
-    else {
+    else{ /* we need to read a board from a file*/
         file = fopen(fileName, "r");
+
         if (file == NULL) {
             printFilePathIllegal();
-            freeBoard(board);
+            free(board);
             free(linkedList);
             return NULL;
         }
+
         success = inputNumFromFile(file, &m);
         if(success == 0){ /*No integer was received*/
-            freeBoard(board);
+            free(board);
             free(linkedList);
             fclose(file);
             return NULL;
         }
+
         board->m = m;
 
         success = inputNumFromFile(file, &n);
         if(success == 0){ /*No integer was received*/
-            freeBoard(board);
+            free(board);
             free(linkedList);
             fclose(file);
             return NULL;
         }
+
         board->n = n;
+    }
 
-        board->board = (int *)(calloc(sizeof(int), boardArea(board)));
-
-        if (board->board == NULL){
-            printAllocFailed();
-            freeBoard(board);
-            free(linkedList);
+    board->fixed = (int *)calloc(boardArea(board), sizeof(int));
+    if (board->fixed == NULL) {
+        printAllocFailed();
+        free(board);
+        free(linkedList);
+        if (fileName != NULL){
             fclose(file);
-            return NULL;
         }
+        return NULL;
+    }
+    board->board = calloc(boardArea(board), sizeof(int));
+    if (board->board == NULL) {
+        printAllocFailed();
+        free(board->fixed);
+        free(board);
+        free(linkedList);
+        if (fileName != NULL){
+            fclose(file);
+        }
+        return NULL;
+    }
 
-        for (i = 0; i < boardLen(board); i++){ /*Row*/
-            for (j = 0; j < boardLen(board); j++){ /*Column*/
-                success = inputNumFromFile(file, &value);
-                if(success == 0){ /*No integer was received*/
-                    freeBoard(board);
-                    free(linkedList);
-                    fclose(file);
-                    return NULL;
-                }
-                if (!isLegalCellValue(board, value)){
-                    printWrongRange(board, value);
-                    freeBoard(board);
-                    free(linkedList);
-                    fclose(file);
-                    return NULL;
-                }
-                changeCellValue(board->board, board->m, board->n, i, j, value);
-                nextChar = fgetc(file);
-                if (nextChar == EOF){
-                    printNotEnoughNumbers(boardArea(board), i*boardLen(board) + j);
-                    freeBoard(board);
-                    free(linkedList);
-                    fclose(file);
-                    return NULL;
-                }
+    board->erroneous= calloc(boardArea(board), sizeof(int));
+    if (board->erroneous == NULL) {
+        printAllocFailed();
+        free(board->board);
+        free(board->fixed);
+        free(board);
+        free(linkedList);
+        if (file != NULL){ /* we opened a file*/
+            fclose(file);
+        }
+        return NULL;
+    }
 
-                if ((nextChar == '.') && (mode1==Solve)){
-                    if (value != 0){
-                        changeCellValue(board->fixed, board->m, board->n, i, j, value);
-                    }
-                    else{
-                        printErrorEmptyCellFixed(i+1, j+1);
-                        freeBoard(board);
-                        free(linkedList);
-                        fclose(file);
-                        return NULL;
-                    }
+    /* all board's fields are initialized */
+
+    if ((mode1 == Edit) && (fileName == NULL)){ /* we didn't receive a file path, we need to return board*/
+        return board;
+    }
+
+    /* we need to read a board from a file*/
+
+    for (i = 0; i < boardLen(board); i++) { /*Row*/
+        for (j = 0; j < boardLen(board); j++) { /*Column*/
+            success = inputNumFromFile(file, &value);
+            if (success == 0) { /*No integer was received*/
+                printNotEnoughNumbers(boardArea(board) + 2,i * boardLen(board) + j + 2);
+                freeBoard(board); /*frees also linkedList */
+                fclose(file);
+                return NULL;
+            }
+            if (!isLegalCellValue(board, value)) { /* checking the cell is in the correct range */
+                printWrongRange();
+                freeBoard(board); /*frees also linkedList */
+                fclose(file);
+                return NULL;
+            }
+            changeCellValue(board->board, board->m, board->n, i, j, value);
+            nextChar = fgetc(file);
+            if (nextChar == EOF && (!isLastCellInMatrix(boardLen(board), i, j))) {
+                printNotEnoughNumbers(boardArea(board), i * boardLen(board) + j);
+                freeBoard(board); /*frees also linkedList */
+                fclose(file);
+                return NULL;
+            }
+
+            if ((nextChar == '.') && (mode1 == Solve)) {
+                if (value != 0) {
+                    changeCellValue(board->fixed, board->m, board->n, i, j, value);
+                } else {
+                    printErrorEmptyCellFixed(i + 1, j + 1);
+                    freeBoard(board); /*frees also linkedList */
+                    fclose(file);
+                    return NULL;
                 }
             }
         }
 
-        if (mode1 == Solve){
-            onlyFixed = (int *) (calloc(sizeof(int), boardArea(board)));
 
-            if (onlyFixed == NULL){
+        if (mode1 == Solve) {
+
+            onlyFixed = (int *) (calloc(boardArea(board), sizeof(int)));
+
+            if (onlyFixed == NULL) {
                 printAllocFailed();
-                freeBoard(board);
-                free(linkedList);
+                freeBoard(board); /*frees also linkedList */
                 fclose(file);
                 return NULL;
             }
 
             copyFixedOnly(board, onlyFixed);
 
-            if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)){
-                printBoardIsErroneous();
-                freeBoard(board);
-                free(linkedList);
+            if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)) { /* the board is erroneous */
+                printErroneousBoard();
+                freeBoard(board); /*frees also linkedList */
                 fclose(file);
                 return NULL;
             }
         }
-        
     }
 
     fclose(file);
@@ -199,45 +220,54 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
 
 /*
  * This function uploads a file of a game to solve.
+ * It returns -1 if we need to terminate. Otherwise, it returns 0.
  */
-struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName){
+int solve(struct sudokuManager **pPrevBoard, char *fileName){
+    struct sudokuManager *tmp;
     struct sudokuManager *board = (struct sudokuManager *) createBoardFromFile(fileName, Solve);
     if (board == NULL){ /* if board creation was unsuccessful */
         printErrorCreateBoard();
-        return prevBoard;
+        return -1;
     }
     else{
         changeMode(Solve);
-        if (prevBoard != NULL) {
-            freeBoard(prevBoard);
+        tmp = *pPrevBoard;
+        *pPrevBoard = board;
+        if (tmp != NULL) {
+            freeBoard(tmp);
         }
     }
-    return board;
+    return 0;
 }
 
 /*
  * This function uploads a file of a game to edit.
+ *  It returns -1 if we need to terminate. Otherwise, it returns 0.
  */
-struct sudokuManager* edit(struct sudokuManager *prevBoard, char *fileName){
+int edit(struct sudokuManager **pPrevBoard, char *fileName){
+    struct sudokuManager *tmp;
     struct sudokuManager *board = (struct sudokuManager *) createBoardFromFile(fileName, Edit);
     if (board == NULL){ /* board creation was unsuccessful */
         printErrorCreateBoard();
-        return prevBoard; /* keep the previous board */
+        return -1;
     }
     else{
         changeMode(Edit);
-        if (prevBoard != NULL) {
-            freeBoard(prevBoard); /* frees the previous board if the new boars was successful */
+        tmp = *pPrevBoard;
+        *pPrevBoard = board;
+        if (tmp != NULL) {
+            freeBoard(tmp); /* frees the previous board if the new boars was successful */
         }
     }
-    return board;
+    return 0;
 }
 
 /*
  * This method is used for saving your game.
  * need to validate the board!!!
+ * Valid only in Edit and Solve modes.
  */
-void saveGame(struct sudokuManager *board,char* fileName){
+void save(struct sudokuManager *board, char* fileName){
     FILE *file;
     int N = boardLen(board), m=board->m, n=board->n, row, col, currVal;
     if(validate(board)){
@@ -469,7 +499,7 @@ void markErrors(struct sudokuManager* board ,int X){
 int startGame(){
     char command[LENGTH];  /*Last cell is '\0'*/
     int res;
-    struct sudokuManager *board;
+    struct sudokuManager *board = NULL;
 
     title();
     while (fgets(command, LENGTH, stdin) != NULL){  /* We have not reached EOF*/
@@ -477,7 +507,7 @@ int startGame(){
             continue;
         }
         /*The line is not blank*/
-        res = interpret(command, &board);
+        res = interpret(command, &board, mode);
         if (res == -1){ /* There is any error */
             return -1;
         }

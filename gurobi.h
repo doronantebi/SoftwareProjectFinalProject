@@ -9,6 +9,13 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_GUROBI_H
 #define SOFTWAREPROJECTFINALPROJECT_GUROBI_H
 
+typedef enum {
+    BINARY = 0,
+    INTEGER = 1,
+    CONTINUOUS = 2
+} GurobiOption;
+
+
 
 typedef enum {
     BINARY = 0,

@@ -13,12 +13,12 @@ int startGame();
 /*
  * This function uploads a file of a game to solve.
  */
-struct sudokuManager* solve(struct sudokuManager *prevBoard, char *fileName);
+int solve(struct sudokuManager **pPrevBoard, char *fileName);
 
 /*
  * This function uploads a file of a game to edit.
  */
-struct sudokuManager* edit(struct sudokuManager *prevBoard, char *fileName);
+int edit(struct sudokuManager **pPrevBoard, char *fileName);
 
 /*
  * Sets the "mark errors" setting to X, where X is 0 or 1.
@@ -56,7 +56,7 @@ int guess(struct sudokuManager *board, float X);
  * Y = fixed cells #
  * Valid only in Edit mode.
  */
-struct sudokuManager* generate(struct sudokuManager* prevBoard, int X, int Y);
+int generate(struct sudokuManager **pPrevBoard, int X, int Y);
 
 /*
  * This function undo the previous move done by the user.
@@ -74,7 +74,7 @@ void redo(struct sudokuManager *board);
  * This function saves the board to fileName
  * Valid only in Edit and Solve modes.
  */
-int save(struct sudokuManager *board, char* fileName);
+void save(struct sudokuManager *board, char* fileName);
 
 /*
  * This function shows the solution to cell <X,Y>

@@ -6,7 +6,6 @@
 #include "main_aux.h"
 #include "utilitiesBoardManager.h"
 
-#define commandListLength 17
 
 /*
  * This method assumes the command entered is solve,
@@ -14,7 +13,7 @@
  * Available in every mode.
  * It returns
  */
-int interpretSolve(char *token, struct sudokuManager *board){
+int interpretSolve(char *token, struct sudokuManager **pBoard){
 
     token = strtok(NULL, " \t\r\n");
 
@@ -28,7 +27,7 @@ int interpretSolve(char *token, struct sudokuManager *board){
            return 0;
         }
         else{
-            return solve(board, token);
+            return solve(pBoard, token);
         }
     }
 }
@@ -39,18 +38,17 @@ int interpretSolve(char *token, struct sudokuManager *board){
  * Available in every mode.
  * It returns
  */
-int interpretEdit(char *token, struct sudokuManager *board){
-    int arrNumOfParams[2];
+int interpretEdit(char *token, struct sudokuManager **pBoard){
+    int arrNumOfParams[2] = {0, 1};
 
     token = strtok(NULL, " \t\r\n");
 
     if (strtok(NULL, " \t\r\n") != NULL){ /*Too many parameters*/
-        arrNumOfParams = {0, 1};
         printExtraParamsExtend(arrNumOfParams, 2, 1);
         return 0;
     }
-    else{
-        return edit(board, token); /* Sending Null in token if no parameters were entered. */
+    else {
+        return edit(pBoard, token);/* Sending NULL in token if no parameters were entered. */
     }
 }
 
@@ -105,7 +103,8 @@ int interpretMarkErrors(char *token, struct sudokuManager *board, enum Mode mode
  * Otherwise, it returns 0.
  */
 int interpretNoArguments(char *token, enum Mode mode, int indexCommand, enum Mode *availableModes, int len){
-    int i, isAvailable = 0;
+    int i;
+    int isAvailable = 0;
 
     for (i = 0; i < len; i++){
         if (availableModes[i] == mode){
@@ -197,7 +196,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                                 printNotANumber(2);
                                 return 0;
                             } else {
-                                if (!(isLegalCellValue(arrInput[2]))) {
+                                if (!(isLegalCellValue(board, arrInput[2]))) {
                                     printWrongRangeInt(4, arrInput[2], 3);
                                     printf("The parameter should be an integer between 0 and %d.\n", len);
                                     return 0;
@@ -283,7 +282,7 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
  * Available only in Edit mode.
  * It returns
  */
-int interpretGenerate(char *token, struct sudokuManager *board, enum Mode mode) {
+int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode) {
     int i = 0, emptyCells;
     enum Mode availableModes[1] = {Edit};
     int arrInput[2], arrCheck[2];  /*arrCheck saves whether we succeeded in converting
@@ -311,12 +310,12 @@ int interpretGenerate(char *token, struct sudokuManager *board, enum Mode mode) 
                 printNotANumber(1);
                 return 0;
             } else {
-                if (!(arrInput[0] >= 0)) {
+                if (arrInput[0] < 0) {
                     printWrongRangeInt(7, arrInput[0], 1);
                     printf("The parameter should be an integer greater than or equal to 0.\n");
                     return 0;
                 } else {
-                    emptyCells = amountOfEmptyCells(board);
+                    emptyCells = amountOfEmptyCells(*pBoard);
                     if (emptyCells < arrInput[0]) { /* checking for number of empty cells */
                         printNotEnoughEmptyCells(emptyCells, arrInput[0]);
                         return 0;
@@ -325,12 +324,12 @@ int interpretGenerate(char *token, struct sudokuManager *board, enum Mode mode) 
                             printNotANumber(2);
                             return 0;
                         } else {
-                            if (!(arrInput[1] > 0)) {
+                            if (arrInput[1] <= 0) {
                                 printWrongRangeInt(7, arrInput[1], 2);
                                 printf("The parameter should be an integer greater than 0.\n");
                                 return 0;
                             } else { /* All parameters are valid */
-                                return generate(board, arrInput[0], arrInput[1]);
+                                return generate(pBoard, arrInput[0], arrInput[1]);
                             }
                         }
                     }
@@ -353,7 +352,8 @@ int interpretUndo(char *token, struct sudokuManager *board, enum Mode mode) {
         return 0;
     }
     else{
-        return undo(board);
+        undo(board);
+        return 0;
     }
 }
 
@@ -370,7 +370,8 @@ int interpretRedo(char *token, struct sudokuManager *board, enum Mode mode) {
         return 0;
     }
     else{
-        return redo(board);
+        redo(board);
+        return 0;
     }
 }
 
@@ -398,7 +399,8 @@ int interpretSave(char *token, struct sudokuManager *board, enum Mode mode) {
             return 0;
         }
         else{
-            return save(board, token);
+            save(board, token);
+            return 0;
         }
     }
 }
@@ -455,10 +457,10 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
                             return 0;
                         } else { /* All parameters are valid */
                             if (isHint){
-                                return hint(arrInput[0], arrInput[1], board);
+                                return hint(board, arrInput[0], arrInput[1]);
                             }
                             else{
-                                return guessHint(arrInput[0], arrInput[1], board);
+                                return guessHint(board, arrInput[0], arrInput[1]);
                             }
                         }
                     }
@@ -524,7 +526,7 @@ int interpretReset(char *token, struct sudokuManager *board, enum Mode mode) {
  * This method assumes the command entered is exit,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns 0 if the command is invalid. Otherwise, it returns 2.
+ * It returns 0 if the command is invalid. Otherwise, it returns exitGame's return value = 2.
  */
 int interpretExit(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[3] = {Init, Solve, Edit};
@@ -532,32 +534,18 @@ int interpretExit(char *token, struct sudokuManager *board, enum Mode mode) {
         return 0;
     }
     else{
-        exitGame(board);
-        return 2;
+        return exitGame(board);
     }
-}
-/*
- * This method receives a word and returns a number unique to the
- * command if it is a legal command, or -1 if it is an invalid command.
- * It returns the index of the command in the array commandList.
- */
-int commandNum (char* word){
-    int i;
-    for (i = 0; i < commandListLength; i++){
-        if (strcmp(word, commandList[i]) == 0) { /* strings are equal*/
-            return i;
-        }
-    }
-    return -1;
 }
 
 /*
  * This method interprets the command the user entered and
  * executes it by calling to the proper method in Game.
- * It returns -1 if we need to terminate. Otherwise, it returns 0.
+ * It returns -1 if we need to terminate.
  * If exit command has been received, it returns 2.
+ * Otherwise, it returns 0.
  */
-int interpret(char *command, struct sudokuManager **pBoard){
+int interpret(char *command, struct sudokuManager **pBoard, enum Mode mode){
     char *token;
     struct sudokuManager *board = *pBoard;
     int index;
@@ -574,42 +562,41 @@ int interpret(char *command, struct sudokuManager **pBoard){
 
         switch (index){
             case 0:
-                return interpretSolve(token, board);
+                return interpretSolve(token, pBoard);
             case 1:
-                return interpretEdit(token, board);
+                return interpretEdit(token, pBoard);
             case 2:
-                return interpretMarkErrors(token, board);
+                return interpretMarkErrors(token, board, mode);
             case 3:
-                return interpretPrintBoard(token, board);
+                return interpretPrintBoard(token, board, mode);
             case 4:
-                return interpretSet(token, board);
+                return interpretSet(token, board, mode);
             case 5:
-                return interpretValidate(token, board);
+                return interpretValidate(token, board, mode);
             case 6:
-                return interpretGuess(token, board);
+                return interpretGuess(token, board, mode);
             case 7:
-                return interpretGenerate(token, board);
+                return interpretGenerate(token, pBoard, mode);
             case 8:
-                return interpretUndo(token, board);
+                return interpretUndo(token, board, mode);
             case 9:
-                return interpretRedo(token, board);
+                return interpretRedo(token, board, mode);
             case 10:
-                return interpretSave(token, board);
+                return interpretSave(token, board, mode);
             case 11:
-                return interpretHintOrGuessHint(token, board, 1);
+                return interpretHintOrGuessHint(token, board, 1, mode);
             case 12:
-                return interpretHintOrGuessHint(token, board, 0);
+                return interpretHintOrGuessHint(token, board, 0, mode);
             case 13:
-                return interpretNumSolutions(token, board);
+                return interpretNumSolutions(token, board, mode);
             case 14:
-                return interpretAutofill(token, board);
+                return interpretAutofill(token, board, mode);
             case 15:
-                return interpretReset(token, board);
+                return interpretReset(token, board, mode);
             case 16:
-                return interpretExit(token, board);
-            case -1:
+                return interpretExit(token, board, mode);
+            default:
                 printInvalidCommand();
-                printf("The command entered does not exist. Please enter a new command.\n");
                 return 0;
         }
 

@@ -2,11 +2,12 @@
 #include "main_aux.h"
 
 #include "game.h"
+#include <string.h>
 #define title1 "                              ,,                               \n .M\"\"\"bgd                   `7MM              `7MM                  \n,MI    \"Y                     MM                MM                  \n`MMb."
 #define title2    "     `7MM  `7MM     ,M\"\"bMM    ,pW\"Wq.     MM  ,MP'  `7MM  `7MM  \n  `YMMNq.   MM    MM   ,AP    MM   6W'   `Wb    MM ;Y       MM    MM  \n.     `MM   MM    MM   8MI    MM   8M     M8    MM;Mm       MM    MM  \nMb     dM   MM    MM   `Mb    MM   YA.   ,A9    MM `Mb.     MM    MM  \nP\"Ybmmd\"    `Mbod\"YML.  `Wbmd\"MML.  `Ybmd9'.   JMML. YA.    `Mbod\"YML."
 #define creators "Din Moshe and Doron Antebi"
 
-
+#define commandListLength 17
 static char* commandList[] = {"solve", "edit", "mark_errors", "print_board", "set", "validate",
                               "guess", "generate", "undo", "redo", "save", "hint", "guess_hint",
                               "num_solutions", "autofill", "reset", "exit"};
@@ -16,6 +17,21 @@ void printGameTitle(){
 }
 
 /* PARSER METHODS */
+
+/*
+ * This method receives a word and returns a number unique to the
+ * command if it is a legal command, or -1 if it is an invalid command.
+ * It returns the index of the command in the array commandList.
+ */
+int commandNum (char* word){
+    int i;
+    for (i = 0; i < commandListLength; i++){
+        if (!strcmp(word, commandList[i])) { /* strings are equal*/
+            return i;
+        }
+    }
+    return -1;
+}
 
 /*
  * The function prints a message to the user saying that not enough parameters were entered.
@@ -131,6 +147,12 @@ void printNotEnoughEmptyCells(int emptyCells, int requiredEmptyCells){
            "but %d empty cells are required\n", emptyCells, requiredEmptyCells);
 }
 
+/*
+ * This method prints a message to the user saying that the command entered does not exist.
+ */
+void printInvalidCommand(){
+    printf("The command entered does not exist. Please enter a new command.\n");
+}
 
 /* END OF PARSER METHODS*/
 
