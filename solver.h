@@ -15,6 +15,14 @@ int validateBoard(struct sudokuManager *manager);
 
 
 /*
+ * This function fills in *hint a hint for cell <row ,col>
+ * returns 1 if succeed solving the board.
+ * return -1 if allocate failed
+ * returns 0 if board could not be solved or gurobi failed
+ */
+int getHint(struct sudokuManager *manager, int row, int col, int* hint);
+
+/*
  * This function generates a new board with Y cells.
  * if has been successful,returns a pointer to a newBoard that will have Y values.
  * if fails, returns prevBoard

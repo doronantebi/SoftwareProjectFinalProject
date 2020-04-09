@@ -271,7 +271,7 @@ int validateBoard(struct sudokuManager *manager){
     }
     res = solveGurobi(manager, BINARY, &retBoard);
     if(res == -1){
-        printf("gurobi failed");
+        printf("gurobi error\n");
     }
     else
         if(res == -2){
@@ -377,4 +377,42 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
 
     return board;
 }
+
+/*
+ * This function fills in *hint a hint for cell <row,col>
+ * returns 1 if succeed solving the board.
+ * return -1 if allocate failed
+ * returns 0 if board could not be solved or gurobi failed
+ */
+int getHint(struct sudokuManager *manager, int row, int col, int* hint){
+    int res;
+    int *retBoard = calloc(boardArea(manager),sizeof(int));
+    if(retBoard == NULL){
+        printAllocFailed();
+        return -2;
+    }
+    res = solveGurobi(manager, BINARY, &retBoard);
+    if(res == -1){
+        printf("gurobi error\n");
+        free(retBoard);
+    }
+    else{
+        if(res == -2){ /* alloc failed in gurobi  */
+            return 0;
+        }
+        else{
+            if(retBoard == NULL){/* the board is not valid */
+                return 0;
+            }
+            else {
+                *hint = retBoard[matIndex(manager->m, manager->n, row, col)];
+                free(retBoard);
+                return 1;
+            }
+        }
+    }
+}
+
+
+
 

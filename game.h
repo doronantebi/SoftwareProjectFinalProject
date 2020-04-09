@@ -77,7 +77,7 @@ void redo(struct sudokuManager *board);
 void save(struct sudokuManager *board, char* fileName);
 
 /*
- * This function shows the solution to cell <X,Y>
+ * This function shows the solution to cell <Y,X>
  * Valid only in Solve mode.
  */
 int hint(struct sudokuManager *board, int X, int Y);

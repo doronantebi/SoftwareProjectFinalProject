@@ -20,7 +20,7 @@
  * of which all dimensions are in size len.
  */
 int threeDIndex(int len, int i, int j, int k){
-    return i * len * len + j * len + k;
+    return (i * (len * len)) + (j * len) + k;
 }
 
 

@@ -418,6 +418,42 @@ int validate(struct sudokuManager *board){
     return isValid;
 }
 
+
+/*
+ * This function shows the solution to cell <Y,X>
+ * Valid only in Solve mode.
+ * X = COLUMN, Y = ROW
+ */
+int hint(struct sudokuManager *board, int X, int Y){
+    int hint = -3, ret;
+    if(board->erroneous[matIndex(board->m, board->n, Y, X)]){
+        printErrorCellIsErroneous(X, Y);
+        return 0;
+    }
+    if(board->fixed[matIndex(board->m, board->n, Y, X)]){
+        printErrorCellXYIsFixed(X, Y);
+        return 0;
+    }
+    if(board->board[matIndex(board->m, board->n, Y, X)]!=0){
+        printErrorCellContainsValue(X, Y);
+        return 0;
+    }
+    ret = getHint(board, Y, X, &hint);
+    if(ret == -1){
+        return -1;
+    }
+    else
+        if(ret == 0){
+            printBoardNotValidError();
+            return 0;
+        }
+        else{  /* ret == 1 */
+        return hint; /* if this function returns -3 we have an error in getHint!!! */
+    }
+
+}
+
+
 /*
  * This function guesses a solution to the current board using LP.
  * X value is between 0 and 1.
