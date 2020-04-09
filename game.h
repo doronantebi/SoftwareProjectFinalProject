@@ -104,7 +104,7 @@ int autofill(struct sudokuManager *board);
  * Undo all moves.
  * Valid only in Edit and Solve mode.
  */
-int reset(struct sudokuManager *board);
+void reset(struct sudokuManager *board);
 
 /*
  * Terminates the program

@@ -191,4 +191,8 @@ int isAnyErroneousCell(struct sudokuManager *manager);
 int updateAutofillValuesBoard(struct sudokuManager *board);
 
 
+int getFirstIndexInBlock(struct sudokuManager *board, int blockNum, int* pRow, int* pCol);
+
+
+
 #endif

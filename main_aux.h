@@ -97,6 +97,13 @@ void printNoPrevMoveError();
  */
 void printErrorAutofill();
 
+
+/*
+ * This method prints a message that the board is erronous
+ */
+void printBoardIsErroneous();
+
+
 /*
  * the user tried to set something that is not 0 or 1 to mark_errors
  */
@@ -162,5 +169,18 @@ void printFilePathIllegal();
  * This function prints an error that allocation failed~
  */
 void printAllocFailed();
+
+/*
+ * This function prints error that
+ * ((value < 0) || (x > boardLen(manager)));
+ */
+void printWrongRange(struct sudokuManager *board, int value);
+
+
+/*
+ * This function prints a message that the input is not an integer.
+ */
+void printNotAnInteger();
+
 
 #endif

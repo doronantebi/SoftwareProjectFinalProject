@@ -7,7 +7,6 @@
 
 /*
  * This function calculates the row's lower bound of the block.
- * CHECK!!!!!!!!
  */
 int rowLowBound(int m, int row){
     return ((row/m)*m);
@@ -15,7 +14,6 @@ int rowLowBound(int m, int row){
 
 /*
  * This function calculates the row's higher bound of the block.
- * CHECK!!!!!!!!
  */
 int rowHighBound(int m, int row){
     return (((row/m)+1)*m);
@@ -23,7 +21,6 @@ int rowHighBound(int m, int row){
 
 /*
  * This function calculates the column's lower bound of the block.
- * CHECK!!!!!!!!
  */
 int colLowBound(int n, int column){
     return ((column/n)*n);
@@ -31,7 +28,6 @@ int colLowBound(int n, int column){
 
 /*
  * This function calculates the column's higher bound of the block.
- * CHECK!!!!!!!!
  */
 int colHighBound(int n, int column){
     return (((column/n)+1)*n);

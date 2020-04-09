@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "solver.h"
 #include "utilitiesBoardManager.h"
+#include "main_aux.h"
 
 int recBacktracking(struct sudokuManager *manager, int *solutionBoard);
 

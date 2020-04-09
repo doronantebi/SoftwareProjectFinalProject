@@ -39,7 +39,7 @@ int inputNumFromFile(FILE *file, int *pNum){
             return 0;
         }
         if (check == 0) {
-            printNotANumber();
+            printNotAnInteger();
             return 0;
         }
     }
@@ -138,7 +138,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
                     return NULL;
                 }
                 if (!isLegalCellValue(board, value)){
-                    printWrongRange();
+                    printWrongRange(board, value);
                     freeBoard(board);
                     free(linkedList);
                     fclose(file);
@@ -183,7 +183,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
             copyFixedOnly(board, onlyFixed);
 
             if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)){
-                printErroneousBoard();
+                printBoardIsErroneous();
                 freeBoard(board);
                 free(linkedList);
                 fclose(file);
@@ -302,7 +302,7 @@ void undo(struct sudokuManager *board){
 /*
  * This function resets the board to start position by undoing all moves.
 */
-int reset(struct sudokuManager *board){
+void reset(struct sudokuManager *board){
     pointToFirstMoveInMovesList(board);
     updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
     printBoard(board);
@@ -329,6 +329,7 @@ int doSet(struct sudokuManager *manager, int X, int Y, int Z){
         return -1;
     }
     goToNextNode(manager);
+    return 0;
 }
 
 /*
@@ -394,8 +395,9 @@ int guess(struct sudokuManager *board, float X){
     if(!isValid){
         return -1;
     }
-
+    printf("%f", X);
     /* THINK OF A WAY TO DO IT MORE EFFICIENTLY IN GUROBI SECTION! */
+    return 0;
 }
 
 /*

@@ -238,3 +238,33 @@ void printAllocFailed(){
     printf("Allocation failed!! \n");
 }
 
+/*
+ * This method prints a message that the board is erronous
+ */
+void printBoardIsErroneous(){
+    printf("The board is erroneous!\n");
+}
+
+/*
+ * This function prints error that
+ * ((value < 0) || (x > boardLen(manager)));
+ */
+void printWrongRange(struct sudokuManager *manager, int value){
+    if(value < 0){
+        printf("%d < 0, ", value);
+    }
+    else { /* value > boardLen(mmanager)*/
+        printf("%d > %d, ", value, boardLen(manager));
+    }
+    printf("while value should be in range 0 to %d.\n", boardLen(manager));
+}
+
+
+/*
+ * This function prints a message that the input is not an integer.
+ */
+void printNotAnInteger(){
+    printf("Input should be integer.\n");
+}
+
+
