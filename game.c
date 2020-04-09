@@ -378,9 +378,12 @@ int autofill(struct sudokuManager *board){
  *  * CHECK!!!!!!!! DO WITH GUROBI
  */
 int validate(struct sudokuManager *board){
-    int isValid = validateBoard(board->board, board->m, board->n);
-    if(!isValid){
+    int isValid = validateBoard(board);
+    if(isValid == 0){
         printBoardNotValidError();
+    }
+    else if(isValid == 1){
+        printBoardIsValid();
     }
     return isValid;
 }
@@ -405,16 +408,24 @@ int guess(struct sudokuManager *board, float X){
  *  * CHECK!!!!!!!! check MALLOC ALLOCATION SUCCESS
  *  CREATE DOGENERATE IN GUROBI
  */
-struct sudokuManager* generate(struct sudokuManager *prevBoard, int X, int Y){
-    struct sudokuManager *newBoard = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
-    if(X > amountOfEmptyCells(prevBoard)){
+struct sudokuManager* generate(struct sudokuManager *board, int X, int Y){
+    int *newBoard = (int*)malloc(boardArea(board)*sizeof(int));
+    if(newBoard == NULL){
+        printAllocFailed();
+        return NULL;
+    } /* MAYBE DONE IN PARSER */
+    if(X > amountOfEmptyCells(board)){
         printGenerateInputError();
-        return prevBoard;
+        return board;
     }
     else {
-        newBoard = doGenerate(prevBoard, newBoard, X, Y);
+        board = doGenerate(board, newBoard, X, Y);
+        if(board == NULL){
+            return NULL;
+        }
+        free(newBoard);
     }
-    return newBoard;
+    return board;
 }
 
 

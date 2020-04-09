@@ -1,3 +1,6 @@
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #ifndef SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 #define SOFTWAREPROJECTFINALPROJECT_SOLVER_H
@@ -8,7 +11,7 @@
  * This function validates a board using ILP
  * return 1 if valid and 0 otherwise.
  */
-int validateBoard(int *board, int m, int n);
+int validateBoard(struct sudokuManager *manager);
 
 
 /*
@@ -16,6 +19,9 @@ int validateBoard(int *board, int m, int n);
  * if has been successful,returns a pointer to a newBoard that will have Y values.
  * if fails, returns prevBoard
  */
-struct sudokuManager* doGenerate(struct sudokuManager *prevBoard, struct sudokuManager *newBoard, int X, int Y);
+struct sudokuManager* doGenerate(struct sudokuManager *prevBoard, int *newBoard, int X, int Y);
+
+
+double randRangeDouble(double min, double max);
 
 #endif

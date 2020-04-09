@@ -4,6 +4,24 @@
 #include "solver.h"
 #include "utilitiesBoardManager.h"
 #include "main_aux.h"
+#include "gurobi.h"
+
+#define NUM_ITERATIONS 1000
+
+
+double randRangeDouble(double min, double max)
+{
+    double range = (max - min);
+    double div = RAND_MAX / range;
+    return min + (rand() / div);
+}
+
+
+int randRangeInt(int min, int max)
+{
+    int range = (max - min);
+    return min + (rand() % range);
+}
 
 int recBacktracking(struct sudokuManager *manager, int *solutionBoard);
 
@@ -238,4 +256,125 @@ int backtracking(struct sudokuManager *manager){
     return res;
 }
 
+
+
+/*
+ * This function validates a board using ILP
+ * return 1 if valid and 0 otherwise.
+ */
+int validateBoard(struct sudokuManager *manager){
+    int res;
+    int *retBoard = calloc(boardArea(manager),sizeof(int));
+    if(retBoard == NULL){
+        printAllocFailed();
+        return -2;
+    }
+    res = solveGurobi(manager, BINARY, &retBoard);
+    if(res == -1){
+        printf("gurobi failed");
+    }
+    else
+        if(res == -2){
+        return -1;
+        }
+        else{
+            if(retBoard == NULL){
+            /* the board is not valid */
+            return 0;
+            }
+            else {
+                return 1;
+            }
+        }
+
+}
+
+/*
+ * This function generates a new board with Y cells.
+ * if has been successful,returns a pointer to a newBoard that will have Y values.
+ * if fails, returns prevBoard
+ */
+struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
+    /* ALL ALLOCATIONS */
+    int* prevBoard = board->board;
+    struct sudokuManager *newManager = (struct sudokuManager*)calloc(1, sizeof(struct sudokuManager));
+    int* retBoard = (int*)calloc(boardArea(board), sizeof(int)); /* THIS WILL CONTAIN THE SOLUTION */
+
+    int* erroneous = (int*)calloc(boardArea(board), sizeof(int));
+    int* fixed = (int*)calloc(boardArea(board), sizeof(int));
+    struct movesList *list = (struct movesList*) malloc(sizeof(struct movesList));
+    int val = randRangeInt(0, boardLen(board)) + 1;
+    int row, col, retGurobi;
+    int m = board->m, n = board->n, iter;
+    int x, cellsToRemove;
+
+    if((newManager == NULL)||(retBoard == NULL) || (erroneous == NULL) || (fixed == NULL) || (list == NULL)){
+        printAllocFailed();
+        free(newManager);
+        free(retBoard);
+        free(erroneous);
+        free(list);
+        free(fixed);
+        return NULL;
+    }
+
+    srand(time(NULL));
+
+    /* INITIALIZES NEW SUDOKU MANAGER */
+    newManager->m = m, newManager->n = n;
+    newManager->erroneous = erroneous, newManager->fixed= fixed;
+    newManager->addMarks = 1;
+    newManager->linkedList = list;
+    initList(newManager->linkedList);
+    newManager->linkedList->board = newManager;
+
+    /* STARTING 1000 ITERETIONS */
+    for(iter = 0; iter < NUM_ITERATIONS; iter ++) {
+        duplicateBoard(prevBoard, newBoard, board->m, board->n); /* copy content of prevBoard to newBoard */
+        x = X;
+        /* RANDOMLY FILLS X CELLS */
+        while (x != 0) {
+            row = randRangeInt(0, boardLen(board)); /* MAKE SURE!!!!!! IT DOESNT INCLUDE THE UPPER BOUND */
+            col = randRangeInt(0, boardLen(board));
+            if (newBoard[matIndex(m, n, row, col)] == 0) { /* if cell is empty */
+                while (neighbourContainsOnce(newBoard, m, n, row, col, val)) { /* as long as val is not legal for our curr cell */
+                    val = randRangeInt(0, boardLen(board)) + 1; /* randomly choose different value  */
+                }
+                newBoard[matIndex(m, n, row, col)] = val; /* set the new value */
+                x--; /* reduce X by one */
+            }
+        }
+
+        newManager->board = newBoard; /* solve the board with the new X filled cells */
+        /* previous board is saved in prevBoard */
+        retGurobi = solveGurobi(newManager, BINARY, &retBoard);
+        if(retGurobi == -2){ /* allocation failed... */
+            return NULL;
+        }
+        else {
+            if(retGurobi == 0){ /* Gurobi error did not occur */
+                if(retBoard != NULL){ /* solution has been found!!! Hurray!!! */
+                    cellsToRemove = boardArea(board) - Y;
+
+                    while (cellsToRemove != 0){
+                        row = randRangeInt(0, boardLen(board));
+                        col = randRangeInt(0, boardLen(board));
+                        if(retBoard[matIndex(m, n, row, col)] != 0){
+                            retBoard[matIndex(m, n, row, col)] = 0;
+                            cellsToRemove --;
+                            }
+                        }
+
+                    newManager->board = retBoard;
+                    freeBoard(board);
+                    return newManager;
+                    }
+                }
+            }
+        }
+    freeBoard(newManager);
+    printErrorPuzzleGenerator();
+
+    return board;
+}
 

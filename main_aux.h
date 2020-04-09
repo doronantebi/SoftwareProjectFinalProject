@@ -183,4 +183,6 @@ void printWrongRange(struct sudokuManager *board, int value);
 void printNotAnInteger();
 
 
+void printBoardIsValid();
+
 #endif

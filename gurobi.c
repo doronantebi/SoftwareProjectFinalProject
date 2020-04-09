@@ -11,20 +11,9 @@
      x, y, z binary
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "gurobi_sys"
-#include "utilitiesBoardManager.h"
-#include "main_aux.h"
-#include <time.h>
 
 
 
-typedef enum {
-    BINARY = 0,
-    INTEGER = 1,
-    CONTINUOUS = 2
-} GurobiOption;
 
 /*
  *
@@ -35,13 +24,7 @@ typedef struct {
     int val;  /* matching value */
 } Variable ;
 
-/* generate a random floating point number from min to max */
-double randRange(double min, double max)
-{
-    double range = (max - min);
-    double div = RAND_MAX / range;
-    return min + (rand() / div);
-}
+
 
 
 /*
@@ -179,7 +162,7 @@ int getConstaintRowLength(int val, int row, struct sudokuManager *manager, int *
     int length = boardLen(manager);
     int col, count = 0;
     for(col = 0; col < length; col++){
-        if(indices[row][col][val] == -1){
+        if(indices[row][col][val-1] == -1){
             continue;
         }
         count ++;
@@ -200,10 +183,10 @@ int* getConstraintRow(int val, int row, struct sudokuManager *manager, int ***in
         return NULL;
     }
     for(col = 0; col < length; col++){
-        if(indices[row][col][val] == -1){
+        if(indices[row][col][val-1] == -1){
             continue;
         }
-        constraint[count] = indices[row][col][val];
+        constraint[count] = indices[row][col][val-1];
         count++;
     }
     return constraint;
@@ -216,7 +199,7 @@ int getConstaintColLength(int val, int col, struct sudokuManager *manager, int *
     int length = boardLen(manager);
     int row, count = 0;
     for(row = 0; row < length; row++){
-        if(indices[row][col][val] == -1){
+        if(indices[row][col][val-1] == -1){
             continue;
         }
         count ++;
@@ -238,10 +221,10 @@ int* getConstraintCol(int val, int col, struct sudokuManager *manager, int ***in
         return NULL;
     }
     for(row = 0; row < length; row++){
-        if(indices[row][col][val] == -1){
+        if(indices[row][col][val-1] == -1){
             continue;
         }
-        constraint[count] = indices[row][col][val];
+        constraint[count] = indices[row][col][val-1];
         count++;
     }
     return constraint;
@@ -261,7 +244,7 @@ int getConstraintBlockLength(int val, int row, int col, struct sudokuManager *ma
     blockColHighBound = colHighBound(n, col);
     for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
         for(j = blockColLowBound ; j < blockColHighBound ; j++) {
-            if(indices[i][j][val] == -1){
+            if(indices[i][j][val-1] == -1){
                 continue;
             }
             count ++;
@@ -291,10 +274,10 @@ int* getConstraintBlock(int val, int row, int col, struct sudokuManager *manager
     }
     for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
         for(j = blockColLowBound ; j < blockColHighBound ; j++) {
-            if(indices[i][j][val] == -1){
+            if(indices[i][j][val-1] == -1){
                 continue;
             }
-            constraint[count] = indices[i][j][val];
+            constraint[count] = indices[i][j][val-1];
             count++;
         }
     }
@@ -353,7 +336,7 @@ double* onesArray(int len){
     return array;
 }
 
-int solveGurobi(struct sudokuManager *manager, GurobiOption type, int* retBoard){
+int solveGurobi(struct sudokuManager *manager, GurobiOption type, int** retBoard){
     int i, j, k, b, index;
     int constraintLength;
     int N = boardLen(manager);
@@ -415,7 +398,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int* retBoard)
         return -2;
     }
     for (i = 0; i < amountOfVariables; i++) {
-        obj[i] = randRange(1.0, (double)N);
+        obj[i] = randRangeDouble(1.0, (double)N);
     }
 
     /* variable types - for objective function */
@@ -759,12 +742,12 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int* retBoard)
                 for(j = 0; j < N; j++){
                     index = matIndex(manager->m, manager->n, i, j);
                     if(manager->board[index]!= 0){
-                        retBoard[index] = manager->board[index];
+                        (*retBoard)[index] = manager->board[index];
                     }
                     else{
-                        for (k = 0; k < N ; k++) {
-                            if(sol[indices[i][j][k]] == 1){
-                                retBoard[index] = k + 1;
+                        for (k = 1; k <= N ; k++) {
+                            if(sol[indices[i][j][k-1]] == 1){
+                                (*retBoard)[index] = k;
                                 break;
                             }
                         }
@@ -777,6 +760,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int* retBoard)
         /* no solution found */
     else if (optimstatus == GRB_INF_OR_UNBD) {
         printf("Model is infeasible or unbounded\n");
+        *retBoard = NULL; /* */
     }
         /* error or calculation stopped */
     else {

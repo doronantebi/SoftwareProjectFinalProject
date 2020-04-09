@@ -267,4 +267,10 @@ void printNotAnInteger(){
     printf("Input should be integer.\n");
 }
 
+/*
+ *
+ */
+void printBoardIsValid(){
+    printf("The board is valid.\n");
+}
 
