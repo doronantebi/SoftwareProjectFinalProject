@@ -26,16 +26,22 @@ typedef enum {
     CONTINUOUS = 2
 } GurobiOption;
 
+/*
+ *
+ */
+typedef struct {
+    int row; /* row in board */
+    int col; /* column in board */
+    int val;  /* matching value */
+} Variable ;
 
 /* generate a random floating point number from min to max */
-double randfrom(double min, double max)
+double randRange(double min, double max)
 {
     double range = (max - min);
     double div = RAND_MAX / range;
     return min + (rand() / div);
 }
-
-
 
 
 /*
@@ -44,7 +50,7 @@ double randfrom(double min, double max)
  * and with its variable index.
  * the function returns the amount of variables we need in our gurobi program.
  */
-int update3DIndices(struct sudokuManager *manager, int ***indices){
+int update3DIndices(struct sudokuManager *manager, Variable **indices){
     int length = boardLen(manager);
     int* board = manager->board;
     int row, col, m = manager->m, n = manager->n, val = 0;
@@ -347,9 +353,8 @@ double* onesArray(int len){
     return array;
 }
 
-int solveGurobi(struct sudokuManager *manager, GurobiOption type){
-    int cNum = 0;
-    int i, j, k, b;
+int solveGurobi(struct sudokuManager *manager, GurobiOption type, int* retBoard){
+    int i, j, k, b, index;
     int constraintLength;
     int N = boardLen(manager);
     GRBenv    *env   = NULL;
@@ -363,7 +368,8 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type){
     int       optimstatus;
     double    objval; /* */
     int       amountOfVariables;
-
+    int       staticInd[1];
+    double    staticVal[1];
     int ***indices = init3DArray(N);
     if(indices == NULL){
         return -2; /* terminate program */
@@ -409,7 +415,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type){
         return -2;
     }
     for (i = 0; i < amountOfVariables; i++) {
-        obj[i] = randfrom(1.0, (double)N);
+        obj[i] = randRange(1.0, (double)N);
     }
 
     /* variable types - for objective function */
@@ -595,7 +601,6 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type){
 
     /* BLOCKS - MUST ADD we only need one constraint per block for each value */
 
-
     for(b = 0; b < N ; b++){ /* b = #block */
         for(k = 1; k <= N ; k++){ /* k = value */
             getFirstIndexInBlock(manager, b, &i, &j);
@@ -638,6 +643,31 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type){
             }
         }
     }
+    /* MAKE SURE EVERY VARIABLE >=0 */
+    if(type == CONTINUOUS){
+        for(i = 0; i < N; i ++){
+            for(j = 0; j < N; j ++){
+                for(k = 0; k < N; k ++ ){
+                    if(indices[i][j][k]==-1){
+                        continue;
+                    }
+                    staticInd[0] = indices[i][j][k];
+                    staticVal[0] = 1;
+                    error = GRBaddconstr(model, 1, ind, val, GRB_GREATER_EQUAL, 0, NULL);
+                    if (error) {
+                        printf("ERROR %d 1st GRBaddconstr(): %s\n", error, GRBgeterrormsg(env));
+                        free3DArray(indices, N);
+                        free(obj);
+                        free(vtype);
+                        GRBfreemodel(model);
+                        GRBfreeenv(env);
+                        return -1;
+                    }
+                }
+            }
+        }
+    }
+
 
 
     /* Optimize model - need to call this before calculation */
@@ -682,6 +712,8 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type){
     if (error) {
         printf("ERROR %d GRBgettdblattr(): %s\n", error, GRBgeterrormsg(env));
         free3DArray(indices, N);
+        free(obj);
+        free(vtype);
         GRBfreemodel(model);
         GRBfreeenv(env);
         return -1;
@@ -718,7 +750,29 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type){
     /* solution found */
     if (optimstatus == GRB_OPTIMAL) {
         printf("Optimal objective: %.4e\n", objval);
-        printf("  x=%.2f, y=%.2f, z=%.2f\n", sol[0], sol[1], sol[2]);
+        for(i = 0; i < amountOfVariables ; i++){
+            printf("variable i=%d is equal to %.2f, \n", i, sol[i]);
+        }
+
+        if(type != CONTINUOUS){
+            for(i = 0; i < N; i++){
+                for(j = 0; j < N; j++){
+                    index = matIndex(manager->m, manager->n, i, j);
+                    if(manager->board[index]!= 0){
+                        retBoard[index] = manager->board[index];
+                    }
+                    else{
+                        for (k = 0; k < N ; k++) {
+                            if(sol[indices[i][j][k]] == 1){
+                                retBoard[index] = k + 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
     }
         /* no solution found */
     else if (optimstatus == GRB_INF_OR_UNBD) {
