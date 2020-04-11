@@ -260,18 +260,21 @@ int backtracking(struct sudokuManager *manager){
 
 /*
  * This function validates a board using ILP
- * return 1 if valid and 0 otherwise.
+ * return 1 if valid and 0 if it isn't .
+ * returns -1 if allocation failed
+ * returns -2 if gurobi error occurred.
  */
 int validateBoard(struct sudokuManager *manager){
     int res;
     int *retBoard = calloc(boardArea(manager),sizeof(int));
     if(retBoard == NULL){
         printAllocFailed();
-        return -2;
+        return -1;
     }
     res = solveGurobi(manager, BINARY, &retBoard);
     if(res == -1){
         printf("gurobi error\n");
+        return -2;
     }
     else
         if(res == -2){

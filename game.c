@@ -270,7 +270,8 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName){
 void save(struct sudokuManager *board, char* fileName){
     FILE *file;
     int N = boardLen(board), m=board->m, n=board->n, row, col, currVal;
-    if(validate(board)){
+    int valid = validateBoard(board);
+    if(valid == 1){ /* the board is valid */
         file = fopen(fileName, "w");
         if(file == NULL){
             printFilePathIllegal();
@@ -295,9 +296,14 @@ void save(struct sudokuManager *board, char* fileName){
             }
         }
         fclose(file);
-    }
-    else{
+    } else if (valid == 0){
         printBoardNotValidError(); /* MUST SAVE ONLY VALID BOARD */
+    }
+    else if(valid == -1){
+        return;
+    }
+    else{ /* valid == -2 - gurobi failed */
+        printGurobiFailedTryAgain();
     }
 }
 
@@ -404,7 +410,7 @@ int autofill(struct sudokuManager *board){
 /*
  * This function validates the current board using ILP,
  * ensuring it's solvable.
- * returns 1 if valid and 0 otherwise.
+ * returns 1 if valid and 0 if it isn't .
  *  * CHECK!!!!!!!! DO WITH GUROBI
  */
 int validate(struct sudokuManager *board){
@@ -414,6 +420,10 @@ int validate(struct sudokuManager *board){
     }
     else if(isValid == 1){
         printBoardIsValid();
+    }
+    else if(isValid == -2){
+        printGurobiFailedTryAgain();
+        return 0;
     }
     return isValid;
 }
@@ -440,7 +450,7 @@ int hint(struct sudokuManager *board, int X, int Y){
     }
     ret = getHint(board, Y, X, &hint);
     if(ret == -1){
-        return -1;
+        return -1; /* alloc failed */
     }
     else
         if(ret == 0){
@@ -460,9 +470,9 @@ int hint(struct sudokuManager *board, int X, int Y){
  * validation of X and mode is done in Parser.
  */
 int guess(struct sudokuManager *board, float X){
-    int isValid = validate(board);
-    if(!isValid){
-        return -1;
+    int isValid = validateBoard(board);
+    if(isValid == -1){
+        return -1; /*alloc failed */
     }
     printf("%f", X);
     /* THINK OF A WAY TO DO IT MORE EFFICIENTLY IN GUROBI SECTION! */
