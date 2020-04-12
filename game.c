@@ -53,7 +53,7 @@ int inputNumFromFile(FILE *file, int *pNum){
  */
 struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
     int n, m, i, j, success, value, *onlyFixed;
-    FILE *file;
+    FILE *file = NULL;
     struct movesList *linkedList;
     struct sudokuManager *board;
     char nextChar;
@@ -122,7 +122,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
         }
         return NULL;
     }
-    board->board = calloc(boardArea(board), sizeof(int));
+    board->board = (int *)calloc(boardArea(board), sizeof(int));
     if (board->board == NULL) {
         printAllocFailed();
         free(board->fixed);
@@ -161,13 +161,13 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
         for (j = 0; j < boardLen(board); j++) { /*Column*/
             success = inputNumFromFile(file, &value);
             if (success == 0) { /*No integer was received*/
-                printNotEnoughNumbers(boardArea(board) + 2,i * boardLen(board) + j + 2);
+                printNotEnoughNumbers();
                 freeBoard(board); /*frees also linkedList */
                 fclose(file);
                 return NULL;
             }
             if (!isLegalCellValue(board, value)) { /* checking the cell is in the correct range */
-
+                printWrongRangeFile(value, 1, boardLen(board));
                 freeBoard(board); /*frees also linkedList */
                 fclose(file);
                 return NULL;
@@ -176,7 +176,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
             updateEmptyCellsSingleSet(board, 0, value);
             nextChar = fgetc(file);
             if (nextChar == EOF && (!isLastCellInMatrix(boardLen(board), i, j))) {
-                printNotEnoughNumbers(boardArea(board), i * boardLen(board) + j);
+                printNotEnoughNumbers();
                 freeBoard(board); /*frees also linkedList */
                 fclose(file);
                 return NULL;
@@ -594,6 +594,22 @@ int guessHint(struct sudokuManager *board, int X, int Y){
     }
 
     return 0;
+}
+
+/*
+ * Prints the amount of possible solutions of the board.
+ * Valid only in Edit and Solve modes.
+ */
+int numSolutions(struct sudokuManager *board){
+    int res;
+    res = backtracking(board);
+    if (res == -1){
+        return -1;
+    }
+    else{
+        printNumOfSolutions(res);
+        return 0;
+    }
 }
 
 

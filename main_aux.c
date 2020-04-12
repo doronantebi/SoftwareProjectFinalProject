@@ -238,8 +238,8 @@ void printNoInput(){
 /*
  * This method prints that not enough numbers were entered.
  */
-void printNotEnoughNumbers(int expected, int is){
-    printf("Not enough numbers were inserted. Expected %d, but received only %d.\n", expected, is);
+void printNotEnoughNumbers(){
+    printf("Not enough numbers were inserted.\n");
 }
 
 /*
@@ -247,6 +247,14 @@ void printNotEnoughNumbers(int expected, int is){
  */
 void printErrorEmptyCellFixed(int row, int col){
     printf("Cell (%d, %d) is empty but set as fixed.\n", row, col);
+}
+
+/*
+ * This method prints that the number read from a file is not in the correct range.
+ */
+void printWrongRangeFile(int number, int start, int end){
+    printf("Error: the number %d read form the file is not in the corredct range."
+           "The correct range is %d to %d.\n", number, start, end);
 }
 
 void printBoardNotValidError(){
@@ -265,20 +273,6 @@ void printAllocFailed(){
  */
 void printBoardIsErroneous(){
     printf("The board is erroneous!\n");
-}
-
-/*
- * This function prints error that
- * ((value < 0) || (x > boardLen(manager)));
- */
-void printWrongRange(struct sudokuManager *manager, int value){
-    if(value < 0){
-        printf("%d < 0, ", value);
-    }
-    else { /* value > boardLen(mmanager)*/
-        printf("%d > %d, ", value, boardLen(manager));
-    }
-    printf("while value should be in range 0 to %d.\n", boardLen(manager));
 }
 
 
@@ -301,4 +295,10 @@ void printBoardIsSolved(){
 
 }
 
+/*
+ * This method prints a message to the user saying how many possible values there are.
+ */
+void printNumOfSolutions(int num){
+    printf("There are %d solutions sfor the current board.\n", num);
+}
 

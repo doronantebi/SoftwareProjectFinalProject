@@ -7,6 +7,13 @@
 
 #include "utilitiesBoardManager.h"
 
+
+/*
+ * This method returns the number of possible solutions of the current board using the backtracking algorithm.
+ * If there is memory allocation error, it returns -1.
+ */
+int backtracking(struct sudokuManager *manager);
+
 /*
  * This function validates a board using ILP
  * return 1 if valid and 0 otherwise.

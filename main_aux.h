@@ -159,6 +159,11 @@ void printBoardIsValid();
  */
 void printGenerateInputError();
 
+/*
+ * This method prints a message to the user saying how many possible values there are.
+ */
+void printNumOfSolutions(int num);
+
 
 /*
  * prints the array of possible legal values for guess hint
@@ -173,10 +178,10 @@ void printArray(int *cellValues, int length);
 void printFilePathIllegal();
 
 /*
- * This function prints error that
- * ((value < 0) || (x > boardLen(manager)));
+ * This method prints that the number read from a file is not in the correct range.
  */
-void printWrongRange(struct sudokuManager *board, int value);
+void printWrongRangeFile(int number, int start, int end);
+
 
 /*
  * This function prints a message that the input is not an integer.
@@ -189,6 +194,7 @@ void printNotAnInteger();
  */
 void printErrorEmptyCellFixed(int row, int col);
 
+
 /*
  * This method prints that no input was received.
  */
@@ -197,7 +203,7 @@ void printNoInput();
 /*
  * This method prints that not enough numbers were entered.
  */
-void printNotEnoughNumbers(int expected, int is);
+void printNotEnoughNumbers();
 
 /*
  * This method prints a message saying that an
