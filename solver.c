@@ -260,7 +260,7 @@ int backtracking(struct sudokuManager *manager){
 
 /*
  * This function validates a board using ILP
- * return 1 if valid and 0 if it isn't .
+ * returns 1 if valid and 0 if it isn't .
  * returns -1 if allocation failed
  * returns -2 if gurobi error occurred.
  */
@@ -268,34 +268,43 @@ int validateBoard(struct sudokuManager *manager){
     int res;
     int *retBoard = calloc(boardArea(manager),sizeof(int));
     if(retBoard == NULL){
-        printAllocFailed();
         return -1;
     }
-    res = solveGurobi(manager, BINARY, &retBoard);
-    if(res == -1){
-        printf("gurobi error\n");
+    res = solveBoard(manager, &retBoard);
+    if(res == -1){ /* gurobi error */
         return -2;
     }
-    else
-        if(res == -2){
-        return -1;
-        }
-        else{
-            if(retBoard == NULL){
-            /* the board is not valid */
-            return 0;
-            }
-            else {
+    else {
+        if (res == -2) { /* memory allocation error */
+            return -1;
+        } else {
+            if (retBoard == NULL) {
+                /* the board is not valid */
+                return 0;
+            } else {
                 return 1;
             }
         }
+    }
+}
 
+/*
+ * This method guesses a hint for cell (row, col) using LP.
+ *  The method returns -1 there was a nonfatal error because of which we can't execute the command and need to continue,
+ *  -2 if memory allocation failed, and 0 otherwise.
+ *  User needs to free *pCellValues iff return value == 0.
+ */
+int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, int *pLength) {
+    /* initializing *pCellValues and *pLength */
+    *pCellValues = NULL;
+    *pLength = 0;
+    return guessCellValues(manager, row, col, pCellValues, pLength);
 }
 
 /*
  * This function generates a new board with Y cells.
- * if has been successful,returns a pointer to a newBoard that will have Y values.
- * if fails, returns prevBoard
+ * if has been successful, returns a pointer to a newBoard that will have Y values.
+ * if fails, returns board. If we need to terminate, it returns NULL.
  */
 struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
     /* ALL ALLOCATIONS */
@@ -306,13 +315,12 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
     int* erroneous = (int*)calloc(boardArea(board), sizeof(int));
     int* fixed = (int*)calloc(boardArea(board), sizeof(int));
     struct movesList *list = (struct movesList*) malloc(sizeof(struct movesList));
-    int val = randRangeInt(0, boardLen(board)) + 1;
+    int val;
     int row, col, retGurobi;
     int m = board->m, n = board->n, iter;
     int x, cellsToRemove;
 
     if((newManager == NULL)||(retBoard == NULL) || (erroneous == NULL) || (fixed == NULL) || (list == NULL)){
-        printAllocFailed();
         free(newManager);
         free(retBoard);
         free(erroneous);
@@ -326,7 +334,7 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
     /* INITIALIZES NEW SUDOKU MANAGER */
     newManager->m = m, newManager->n = n;
     newManager->erroneous = erroneous, newManager->fixed= fixed;
-    newManager->addMarks = 1;
+    newManager->addMarks = board->addMarks;
     newManager->linkedList = list;
     initList(newManager->linkedList);
     newManager->linkedList->board = newManager;
@@ -336,11 +344,13 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
         duplicateBoard(prevBoard, newBoard, board->m, board->n); /* copy content of prevBoard to newBoard */
         x = X;
         /* RANDOMLY FILLS X CELLS */
-        while (x != 0) {
+        while (x > 0) {
             row = randRangeInt(0, boardLen(board)); /* MAKE SURE!!!!!! IT DOESNT INCLUDE THE UPPER BOUND */
             col = randRangeInt(0, boardLen(board));
             if (newBoard[matIndex(m, n, row, col)] == 0) { /* if cell is empty */
-                while (neighbourContainsOnce(newBoard, m, n, row, col, val)) { /* as long as val is not legal for our curr cell */
+                val = randRangeInt(0, boardLen(board)) + 1;
+                while (neighbourContainsOnce(newBoard, m, n, row, col, val)) { /* as long as val is
+                                                                                * illegal for our curr cell */
                     val = randRangeInt(0, boardLen(board)) + 1; /* randomly choose different value  */
                 }
                 newBoard[matIndex(m, n, row, col)] = val; /* set the new value */
@@ -350,7 +360,7 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
 
         newManager->board = newBoard; /* solve the board with the new X filled cells */
         /* previous board is saved in prevBoard */
-        retGurobi = solveGurobi(newManager, BINARY, &retBoard);
+        retGurobi = solveBoard(newManager, &retBoard);
         if(retGurobi == -2){ /* allocation failed... */
             return NULL;
         }
@@ -359,7 +369,7 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
                 if(retBoard != NULL){ /* solution has been found!!! Hurray!!! */
                     cellsToRemove = boardArea(board) - Y;
 
-                    while (cellsToRemove != 0){
+                    while (cellsToRemove > 0){
                         row = randRangeInt(0, boardLen(board));
                         col = randRangeInt(0, boardLen(board));
                         if(retBoard[matIndex(m, n, row, col)] != 0){
@@ -382,9 +392,28 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
 }
 
 /*
+ * This method guesses a solution for the entire board and fills its cells with this solution if legal.
+ * The method returns -2 there was a nonfatal error because of which we can't execute the command (gurobi failed)
+ * and need to continue, -1 if memory allocation failed, and 0 otherwise.
+ */
+int doGuess(struct sudokuManager *manager, float threshold){
+    int res;
+    res = guessSolution(manager, threshold);
+    if (res == -2){
+        return -1;
+    }
+    if (res == -1){
+        return -2;
+    }
+    return 0;
+}
+
+
+/*
  * This function fills in *hint a hint for cell <row,col>
  * returns 1 if succeed solving the board.
- * return -1 if allocate failed
+ * returns -1 if allocation failed
+ * returns -2 if gurobi failed.
  * returns 0 if board could not be solved or gurobi failed
  */
 int getHint(struct sudokuManager *manager, int row, int col, int* hint){
@@ -394,14 +423,14 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
         printAllocFailed();
         return -2;
     }
-    res = solveGurobi(manager, BINARY, &retBoard);
+    res = solveBoard(manager, &retBoard);
     if(res == -1){
-        printf("gurobi error\n");
         free(retBoard);
+        return -2;
     }
     else{
         if(res == -2){ /* alloc failed in gurobi  */
-            return 0;
+            return -1;
         }
         else{
             if(retBoard == NULL){/* the board is not valid */
@@ -415,7 +444,3 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
         }
     }
 }
-
-
-
-

@@ -101,7 +101,7 @@ int neighbourContainsOnce(int* board, int m, int n, int i, int j, int val);
  * This method returns 1 if a row/col/block contains
  * val more than once.
  */
-int neighbourContainsTwice(int* board, int m, int n, int i, int j, int val);
+int neighbourContainsTwice(int* board, int m, int n, int row, int col, int val);
 
 
 /*

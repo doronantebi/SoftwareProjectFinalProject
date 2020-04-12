@@ -30,6 +30,23 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint);
 struct sudokuManager* doGenerate(struct sudokuManager *prevBoard, int *newBoard, int X, int Y);
 
 
+
+/*
+ * This method guesses a hint for cell (row, col) using LP.
+ *  The method returns -1 there was a nonfatal error because of which we can't execute the command and need to continue,
+ *  -2 if memory allocation failed, and 0 otherwise.
+ *  User needs to free *pCellValues iff return value == 0.
+ */
+int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, int *pLength);
+
+
+/*
+ * This method guesses a solution for the entire board and fills its cells with this solution if legal.
+ * The method returns -1 there was a nonfatal error because of which we can't execute the command and need to continue,
+ *  -2 if memory allocation failed, and 0 otherwise.
+ */
+int doGuess(struct sudokuManager *manager, float threshold);
+
 double randRangeDouble(double min, double max);
 
 #endif

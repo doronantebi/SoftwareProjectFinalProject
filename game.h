@@ -56,7 +56,7 @@ int guess(struct sudokuManager *board, float X);
  * Y = fixed cells #
  * Valid only in Edit mode.
  */
-int generate(struct sudokuManager **pPrevBoard, int X, int Y);
+int generate(struct sudokuManager **pManager, int X, int Y);
 
 /*
  * This function undo the previous move done by the user.
@@ -83,7 +83,7 @@ void save(struct sudokuManager *board, char* fileName);
 int hint(struct sudokuManager *board, int X, int Y);
 
 /*
- * This function shows the solution to cell <X,Y>
+ * This function shows the solution to cell <Y,X>
  * Valid only in Solve mode.
  */
 int guessHint(struct sudokuManager *board, int X, int Y);

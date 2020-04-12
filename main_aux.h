@@ -128,6 +128,7 @@ void printMarkErrorsModeError();
 
 /*
  * This method announces that the user has been trying to set a fixed cell
+ * X is column, Y is row.
  */
 void printErrorCellXYIsFixed(int X, int Y);
 

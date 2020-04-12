@@ -310,7 +310,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
                 printNotANumber(1);
                 return 0;
             } else {
-                if (arrInput[0] < 0) {
+                if (arrInput[0] < 0 || arrInput[0] > boardLen(*pBoard)) {
                     printWrongRangeInt(7, arrInput[0], 1);
                     printf("The parameter should be an integer greater than or equal to 0.\n");
                     return 0;
@@ -324,7 +324,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
                             printNotANumber(2);
                             return 0;
                         } else {
-                            if (arrInput[1] <= 0) {
+                            if (arrInput[1] <= 0 || arrInput[1] > boardLen(*pBoard)) {
                                 printWrongRangeInt(7, arrInput[1], 2);
                                 printf("The parameter should be an integer greater than 0.\n");
                                 return 0;
@@ -555,6 +555,7 @@ int interpret(char *command, struct sudokuManager **pBoard, enum Mode mode){
                "A line should contain up to 256 characters.\nPlease enter a new command.\n");
         return 0;
     }
+
     token = strtok(command, " \t\r\n");
     if (token != NULL) { /* First token exists*/
 

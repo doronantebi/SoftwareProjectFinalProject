@@ -147,6 +147,8 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
         return NULL;
     }
 
+    board->emptyCells = boardArea(board);
+
     /* all board's fields are initialized */
 
     if ((mode1 == Edit) && (fileName == NULL)){ /* we didn't receive a file path, we need to return board*/
@@ -171,6 +173,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
                 return NULL;
             }
             changeCellValue(board->board, board->m, board->n, i, j, value);
+            updateEmptyCellsSingleSet(board, 0, value);
             nextChar = fgetc(file);
             if (nextChar == EOF && (!isLastCellInMatrix(boardLen(board), i, j))) {
                 printNotEnoughNumbers(boardArea(board), i * boardLen(board) + j);
@@ -399,18 +402,32 @@ int autofill(struct sudokuManager *board){
  *  * CHECK!!!!!!!! DO WITH GUROBI
  */
 int validate(struct sudokuManager *board){
-    int isValid = validateBoard(board);
+    int isValid;
+    if (isAnyErroneousCell(board)){
+        printBoardIsErroneous();
+        return 0;
+    }
+
+    isValid = validateBoard(board);
     if(isValid == 0){
         printBoardNotValidError();
+        return 0;
     }
     else if(isValid == 1){
         printBoardIsValid();
+        return 0;
     }
     else if(isValid == -2){
         printGurobiFailedTryAgain();
         return 0;
     }
-    return isValid;
+    else{
+        if (isValid == -1){
+            printAllocFailed();
+            return -1;
+        }
+    }
+    return 0;
 }
 
 
@@ -455,9 +472,21 @@ int hint(struct sudokuManager *board, int X, int Y){
  * validation of X and mode is done in Parser.
  */
 int guess(struct sudokuManager *board, float X){
-    int isValid = validateBoard(board);
-    if(isValid == -1){
-        return -1; /*alloc failed */
+    int res;
+    if (isAnyErroneousCell(board)){
+        printBoardIsErroneous();
+        return 0;
+    }
+
+    res = doGuess(board, X);
+    if (res == -1){
+        printAllocFailed();
+        return -1;
+    }
+
+    if (res == -2){
+        printGurobiFailedTryAgain();
+        return 0;
     }
     printf("%f", X);
     /* THINK OF A WAY TO DO IT MORE EFFICIENTLY IN GUROBI SECTION! */
@@ -469,27 +498,35 @@ int guess(struct sudokuManager *board, float X){
  *  * CHECK!!!!!!!! check MALLOC ALLOCATION SUCCESS
  *  CREATE DOGENERATE IN GUROBI
  */
-struct sudokuManager* generate(struct sudokuManager *board, int X, int Y){
-    int *newBoard = (int*)malloc(boardArea(board)*sizeof(int));
+int generate(struct sudokuManager **pManager, int X, int Y){
+    int *newBoard;
+    struct sudokuManager *tmp, *prevManager;
+    if (isAnyErroneousCell(*pManager)){
+        printBoardIsErroneous();
+        return 0;
+    }
+    newBoard = (int*)calloc(boardArea(*pManager), sizeof(int));
     if(newBoard == NULL){
         printAllocFailed();
-        return NULL;
+        return -1;
     } /* MAYBE DONE IN PARSER */
-    if(X > amountOfEmptyCells(board)){
+    if(X > amountOfEmptyCells(*pManager)){
         printGenerateInputError();
-        return board;
+        return 0;
     }
     else {
-        board = doGenerate(board, newBoard, X, Y);
-        if(board == NULL){
-            return NULL;
+        tmp = doGenerate(*pManager, newBoard, X, Y);
+        if(tmp == NULL){ /* we need to terminate */
+            printAllocFailed();
+            free(newBoard);
+            return -1;
         }
-        free(newBoard);
+        prevManager = *pManager;
+        *pManager = tmp;
+        freeBoard(prevManager);
     }
-    return board;
+    return 0;
 }
-
-
 
 
 
@@ -519,6 +556,46 @@ void markErrors(struct sudokuManager* board ,int X){
     board->addMarks = X;
 }
 
+
+/*
+ * This function shows the solution to cell <Y,X>
+ * Valid only in Solve mode.
+ */
+int guessHint(struct sudokuManager *board, int X, int Y){
+    int length, *cellValues = NULL, res;
+    X--, Y--;
+    if (isAnyErroneousCell(board)){
+        printBoardIsErroneous();
+        return 0;
+    }
+    if (isFixedCell(board, Y, X)){ /* cell is fixed */
+        printErrorCellXYIsFixed(X, Y);
+        return 0;
+    }
+    if (board->board[matIndex(board->m, board->n, Y, X)] != 0){
+        printErrorCellIsSet();
+        return 0;
+    }
+
+    res = doGuessHint(board, Y, X, &cellValues, &length);
+
+    if (res == -1){
+        return 0;
+    }
+
+    if (res == -2){
+        return -1;
+    }
+
+    if (res == 0){ /* we have succeeded and we need to free cellValues */
+        printGuessHintSuccess();
+        printArray(cellValues, length);
+        free(cellValues);
+        return 0;
+    }
+
+    return 0;
+}
 
 
 /*
