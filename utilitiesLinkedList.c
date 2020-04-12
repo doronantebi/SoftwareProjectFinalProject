@@ -90,9 +90,16 @@ void pointToFirstMoveInMovesList(struct sudokuManager *board){
  * This function updates the board to the previous command
  */
 void undoCommand (struct sudokuManager *board) {
+    int m = board->m, n = board->n;
+    int currVal, prevVal, row, col;
     goToPrevNode(board); /* board after every action is always at seperator, we change it to previous node so now action==command */
     while (board->linkedList->prev->action != separator) {
-        changeCellValue(board->board,  board->m,board->n, board->linkedList->row, board->linkedList->col, board->linkedList->prevValue); /* sets back the previous value */
+        row = board->linkedList->row;
+        col = board->linkedList->col;
+        prevVal = board->linkedList->prevValue;
+        currVal = board->linkedList->newValue;
+        changeCellValue(board->board, m, n, row, col, prevVal); /* sets back the previous value */
+        updateEmptyCellsSingleSet(board, currVal, prevVal);
         goToPrevNode(board);
     }
 }
@@ -101,9 +108,16 @@ void undoCommand (struct sudokuManager *board) {
  * This function updates the board to the previous command
  */
 void redoCommand (struct sudokuManager *board){
-    goToNextNode(board); /* board after every action is always at finishCommand */
+    int m = board->m, n = board->n;
+    int currVal, prevVal, row, col;
+    goToPrevNode(board); /* board after every action is always at finishCommand */
     while (board->linkedList->next->action != separator) {
-        changeCellValue(board->board, board->m, board->n, board->linkedList->row, board->linkedList->col, board->linkedList->newValue); /* sets back the new value*/
+        row = board->linkedList->row;
+        col = board->linkedList->col;
+        prevVal = board->linkedList->prevValue;
+        currVal = board->linkedList->newValue;
+        changeCellValue(board->board, m, n, row, col, currVal); /* sets back the new value*/
+        updateEmptyCellsSingleSet(board, prevVal, currVal);
         goToNextNode(board);
     }
 }

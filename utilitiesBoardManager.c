@@ -372,16 +372,16 @@ int isLastCellInMatrix(int size, int i, int j){
  * otherwise, returns 0.
  */
 int returnLegalValue(int* board, int m, int n, int row, int col){
-    int i, N= m*n,  value = 0;
+    int i, N = m * n, value = 0;
     if(board[matIndex(m,n,row,col)] != 0){
         return 0; /* cell is not empty - return */
     }
     for(i = 1; i <= N ; i++){
-        if (!neighbourContainsOnce(board, m, n, row, col, i)){ /**/
+        if (!neighbourContainsOnce(board, m, n, row, col, i)){ /* none if neighbours contain value i */
             if(value == 0) {
-                value = i;
-            } /* we already have updated value, we know there is more than 1 legal value*/
-            else{
+                value = i; /* this is the value we would like to fill in cell (row, col), it there is only one legal option */
+            }
+            else{ /* we already have updated value, we know there is more than 1 legal value*/
                 return 0;
             }
         }
@@ -389,14 +389,48 @@ int returnLegalValue(int* board, int m, int n, int row, int col){
     return value; /* this is the value we want to set in the board */
 }
 
+/*
+ * This function fills board tmp with the values that has been returned from returnLegalValue function.
+ */
+void fillSingleLegalValue(struct sudokuManager *board, int *tmp) {
+    int row, col, m = board->m, n = board->n, length = boardLen(board);
+    for(row = 0; row < length ; row++){
+        for(col = 0; col < length ; col++){
+            tmp[matIndex(m, n, row, col)] = returnLegalValue(board->board, m, n, row, col);
+        }
+    }
+}
+
+/*
+ * This function receives a board and tmp int pointer that is filled with legal values
+ * (if a cell contain value 0 than it is not a cell with a single value to fill)
+ * return -1 in case of allocation failure.
+ * otherwise, returns 0.
+ */
+int fillBoardWithSignleLegalValues(struct sudokuManager *board, int *tmp) {
+    int row, col, length = boardLen(board), index = 0, val;
+    for (row = 0; row < length; row++) {
+        for (col = 0; col < length; col++) {
+            index = matIndex(board->m, board->n, row, col);
+            val = tmp[index];
+            if (val != 0) { /* there is only one legal value for (row,col) */
+                if (doSet(board, row, col, val) == -1) {
+                    free(tmp);
+                    return -1;
+                }
+            }
+        }
+    }
+    return 0;
+}
 
 /*
  * This function updates the board with autofilled values
  */
+/* SHOULD WE KILL ALL NEXT MOVES IF NO CHANGES HAVE BEEN MADE? */
 int updateAutofillValuesBoard(struct sudokuManager *board){
     int* tmp;
-    int row, col, val, index;
-    int length = boardLen(board), m = board->m, n = board->n;
+    /* destroy all next moves in the boards' move list */
     if (board->linkedList->next != NULL){
         killNextMoves(board); /*???????????*/
     }
@@ -404,32 +438,59 @@ int updateAutofillValuesBoard(struct sudokuManager *board){
     if(tmp == NULL){
         return -1;
     }
-    for(row = 0; row < length ; row++){
-        for(col = 0; col < length ; col++){
-            tmp[matIndex(m, n, row, col)] = returnLegalValue(board->board,m,n, row, col);
-        }
-    }
-    for(row = 0; row < length ; row++){
-        for(col = 0; col < length ; col++){
-            index = matIndex(m, n, row, col);
-            val = tmp[index];
-            if(val != 0){
-                board->board[index] = val;
-                if(createNextNode(board, command, row, col, val, 0) == -1){
-                    free(tmp);
-                    return -1;
-                }
-                goToNextNode(board);
-            }
-        }
+    fillSingleLegalValue(board, tmp);
+    if(fillBoardWithSignleLegalValues(board, tmp)== -1){
+        free(tmp);
+        return -1;
     }
     free(tmp);
-    if(board->linkedList->action == separator){ /* no changes made */
-        return  0; /*NOT SURE YET IF IT IS A NEW ACTION OR NOT */
-    }
+    /*if(board->linkedList->action == separator){ no changes made
+        return  0;  DO WE HAVE TO DO IT?????????
+    } else ... */
     createNextNode(board, separator, 0, 0, 0, 0);
     goToNextNode(board);
     return 0;
 }
 
+/*
+ * This function updates emptyCells field when necessary.
+ */
+void updateEmptyCellsSingleSet(struct sudokuManager *manager, int prevVal, int nextVal){
+    if(prevVal == 0){
+        if(nextVal != 0){ /* change an empty cell to be not empty */
+            manager->emptyCells --;
+        }
+    } /* prevVal != 0 */
+    else {
+        if(nextVal == 0){ /* change a filled cell to be empty */
+            manager->emptyCells ++;
+        }
+    }
+}
+
+/*
+ * this method sets Z to (X,Y),
+ * is called after verifying that all values are legal.
+ */
+int doSet(struct sudokuManager *manager, int X, int Y, int Z){
+    int prevVal = manager->board[matIndex(manager->m, manager->n, X, Y)];
+    updateEmptyCellsSingleSet(manager, prevVal, Z); /* update the amount of emptyCells field */
+    changeCellValue(manager->board, manager->m, manager->n, X, Y, Z);
+    if (manager->linkedList->next != NULL){
+        killNextMoves(manager);
+    }
+    if (createNextNode(manager, command, X, Y, Z, prevVal) == -1){
+        return -1;
+    }
+    goToNextNode(manager);
+    return 0;
+}
+
+
+/*
+ This function counts the amount of empty cells in boards.
+ */
+void updateEmptyCellsField(struct sudokuManager *manager){
+    manager->emptyCells = amountOfEmptyCells(manager);
+}
 

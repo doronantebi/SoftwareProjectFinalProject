@@ -347,26 +347,7 @@ void reset(struct sudokuManager *board){
 
 /* BOARD CHANGING RELATED FUNCTIONS  */
 
-/*
- * this method sets Z to (X,Y),
- * is called after verifying that all values are legal.
- */
-int doSet(struct sudokuManager *manager, int X, int Y, int Z){
-    int prevVal = manager->board[matIndex(manager->m, manager->n, X, Y)];
-    changeCellValue(manager->board, manager->m, manager->n, X, Y, Z);
-    if (manager->linkedList->next != NULL){
-        killNextMoves(manager);
-    }
-    if (createNextNode(manager, command, X, Y, Z, prevVal) == -1){
-        return -1;
-    }
-    goToNextNode(manager);
-    if (createNextNode(manager, separator, 0, 0, 0, 0) == -1){
-        return -1;
-    }
-    goToNextNode(manager);
-    return 0;
-}
+
 
 /*
  * Sets in board at location [Y,X] ( X column, Y row ) value Z
@@ -377,31 +358,35 @@ int set(struct sudokuManager *manager, int X, int Y, int Z){
         printErrorCellXYIsFixed(X,Y);
         return 0;
     }
-    else {
-        if (doSet(manager, Y, X, Z) == -1) { /* fix the order of row and column */
+    else if ((doSet(manager, Y, X, Z) == -1) ||
+            (createNextNode(manager, separator, 0, 0, 0, 0) == -1)) {
+            printAllocFailed();
             return -1;
-        }
+    }
+    else {
+        goToNextNode(manager);
         updateErroneousBoardCell(manager->board, manager->erroneous, manager->m, manager->n, Y, X);
         printBoard(manager);
         return 0;
-    }
+     }
 }
+
 
 /*
  * This function automatically fill "obvious" values – cells which contain a single legal value.
  * Available only in Solve mode.
  */
 int autofill(struct sudokuManager *board){
-    if(isAnyErroneousCell(board)){
+    if(isAnyErroneousCell(board)) {
         printBoardIsErroneous();
-    }
-    else{
-        if(updateAutofillValuesBoard(board)== -1){
-            return -1;
-        }
-        printBoard(board);
         return 0;
     }
+    /* else... */
+    if(updateAutofillValuesBoard(board)== -1){
+        printAllocFailed();
+        return -1;
+    } /* no erroneous cells and no allocation failure.  */
+    printBoard(board);
     return 0;
 }
 

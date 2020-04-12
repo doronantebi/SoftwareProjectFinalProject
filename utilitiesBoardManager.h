@@ -18,6 +18,7 @@ struct sudokuManager {
     int *erroneous;
     struct movesList *linkedList;
     int addMarks;
+    int emptyCells;
 };
 
 
@@ -198,5 +199,22 @@ int updateAutofillValuesBoard(struct sudokuManager *board);
 void getFirstIndexInBlock(int m, int n, int blockNum, int* pRow, int* pCol);
 
 
+
+/*
+ * this method sets Z to (X,Y),
+ * is called after verifying that all values are legal.
+ */
+int doSet(struct sudokuManager *manager, int X, int Y, int Z);
+
+/*
+ * This function updates the epmtyCells field after a single set.
+ */
+void updateEmptyCellsSingleSet(struct sudokuManager *manager, int prevVal, int nextVal);
+
+
+/*
+ * This function updates the enptyCells field by counting the empty cells.
+ */
+void updateEmptyCellsField(struct sudokuManager *manager);
 
 #endif
