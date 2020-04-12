@@ -239,6 +239,7 @@ int solve(struct sudokuManager **pPrevBoard, char *fileName){
         if (tmp != NULL) {
             freeBoard(tmp);
         }
+        printBoard(board);
     }
     return 0;
 }
@@ -261,6 +262,7 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName){
         if (tmp != NULL) {
             freeBoard(tmp); /* frees the previous board if the new boars was successful */
         }
+        printBoard(board);
     }
     return 0;
 }
@@ -488,8 +490,7 @@ int guess(struct sudokuManager *board, float X){
         printGurobiFailedTryAgain();
         return 0;
     }
-    printf("%f", X);
-    /* THINK OF A WAY TO DO IT MORE EFFICIENTLY IN GUROBI SECTION! */
+    printBoard(board);
     return 0;
 }
 
@@ -524,6 +525,7 @@ int generate(struct sudokuManager **pManager, int X, int Y){
         prevManager = *pManager;
         *pManager = tmp;
         freeBoard(prevManager);
+        printBoard(*pManager);
     }
     return 0;
 }
@@ -621,6 +623,14 @@ int startGame(){
         }
         if (res == 2) { /* exit command was entered*/
             return 0;
+        }
+        if (mode == Solve && board->emptyCells == 0){
+            if (isAnyErroneousCell(board)){
+                printBoardIsErroneous();
+            }
+            else{
+                printBoardIsSolved();
+            }
         }
     }
     /* We have reached EOF, there are no more commands to execute*/
