@@ -1,5 +1,4 @@
 
-#include "gurobi_sys"
 #include "utilitiesBoardManager.h"
 #include "main_aux.h"
 

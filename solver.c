@@ -386,8 +386,6 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
             }
         }
     freeBoard(newManager);
-    printErrorPuzzleGenerator();
-
     return board;
 }
 

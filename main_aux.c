@@ -16,6 +16,14 @@ void printGameTitle(){
     printf("%s%s\n\n             Creators: %s.\n", title1, title2, creators);
 }
 
+/*
+ * This function prints the exit message.
+ */
+void printExitMessage(){
+    printf("Bye bye! (:\n");
+}
+
+
 /* PARSER METHODS */
 
 /*
@@ -159,11 +167,11 @@ void printInvalidCommand(){
 
 
 void printNoNextMoveError(){
-    printf("There is no next move\n");
+    printf("Redo is not possible, there is no next move!\n");
 }
 
-void printErrorAutofill(){
-    printf("Autofill error!\n");
+void printNoPrevMoveError(){
+    printf("Undo is not possible, there is no previous move!\n");
 }
 
 /* PRINT RELATED METHODS */
@@ -249,12 +257,26 @@ void printErrorEmptyCellFixed(int row, int col){
     printf("Cell (%d, %d) is empty but set as fixed.\n", row, col);
 }
 
+
+/*
+ * This function prints an error if the path for a file, given by user, is illegal.
+ */
+void printFilePathIllegal(){
+    printf("Sorry, file path is illegal... :(\n");
+
+
+}
 /*
  * This method prints that the number read from a file is not in the correct range.
  */
 void printWrongRangeFile(int number, int start, int end){
     printf("Error: the number %d read form the file is not in the corredct range."
            "The correct range is %d to %d.\n", number, start, end);
+}
+
+/* */
+void printGurobiFailedTryAgain(){
+    printf("Gurobi has failed. Please try again.\n");
 }
 
 void printBoardNotValidError(){
@@ -275,6 +297,27 @@ void printBoardIsErroneous(){
     printf("The board is erroneous!\n");
 }
 
+/*
+ * This method announces that the user has been trying to set a fixed cell
+ * X is column, Y is row.
+ */
+void printErrorCellXYIsFixed(int col, int row){
+    printf("Error: cell <%d,%d> is fixed.\n", col, row);
+}
+
+/*
+ * This message is printed when trying to call hint with an erroneous cell
+ */
+void printErrorCellIsErroneous(int col, int row){
+    printf("Error: cell <%d,%d> is erroneous.\n", col, row);
+}
+
+/*
+ * This message is printed when trying to call hint with a cell that contains a value
+ */
+void printErrorCellContainsValue(int col, int row){
+    printf("Error: cell <%d,%d> already contains a value.\n", col, row);
+}
 
 /*
  * This function prints a message that the input is not an integer.
@@ -291,8 +334,15 @@ void printBoardIsValid(){
 }
 
 
-void printBoardIsSolved(){
+/*
+ * Error message of illegal input value.
+ */
+void printGenerateInputError(){
+    printf("The input of generate is illegal.\n");
+}
 
+void printBoardIsSolved(){
+    printf("Congratulations! The board is successfully solved!\n");
 }
 
 /*
@@ -300,5 +350,18 @@ void printBoardIsSolved(){
  */
 void printNumOfSolutions(int num){
     printf("There are %d solutions sfor the current board.\n", num);
+}
+
+
+/*
+ * prints the array of possible legal values for guess hint
+ */
+void printArray(int *array, int length){
+    int i;
+    printf("[");
+    for (i = 0; i < length; i++){
+        printf("%d ", array[i]);
+    }
+    printf("]\n");
 }
 
