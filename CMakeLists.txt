@@ -4,4 +4,4 @@ project(SoftwareProjectFinalProject C)
 set(CMAKE_C_STANDARD 90)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ansi -Wall -Wextra -Werror -pedantic-errors")
 add_executable(SoftwareProjectFinalProject main.c game.c game.h 
-        main_aux.c main_aux.h solver.c solver.h gurobi.h utilitiesBoardManager.c utilitiesBoardManager.h Parser.c Parser.h utilitiesLinkedList.c utilitiesLinkedList.h)
+        main_aux.c main_aux.h solver.c solver.h gurobi.h utilitiesBoardManager.c utilitiesBoardManager.h gurobi.h gurobi.c Parser.c Parser.h utilitiesLinkedList.c utilitiesLinkedList.h)

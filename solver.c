@@ -306,7 +306,7 @@ int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValu
  * if has been successful, returns a pointer to a newBoard that will have Y values.
  * if fails, returns board. If we need to terminate, it returns NULL.
  */
-struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
+int* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
     /* ALL ALLOCATIONS */
     int* prevBoard = board->board;
     struct sudokuManager *newManager = (struct sudokuManager*)calloc(1, sizeof(struct sudokuManager));
@@ -377,16 +377,16 @@ struct sudokuManager* doGenerate(struct sudokuManager *board, int *newBoard, int
                             cellsToRemove --;
                             }
                         }
-
-                    newManager->board = retBoard;
-                    freeBoard(board);
-                    return newManager;
+                    prevBoard = NULL;
+                    freeBoard(newManager);
+                    return retBoard;
                     }
                 }
             }
         }
+    prevBoard = NULL;
     freeBoard(newManager);
-    return board;
+    return board->board; /* after 1000 trys we will returns the previous board */
 }
 
 /*

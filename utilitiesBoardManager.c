@@ -447,7 +447,9 @@ int updateAutofillValuesBoard(struct sudokuManager *board){
     /*if(board->linkedList->action == separator){ no changes made
         return  0;  DO WE HAVE TO DO IT?????????
     } else ... */
-    createNextNode(board, separator, 0, 0, 0, 0);
+    if(createNextNode(board, separator, 0, 0, 0, 0) == -1){
+        return -1;
+    }
     goToNextNode(board);
     return 0;
 }

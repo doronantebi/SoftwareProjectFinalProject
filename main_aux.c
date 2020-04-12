@@ -57,7 +57,7 @@ void printExtraParamsExtend(int *arrNumOfParams, int len, int indexCommand){
     int i;
 
     printf("Error: too many parameters were entered.\n"
-           "The number of parameters expected for the %s command is ", commandList[indexCommand]);
+           "The number of parameters expected for the %s command is .\n", commandList[indexCommand]);
     for (i = 0; i < len; i++){
         if (i == len - 1){
             if (i == 0){
@@ -151,7 +151,7 @@ void printNotAFloat(int indexParam){
  * This method prints a message to the user saying that there are not enough empty cells.
  */
 void printNotEnoughEmptyCells(int emptyCells, int requiredEmptyCells){
-    printf("There are not enough empty cells. There are %d empty cells, "
+    printf("Error: there are not enough empty cells. There are %d empty cells, "
            "but %d empty cells are required\n", emptyCells, requiredEmptyCells);
 }
 
@@ -159,7 +159,7 @@ void printNotEnoughEmptyCells(int emptyCells, int requiredEmptyCells){
  * This method prints a message to the user saying that the command entered does not exist.
  */
 void printInvalidCommand(){
-    printf("The command entered does not exist. Please enter a new command.\n");
+    printf("Error: the command entered does not exist. Please enter a new command.\n");
 }
 
 /* END OF PARSER METHODS*/
@@ -167,11 +167,11 @@ void printInvalidCommand(){
 
 
 void printNoNextMoveError(){
-    printf("Redo is not possible, there is no next move!\n");
+    printf("Error: there are no more next moves.\n");
 }
 
 void printNoPrevMoveError(){
-    printf("Undo is not possible, there is no previous move!\n");
+    printf("Error: there are no more previous moves.\n");
 }
 
 /* PRINT RELATED METHODS */
@@ -240,21 +240,21 @@ void printSudokuGrid(struct sudokuManager *manager, enum Mode mode) {
  * This method prints that no input was received.
  */
 void printNoInput(){
-    printf("No input was received.\n");
+    printf("Error: no input was received.\n");
 }
 
 /*
  * This method prints that not enough numbers were entered.
  */
 void printNotEnoughNumbers(){
-    printf("Not enough numbers were inserted.\n");
+    printf("Error: not enough numbers were inserted.\n");
 }
 
 /*
  * This method prints a message saying that an empty cell is set as fixed in the file loaded.
  */
 void printErrorEmptyCellFixed(int row, int col){
-    printf("Cell (%d, %d) is empty but set as fixed.\n", row, col);
+    printf("Error: cell <%d, %d> is empty but set as fixed.\n", col, row); /* COL is printed before ROW */
 }
 
 
@@ -262,7 +262,7 @@ void printErrorEmptyCellFixed(int row, int col){
  * This function prints an error if the path for a file, given by user, is illegal.
  */
 void printFilePathIllegal(){
-    printf("Sorry, file path is illegal... :(\n");
+    printf("Error: file path is illegal.\n");
 
 
 }
@@ -270,31 +270,31 @@ void printFilePathIllegal(){
  * This method prints that the number read from a file is not in the correct range.
  */
 void printWrongRangeFile(int number, int start, int end){
-    printf("Error: the number %d read form the file is not in the corredct range."
+    printf("Error: the number %d read from the file is not in the correct range."
            "The correct range is %d to %d.\n", number, start, end);
 }
 
 /* */
 void printGurobiFailedTryAgain(){
-    printf("Gurobi has failed. Please try again.\n");
+    printf("Error: Gurobi has failed. Please try again.\n");
 }
 
 void printBoardNotValidError(){
-    printf("The board is invalid!! \n");
+    printf("Error: the board is invalid.\n");
 }
 
 /*
  * This function prints an error that allocation failed~
  */
 void printAllocFailed(){
-    printf("Allocation failed!\n");
+    printf("Error: allocation failed.\n");
 }
 
 /*
  * This method prints a message that the board is erronous
  */
 void printBoardIsErroneous(){
-    printf("The board is erroneous!\n");
+    printf("Error: the board is erroneous.\n");
 }
 
 /*
@@ -302,7 +302,7 @@ void printBoardIsErroneous(){
  * X is column, Y is row.
  */
 void printErrorCellXYIsFixed(int col, int row){
-    printf("Error: cell <%d,%d> is fixed.\n", col, row);
+    printf("Error: cell <%d,%d> is fixed.\n", col, row); /* COL BEFORE ROW */
 }
 
 /*
@@ -323,7 +323,7 @@ void printErrorCellContainsValue(int col, int row){
  * This function prints a message that the input is not an integer.
  */
 void printNotAnInteger(){
-    printf("Input should be integer.\n");
+    printf("Error: input should be integer.\n");
 }
 
 /*
@@ -335,10 +335,10 @@ void printBoardIsValid(){
 
 
 /*
- * Error message of illegal input value.
+ * Error message if X>emptyCells.
  */
-void printGenerateInputError(){
-    printf("The input of generate is illegal.\n");
+void printGenerateInputError(int emptyCells, int X){
+    printf("Error: a request has been received to fill %d cells, while there are only %d empty cells.\n", emptyCells, X);
 }
 
 void printBoardIsSolved(){

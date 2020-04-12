@@ -498,8 +498,7 @@ int guess(struct sudokuManager *board, float X){
  *  CREATE DOGENERATE IN GUROBI
  */
 int generate(struct sudokuManager **pManager, int X, int Y){
-    int *newBoard;
-    struct sudokuManager *tmp, *prevManager;
+    int *newBoard, *tmp;
     if (isAnyErroneousCell(*pManager)){
         printBoardIsErroneous();
         return 0;
@@ -509,21 +508,27 @@ int generate(struct sudokuManager **pManager, int X, int Y){
         printAllocFailed();
         return -1;
     } /* MAYBE DONE IN PARSER */
-    if(X > amountOfEmptyCells(*pManager)){
-        printGenerateInputError();
+    if(X > (*pManager)->emptyCells){
+        printGenerateInputError((*pManager)->emptyCells, X);
         return 0;
     }
     else {
         tmp = doGenerate(*pManager, newBoard, X, Y);
         if(tmp == NULL){ /* we need to terminate */
             printAllocFailed();
+
             free(newBoard);
             return -1;
         }
-        prevManager = *pManager;
-        *pManager = tmp;
-        freeBoard(prevManager);
+        if(updateBoardLinkedList(*pManager, tmp) == -1) {
+            printAllocFailed();
+            free(newBoard);
+            free(tmp);
+            return -1;
+        }
         printBoard(*pManager);
+        free(tmp);
+        free(newBoard);
     }
     return 0;
 }

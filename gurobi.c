@@ -938,6 +938,10 @@ int guessSolution(struct sudokuManager *manager,
             }
         }
     }
+    if(createNextNode(manager, separator, 0, 0, 0, 0) == -1){
+        return -2;
+    }
+    goToNextNode(manager);
 
     free(indices);
     free(sol);

@@ -34,7 +34,7 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint);
  * if has been successful,returns a pointer to a newBoard that will have Y values.
  * if fails, returns prevBoard
  */
-struct sudokuManager* doGenerate(struct sudokuManager *prevBoard, int *newBoard, int X, int Y);
+int* doGenerate(struct sudokuManager *prevBoard, int *newBoard, int X, int Y);
 
 
 

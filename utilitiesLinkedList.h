@@ -63,4 +63,10 @@ void undoCommand (struct sudokuManager *board);
  */
 void redoCommand (struct sudokuManager *board);
 
+
+/*
+ * This function will update the list of the board after Generate.
+ */
+int updateBoardLinkedList(struct sudokuManager *manager,int *retBoard);
+
 #endif

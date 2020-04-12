@@ -121,3 +121,29 @@ void redoCommand (struct sudokuManager *board){
         goToNextNode(board);
     }
 }
+
+
+/*
+ * This function will update the list of the board after Generate.
+ */
+int updateBoardLinkedList(struct sudokuManager *manager,int *retBoard){
+    int row, col, length = boardLen(manager), index;
+    int m = manager->m, n = manager->n;
+    for(row = 0; row < length; row++){
+        for(col = 0; col < length; col++){
+            index = matIndex(m, n, row, col);
+            if(manager->board[index] != retBoard[index]){
+                if(doSet(manager, row, col, retBoard[index]) == -1){
+                    return -1;
+                }
+            }
+        }
+    }
+    if(createNextNode(manager, separator, 0, 0, 0, 0) == -1){
+        return -1;
+    }
+    goToNextNode(manager);
+    return 0;
+}
+
+
