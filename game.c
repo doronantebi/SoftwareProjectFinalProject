@@ -167,7 +167,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
                 return NULL;
             }
             if (!isLegalCellValue(board, value)) { /* checking the cell is in the correct range */
-                printWrongRange();
+
                 freeBoard(board); /*frees also linkedList */
                 fclose(file);
                 return NULL;
@@ -209,7 +209,7 @@ struct sudokuManager* createBoardFromFile(char *fileName, enum Mode mode1){
             copyFixedOnly(board, onlyFixed);
 
             if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)) { /* the board is erroneous */
-                printErroneousBoard();
+                printBoardIsErroneous();
                 freeBoard(board); /*frees also linkedList */
                 fclose(file);
                 return NULL;
@@ -229,7 +229,6 @@ int solve(struct sudokuManager **pPrevBoard, char *fileName){
     struct sudokuManager *tmp;
     struct sudokuManager *board = (struct sudokuManager *) createBoardFromFile(fileName, Solve);
     if (board == NULL){ /* if board creation was unsuccessful */
-        printErrorCreateBoard();
         return -1;
     }
     else{
@@ -252,7 +251,6 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName){
     struct sudokuManager *tmp;
     struct sudokuManager *board = (struct sudokuManager *) createBoardFromFile(fileName, Edit);
     if (board == NULL){ /* board creation was unsuccessful */
-        printErrorCreateBoard();
         return -1;
     }
     else{
@@ -448,7 +446,7 @@ int hint(struct sudokuManager *board, int X, int Y){
         printErrorCellXYIsFixed(X, Y);
         return 0;
     }
-    if(board->board[matIndex(board->m, board->n, Y, X)]!=0){
+    if(board->board[matIndex(board->m, board->n, Y, X)] != 0){
         printErrorCellContainsValue(X, Y);
         return 0;
     }
@@ -575,7 +573,7 @@ int guessHint(struct sudokuManager *board, int X, int Y){
         return 0;
     }
     if (board->board[matIndex(board->m, board->n, Y, X)] != 0){
-        printErrorCellIsSet();
+        printErrorCellContainsValue(X, Y);
         return 0;
     }
 
@@ -590,7 +588,6 @@ int guessHint(struct sudokuManager *board, int X, int Y){
     }
 
     if (res == 0){ /* we have succeeded and we need to free cellValues */
-        printGuessHintSuccess();
         printArray(cellValues, length);
         free(cellValues);
         return 0;

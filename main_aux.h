@@ -3,6 +3,8 @@
 
 #include "utilitiesBoardManager.h"
 
+/* GENERAL GAME RELATED METHODS */
+
 /*
  * This method prints the game title
  */
@@ -19,6 +21,12 @@ void printExitMessage();
  * This method prints the users board
  */
 void printSudokuGrid(struct sudokuManager *manager, enum Mode mode);
+
+/*
+ * This message prints a message that the board is solved successfully!
+ */
+void printBoardIsSolved();
+
 
 /* PARSER METHODS*/
 
@@ -90,7 +98,9 @@ void printInvalidCommand();
 /* END OF PARSER METHODS*/
 
 
-/* GAME METHODS */
+/* ERRORS */
+
+/* MOVES LIST RELATED */
 
 /*
  * This method announces that there is no more next moves,
@@ -104,39 +114,35 @@ void printNoNextMoveError();
  */
 void printNoPrevMoveError();
 
-/*
- * Some error in autofill ??????
- */
-void printErrorAutofill();
-
+/* BOARD */
 
 /*
  * This method prints a message that the board is erronous
  */
 void printBoardIsErroneous();
 
-
-/*
- * the user tried to set something that is not 0 or 1 to mark_errors
- */
-void printMarkErrorsInputError();
-
-/*
- * announces the user was trying to mark errors outside of Solve mode
- */
-void printMarkErrorsModeError();
-
 /*
  * This method announces that the user has been trying to set a fixed cell
  * X is column, Y is row.
  */
-void printErrorCellXYIsFixed(int X, int Y);
+void printErrorCellXYIsFixed(int col, int row);
 
 /*
- * This error announces that X is not a legal value, between 1 to maxVal
+ * This message is printed when trying to call hint with an erroneous cell
  */
-void printErrorCellValue(int X, int maxVal);
+void printErrorCellIsErroneous(int col, int row);
 
+/*
+ * This message is printed when trying to call hint with a cell that contains a value
+ */
+void printErrorCellContainsValue(int col, int row);
+
+/* VALIDATE */
+
+/*
+ * This message is printed if the gurobi has failed.
+ */
+void printGurobiFailedTryAgain();
 
 /*
  * Error message of invalid board
@@ -144,19 +150,44 @@ void printErrorCellValue(int X, int maxVal);
 void printBoardNotValidError();
 
 /*
- * Error message of unsuccessful board creation.
+ * This method prints that the board is solvable (valid).
  */
-void printErrorCreateBoard();
+void printBoardIsValid();
 
 /*
  * Error message of illegal input value.
  */
 void printGenerateInputError();
 
+
 /*
- * This function prints error message if the loaded file format is illegal
+ * prints the array of possible legal values for guess hint
  */
-void printFileFormatIllegal();
+void printArray(int *cellValues, int length);
+
+/* FILES RELATED */
+
+/*
+ * This function prints an error if the path for a file, given by user, is illegal.
+ */
+void printFilePathIllegal();
+
+/*
+ * This function prints error that
+ * ((value < 0) || (x > boardLen(manager)));
+ */
+void printWrongRange(struct sudokuManager *board, int value);
+
+/*
+ * This function prints a message that the input is not an integer.
+ */
+void printNotAnInteger();
+
+/*
+ * This method prints a message saying that an
+ * empty cell is set as fixed in the file loaded.
+ */
+void printErrorEmptyCellFixed(int row, int col);
 
 /*
  * This method prints that no input was received.
@@ -169,35 +200,21 @@ void printNoInput();
 void printNotEnoughNumbers(int expected, int is);
 
 /*
- * This method prints a message saying that an empty cell is set as fixed in the file loaded.
+ * This method prints a message saying that an
+ * empty cell is set as fixed in the file loaded.
  */
 void printErrorEmptyCellFixed(int row, int col);
 
-/*
- * This function prints an error if the path for a file, given by user, is illegal.
- */
-void printFilePathIllegal();
+/* MEMORY ALLOCATION FAILURE */
 
 /*
  * This function prints an error that allocation failed~
  */
 void printAllocFailed();
 
-/*
- * This function prints error that
- * ((value < 0) || (x > boardLen(manager)));
- */
-void printWrongRange(struct sudokuManager *board, int value);
 
 
-/*
- * This function prints a message that the input is not an integer.
- */
-void printNotAnInteger();
 
-/*
- * This method prints that the board is solvable (valid).
- */
-void printBoardIsValid();
+
 
 #endif

@@ -92,13 +92,6 @@ int *init3DArray(int length){
     return array;
 }
 
-/*
- * This method frees the 3D array.
- */
-void free3DArray(int *array){
-    free(array);
-}
-
 
 /*
  * This function updates vtype array values by the given enum of Gurobi Option

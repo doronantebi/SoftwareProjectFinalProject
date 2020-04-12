@@ -257,7 +257,7 @@ void printBoardNotValidError(){
  * This function prints an error that allocation failed~
  */
 void printAllocFailed(){
-    printf("Allocation failed!! \n");
+    printf("Allocation failed!\n");
 }
 
 /*
@@ -295,4 +295,10 @@ void printNotAnInteger(){
 void printBoardIsValid(){
     printf("The board is valid.\n");
 }
+
+
+void printBoardIsSolved(){
+
+}
+
 
