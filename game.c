@@ -8,6 +8,7 @@
 
 
 static enum Mode mode = Init;
+static int addMarks = 1;
 
 /*
  * This method is used for printing the game's title.
@@ -51,7 +52,7 @@ int inputNumFromFile(FILE *file, int *pNum){
  * if the file format is illegal returns -2, if memory allocation failed, it returns -1.
  * If everything was fine, it returns 0.
  */
-int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *board, int prevAddMarks){
+int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *board){
     int n, m, i, j, success, value, *onlyFixed;
     FILE *file = NULL;
     struct movesList *linkedList;
@@ -62,12 +63,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         return -1;
     }
 
-    if (mode == Init){
-        board->addMarks = 1;
-    }
-    else{
-        board->addMarks = prevAddMarks;
-    }
     initList(linkedList);
     board->linkedList = linkedList;
     linkedList->board = board;
@@ -207,20 +202,14 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
 int loadFile(struct sudokuManager **pPrevBoard, char *fileName, enum Mode mode1){
     struct sudokuManager *tmp;
     struct sudokuManager *board;
-    int res, prevAddMarks;
+    int res;
     board = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
     if (board == NULL) {
         printAllocFailed();
         return -1;
     }
     initNullBoard(board);
-    if (*pPrevBoard == NULL){
-        prevAddMarks = 1;
-    }
-    else{
-        prevAddMarks = (*pPrevBoard)->addMarks;
-    }
-    res = createBoardFromFile(fileName, mode1, board, prevAddMarks);
+    res = createBoardFromFile(fileName, mode1, board);
     if (res == -1){ /* if board creation was unsuccessful */
         printAllocFailed();
         freeBoard(board); /* frees also linked list */
@@ -575,7 +564,7 @@ int exitGame(struct sudokuManager *board){
 /* PRINT RELATED FUNCTIONS */
 
 void printBoard(struct sudokuManager *board){
-    printSudokuGrid(board, mode);
+    printSudokuGrid(board, mode, addMarks);
     /* NEED TO CHECK THE PRINTING FORMAT */
     if (mode == Solve && board->emptyCells == 0){
         if (isAnyErroneousCell(board)){
@@ -593,8 +582,8 @@ void printBoard(struct sudokuManager *board){
  * This function sets mark error to X
  * X and mode are being checked in Parser
  */
-void markErrors(struct sudokuManager* board ,int X){
-    board->addMarks = X;
+void markErrors(int X){
+    addMarks = X;
 }
 
 
