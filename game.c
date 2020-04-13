@@ -209,6 +209,7 @@ int loadFile(struct sudokuManager **pPrevBoard, char *fileName, enum Mode mode1)
         return -1;
     }
     initNullBoard(board);
+
     res = createBoardFromFile(fileName, mode1, board);
     if (res == -1){ /* if board creation was unsuccessful */
         printAllocFailed();
@@ -378,16 +379,16 @@ int set(struct sudokuManager *manager, int X, int Y, int Z){
         return 0;
     }
     else if ((doSet(manager, Y, X, Z) == -1) ||
-            (createNextNode(manager, separator, 0, 0, 0, 0) == -1)) {
-            printAllocFailed();
-            return -1;
+             (createNextNode(manager, separator, 0, 0, 0, 0) == -1)) {
+        printAllocFailed();
+        return -1;
     }
     else {
         goToNextNode(manager);
         updateErroneousBoardCell(manager->board, manager->erroneous, manager->m, manager->n, Y, X);
         printBoard(manager);
         return 0;
-     }
+    }
 }
 
 
@@ -471,11 +472,11 @@ int hint(struct sudokuManager *board, int X, int Y){
         return -1; /* alloc failed */
     }
     else
-        if(ret == 0){
-            printBoardNotValidError();
-            return 0;
-        }
-        else{  /* ret == 1 */
+    if(ret == 0){
+        printBoardNotValidError();
+        return 0;
+    }
+    else{  /* ret == 1 */
         return hint; /* if this function returns -3 we have an error in getHint!!! */
     }
 
@@ -514,38 +515,38 @@ int guess(struct sudokuManager *board, float X){
  *  CREATE DOGENERATE IN GUROBI
  */
 int generate(struct sudokuManager **pManager, int X, int Y){
-    int *newBoard, *tmp;
+    int *retBoard; /* THIS WILL CONTAIN THE SOLUTION */
+    int res;
+
     if (isAnyErroneousCell(*pManager)){
         printBoardIsErroneous();
         return 0;
     }
-    newBoard = (int*)calloc(boardArea(*pManager), sizeof(int));
-    if(newBoard == NULL){
+    retBoard = (int*)calloc(boardArea(*pManager), sizeof(int));
+    if(retBoard == NULL){
         printAllocFailed();
         return -1;
-    } /* MAYBE DONE IN PARSER */
-    if(X > (*pManager)->emptyCells){
-        printGenerateInputError((*pManager)->emptyCells, X);
-        return 0;
     }
-    else {
-        tmp = doGenerate(*pManager, newBoard, X, Y);
-        if(tmp == NULL){ /* we need to terminate */
-            printAllocFailed();
 
-            free(newBoard);
-            return -1;
-        }
-        if(updateBoardLinkedList(*pManager, tmp) == -1) {
+    res = doGenerate(*pManager, X, Y, retBoard);
+    if(res == -1){ /* we need to terminate */
+        printAllocFailed();
+        free(retBoard);
+        return -1;
+    }
+    if (res == 1){
+        if(updateBoardLinkedList(*pManager, retBoard) == -1) {
             printAllocFailed();
-            free(newBoard);
-            free(tmp);
+            free(retBoard);
             return -1;
         }
         printBoard(*pManager);
-        free(tmp);
-        free(newBoard);
+        free(retBoard);
     }
+    if (res == 0){
+        printGenerateFailed();
+    }
+
     return 0;
 }
 

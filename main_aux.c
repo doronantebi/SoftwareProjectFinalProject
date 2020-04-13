@@ -146,13 +146,6 @@ void printNotAFloat(int indexParam){
     printf("Error: a float was expected for parameter %d, but was not received.\n", indexParam);
 }
 
-/*
- * This method prints a message to the user saying that there are not enough empty cells.
- */
-void printNotEnoughEmptyCells(int emptyCells, int requiredEmptyCells){
-    printf("Error: there are not enough empty cells. There are %d empty cells, "
-           "but %d empty cells are required\n", emptyCells, requiredEmptyCells);
-}
 
 /*
  * This method prints a message to the user saying that the command entered does not exist.
@@ -350,9 +343,18 @@ void printBoardIsValid(){
 
 /*
  * Error message if X>emptyCells.
+ * This method prints a message to the user saying that there are not enough empty cells.
  */
 void printGenerateInputError(int emptyCells, int X){
-    printf("Error: a request has been received to fill %d cells, while there are only %d empty cells.\n", emptyCells, X);
+    printf("Error: a request has been received to fill %d cells, while there are"
+           " only %d empty cells.\n", emptyCells, X);
+}
+
+/*
+ * This method prints that we have tried generate too many times and failed.
+ */
+void printGenerateFailed(){
+    printf("Error: board generation failed after several attempts.\n");
 }
 
 void printBoardIsSolved(){

@@ -382,8 +382,9 @@ int isLastCellInMatrix(int size, int i, int j){
 
 /*
  * recieves a board, and index.
- * if the board has only one legal value to fill, it returns it.
- * otherwise, returns 0.
+ * if cell (row, col) has only one legal value to fill, it returns it.
+ * if there is no legal value, it returns -1.
+ * if there is more than one legal value, it returns 0.
  */
 int returnLegalValue(int* board, int m, int n, int row, int col){
     int i, N = m * n, value = 0;
@@ -393,12 +394,16 @@ int returnLegalValue(int* board, int m, int n, int row, int col){
     for(i = 1; i <= N ; i++){
         if (!neighbourContainsOnce(board, m, n, row, col, i)){ /* none if neighbours contain value i */
             if(value == 0) {
-                value = i; /* this is the value we would like to fill in cell (row, col), it there is only one legal option */
+                value = i; /* this is the value we would like to fill in cell (row, col),
+                            * it there is only one legal option */
             }
             else{ /* we already have updated value, we know there is more than 1 legal value*/
                 return 0;
             }
         }
+    }
+    if (value == 0){ /* there is no legal value */
+        return -1;
     }
     return value; /* this is the value we want to set in the board */
 }
@@ -408,9 +413,16 @@ int returnLegalValue(int* board, int m, int n, int row, int col){
  */
 void fillSingleLegalValue(struct sudokuManager *board, int *tmp) {
     int row, col, m = board->m, n = board->n, length = boardLen(board);
+    int val;
     for(row = 0; row < length ; row++){
         for(col = 0; col < length ; col++){
-            tmp[matIndex(m, n, row, col)] = returnLegalValue(board->board, m, n, row, col);
+            val = returnLegalValue(board->board, m, n, row, col);
+            if (val == -1){
+                tmp[matIndex(m, n, row, col)] = 0;
+            }
+            else{
+                tmp[matIndex(m, n, row, col)] = val;
+            }
         }
     }
 }
@@ -527,8 +539,8 @@ void initNullBoard(struct sudokuManager *manager){
 /*
  * This function updated the board values by given parameters
  */
-void initBoardValues(struct sudokuManager *boardToFill, int m, int n, int *board, int *erroneous, int *fixed, int emptyCells,
-                    struct movesList *list){
+void initBoardValues(struct sudokuManager *boardToFill, int m, int n, int *board, int *erroneous, int *fixed,
+        int emptyCells, struct movesList *list){
     boardToFill->m = m, boardToFill->n = n;
     boardToFill->board = board;
     boardToFill->erroneous = erroneous;

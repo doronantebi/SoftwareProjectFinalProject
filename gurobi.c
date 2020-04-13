@@ -1,6 +1,6 @@
+
+
 #include "gurobi.h"
-
-
 #include <stdlib.h>
 #include <stdio.h>
 #include "gurobi_sys"
@@ -489,7 +489,7 @@ int setNonnegativityConstraints(int N, int *indices, GRBmodel *model){
  * Otherwise, it returns 0.
  */
 int initGurobi(GRBenv **pEnv, GRBmodel **pModel,
-                double **pObj, char **pVtype, int amountOfVariables){
+               double **pObj, char **pVtype, int amountOfVariables){
     int error = 0;
 
     /* Create environment - log file is mip1.log */
@@ -530,7 +530,8 @@ int initGurobi(GRBenv **pEnv, GRBmodel **pModel,
  * type == BINARY ---> *retBoard is the solution for the board if exists,
  * and if there is no solution, *retBoard == NULL.
  * type == CONTINUOUS ---> user must use with *retBoard == NULL.
- * The method returns -1 if Gurobi had an error, -2 if memory allocation failed, and 0 otherwise.
+ * The method returns -1 if Gurobi had an error, -2 if memory allocation failed, 1 if we succeeded and
+ * found optimal solution, and 0 otherwise.
  */
 int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard,
                 double *sol, int *indices, int amountOfVariables){
@@ -710,33 +711,36 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
                 }
             }
         }
-        else{
-            *retBoard = NULL; /* MAKE SURE!!! I am not sure*/
-        }
-
     }
         /* no solution found */
-    else if (optimstatus == GRB_INF_OR_UNBD) {
-        printf("Model is infeasible or unbounded\n");
-        free(*retBoard);
-        *retBoard = NULL; /* */
+    else{
+        if (optimstatus == GRB_INF_OR_UNBD) {
+            printf("Model is infeasible or unbounded\n");
+            freeGurobi(obj, vtype, env, model);
+            return 0;
+
+        }
+            /* error or calculation stopped */
+        else {
+            printf("Optimization was stopped early\n");
+            freeGurobi(obj, vtype, env, model);
+            return -1;
+        }
     }
-        /* error or calculation stopped */
-    else {
-        printf("Optimization was stopped early\n");
-    }
+
 
     /* IMPORTANT !!! - Free model and environment */
     freeGurobi(obj, vtype, env, model);
 
-    return 0;
+    return 1; /* if we got here, we didn't fail and there is optimal solution */
 }
 
 
 /*
  * This method solves the current board using ILP.
  * The solution is returned through retBoard.
- * The method returns -1 if Gurobi had an error, -2 if memory allocation failed, and 0 otherwise.
+ * The method returns -1 if Gurobi had an error, -2 if memory allocation failed, 1 if *retBoard is filled with
+ * a solution, and 0 otherwise.
  */
 int solveBoard(struct sudokuManager *manager, int **retBoard){
     int N = boardLen(manager), amountOfVariables, res;
@@ -760,6 +764,7 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
 
     free(indices);
     free(sol);
+
     return res;
 }
 
@@ -767,8 +772,12 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
 
 
 /* This method solves the current board using LP.
-* The method returns -1 if Gurobi had an error, -2 if memory allocation failed, and 0 otherwise.
+* The method returns -1 if Gurobi had an error,
+ * -2 if memory allocation failed,
+ * 1 if we succeeded in guessing the values (the board is solvable),
+ * and 0 if the board is unsolvable.
  * It returns all the possible values of cell (row, col) through *pCellValues, and its length through *pLength.
+ * User needs to free *pCellValues iff return value == 1.
 */
 int guessCellValues(struct sudokuManager *manager, int row, int col,
                     int **pCellValues, int *pLength){
@@ -793,11 +802,12 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
 
     res = solveGurobi(manager, CONTINUOUS, &retBoard, sol, indices, amountOfVariables);
 
-    if (res){
+    if (res == -1 || res == -2 || res == 0){
         free(indices);
         free(sol);
         return res;
     }
+
 
     *pCellValues = (int *)malloc(N * sizeof(int));
 
@@ -826,7 +836,7 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
         return -2;
     }
 
-    return 0;
+    return 1;
 }
 
 /*
@@ -836,7 +846,7 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
  * in *pSumScores.
  */
 void createAvailableValues(struct sudokuManager *manager, int *availableValues, float *scores, float threshold,
-                            int *indices, double *sol, int *pLength, float *pSumScores, int row, int col){
+                           int *indices, double *sol, int *pLength, float *pSumScores, int row, int col){
     int k, index, N = boardLen(manager);
     *pLength = 0;
     *pSumScores = 0;
@@ -858,8 +868,11 @@ void createAvailableValues(struct sudokuManager *manager, int *availableValues, 
 }
 
 /* This method solves the current board using LP.
-* The method returns -1 if Gurobi had an error, -2 if memory allocation failed, and 0 otherwise.
- * It returns all the possible values of cell (row, col) through *pCellValues, and its length through *pLength.
+* The method returns -1 if Gurobi had an error,
+ * -2 if memory allocation failed,
+ * 1 if we succeeded in guessing the values (the board is solvable),
+ * and 0 if the board is unsolvable.
+ * It fills the board with the solution guessed iff return value == 1.
 */
 int guessSolution(struct sudokuManager *manager,
                   float threshold) {
@@ -886,7 +899,7 @@ int guessSolution(struct sudokuManager *manager,
 
     res = solveGurobi(manager, CONTINUOUS, &retBoard, sol, indices, amountOfVariables); /*running gurobi*/
 
-    if (res){
+    if (res == -1 || res == -2 || res == 0){
         free(indices);
         free(sol);
         return res;
@@ -942,5 +955,6 @@ int guessSolution(struct sudokuManager *manager,
     free(sol);
     free(availableValues);
     free(scores);
-    return 0;
+    return 1;
 }
+

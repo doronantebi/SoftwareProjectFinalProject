@@ -290,26 +290,44 @@ int validateBoard(struct sudokuManager *manager){
 
 /*
  * This method guesses a hint for cell (row, col) using LP.
- *  The method returns -1 there was a nonfatal error because of which we can't execute the command and need to continue,
- *  -2 if memory allocation failed, and 0 otherwise.
- *  User needs to free *pCellValues iff return value == 0.
+ *  The method returns -2 there was a nonfatal error because of which we can't execute the command and need to continue,
+ *  -1 if memory allocation failed,
+ *  1 if board is solvable,
+ *  and 0 if the board is unsolvable.
+ *  User needs to free *pCellValues iff return value == 1.
  */
 int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, int *pLength) {
+    int res;
     /* initializing *pCellValues and *pLength */
     *pCellValues = NULL;
     *pLength = 0;
-    return guessCellValues(manager, row, col, pCellValues, pLength);
+    res = guessCellValues(manager, row, col, pCellValues, pLength);
+    if (res == -1){
+        return -2;
+    }
+
+
+    if (res == -2){
+        return -1;
+    }
+
+    return res;
 }
 
 /*
- * This function fills X random cells with legal values
+ * This function fills X random cells with legal values.
+ * It returns 0 if there is no legal value for some index raffled.
+ * If all raffled indices had legal values, it returns 1.
  */
-void doGenerateFillNumRandomCells(struct sudokuManager *board, int *newBoard, int cellsToFill){
+int doGenerateFillNumRandomCells(struct sudokuManager *board, int *newBoard, int cellsToFill){
     int row, col, val, m = board->m, n = board->n;
     while (cellsToFill > 0) {
         row = randRangeInt(0, boardLen(board)); /* MAKE SURE!!!!!! IT DOESNT INCLUDE THE UPPER BOUND */
         col = randRangeInt(0, boardLen(board));
         if (newBoard[matIndex(m, n, row, col)] == 0) { /* if cell is empty */
+            if (returnLegalValue(board->board, m, n, row, col) == -1){
+                return 0;
+            }
             val = randRangeInt(0, boardLen(board)) + 1;
             while (neighbourContainsOnce(newBoard, m, n, row, col, val)) { /* as long as val is
                                                                                 * illegal for our curr cell */
@@ -319,6 +337,7 @@ void doGenerateFillNumRandomCells(struct sudokuManager *board, int *newBoard, in
             cellsToFill--; /* reduce X by one */
         }
     }
+    return 1;
 }
 /*
  * This function removes from retBoard cellsToRemove cells
@@ -335,35 +354,39 @@ void doGenerateRemoveNumRandomCells(struct sudokuManager *board, int *retBoard, 
     }
 }
 /*
- * This function generates a new board with Y cells.
- * if has been successful, returns a pointer to a newBoard that will have Y values.
- * if fails, returns board. If we need to terminate, it returns NULL.
+ * This function updates a retBoard to contain only Y cells.
+ *  This method returns -1 if memory allocation failed,
+ *  1 if board is solvable,
+ *  and 0 if we didn't succeed in generating Y cells.
+ *  if return value == 1, retBoard will have Y values.
  */
-int* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
+int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
     /* ALL ALLOCATIONS */
     struct sudokuManager *newManager = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
-    int* retBoard = (int*)calloc(boardArea(board), sizeof(int)); /* THIS WILL CONTAIN THE SOLUTION */
     int* erroneous = (int*)calloc(boardArea(board), sizeof(int));
     int* fixed = (int*)calloc(boardArea(board), sizeof(int));
     struct movesList *list = (struct movesList*) malloc(sizeof(struct movesList));
+    int *newBoard = (int*)calloc(boardArea(board), sizeof(int));
     int retGurobi;
     int m = board->m, n = board->n, iter;
 
     initNullBoard(newManager);
 
-    if((newManager == NULL)||(retBoard == NULL) || (erroneous == NULL) || (fixed == NULL) || (list == NULL)){
+    if((newManager == NULL) || (retBoard == NULL) || (erroneous == NULL)
+        || (fixed == NULL) || (list == NULL) || (newBoard == NULL)){
         free(newManager);
         free(retBoard);
         free(erroneous);
         free(list);
         free(fixed);
-        return NULL;
+        free(newBoard);
+        return -1;
     }
 
     srand(time(NULL));
 
     /* INITIALIZES NEW SUDOKU MANAGER */
-    initBoardValues(newManager, m, n, board->board,erroneous, fixed, board->addMarks, board->emptyCells, list);
+    initBoardValues(newManager, m, n, newBoard, erroneous, fixed, board->emptyCells, list);
 
     /* STARTING 1000 ITERETIONS */
     for(iter = 0; iter < NUM_ITERATIONS; iter ++) {
@@ -371,35 +394,34 @@ int* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
         duplicateBoard(board->board, newBoard, board->m, board->n); /* copy content of prevBoard to newBoard */
 
         /* RANDOMLY FILLS X CELLS */
-        doGenerateFillNumRandomCells(board, newBoard, X); /* this function fills random legal cells */
+        if (doGenerateFillNumRandomCells(board, newBoard, X) == 0) { /* this function fills random legal cells */
+            continue; /* if a raffled index had no illegal values, we need to try again */
+        }
 
-        newManager->board = newBoard; /* solve the board with the new X filled cells */
-        /* previous board is saved in prevBoard */
-        retGurobi = solveBoard(newManager, &retBoard);
+        retGurobi = solveBoard(newManager, &retBoard); /* solve the board with the new X filled cells */
         if(retGurobi == -2){ /* allocation failed... */
-            return NULL;
+            return -1;
         }
         else {
-            if(retGurobi == 0){ /* Gurobi error did not occur */
-                if(retBoard != NULL){ /* solution has been found!!! Hurray!!! */
-                    doGenerateRemoveNumRandomCells(board, retBoard, boardArea(board) - Y);
-                    /* This function removes cells */
-
-                    freeBoard(newManager);
-                    return retBoard;
-                }
+            if(retGurobi == 1){ /* solution has been found!!! Hurray!!! */
+                doGenerateRemoveNumRandomCells(board, retBoard, boardArea(board) - Y);
+                /* This function removes cells */
+                freeBoard(newManager);
+                return 1;
             }
         }
     }
     freeBoard(newManager);
-    free(retBoard);
-    return board->board; /* after 1000 trys we will returns the previous board */
+    return 0; /* after 1000 trys we will returns the previous board */
 }
 
 /*
  * This method guesses a solution for the entire board and fills its cells with this solution if legal.
  * The method returns -2 there was a nonfatal error because of which we can't execute the command (gurobi failed)
- * and need to continue, -1 if memory allocation failed, and 0 otherwise.
+ * and need to continue,
+ * -1 if memory allocation failed,
+ * 1 if we succeeded in guessing the values (the board is solvable)
+ * and 0 if the board is unsolvable.
  */
 int doGuess(struct sudokuManager *manager, float threshold){
     int res;
@@ -410,23 +432,23 @@ int doGuess(struct sudokuManager *manager, float threshold){
     if (res == -1){
         return -2;
     }
-    return 0;
+    return res;
 }
 
 
 /*
  * This function fills in *hint a hint for cell <row,col>
- * returns 1 if succeed solving the board.
+ * returns 1 if succeeded solving the board.
  * returns -1 if allocation failed
  * returns -2 if gurobi failed.
- * returns 0 if board could not be solved or gurobi failed
+ * returns 0 if board could not be solved
  */
 int getHint(struct sudokuManager *manager, int row, int col, int* hint){
     int res;
     int *retBoard = calloc(boardArea(manager),sizeof(int));
     if(retBoard == NULL){
         printAllocFailed();
-        return -2;
+        return -1;
     }
     res = solveBoard(manager, &retBoard);
     if(res == -1){
@@ -438,7 +460,8 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
             return -1;
         }
         else{
-            if(retBoard == NULL){/* the board is not valid */
+            if(res == 0){/* the board is not valid */
+                free(retBoard);
                 return 0;
             }
             else {

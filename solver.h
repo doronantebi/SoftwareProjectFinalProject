@@ -22,27 +22,32 @@ int validateBoard(struct sudokuManager *manager);
 
 
 /*
- * This function fills in *hint a hint for cell <row ,col>
- * returns 1 if succeed solving the board.
- * return -1 if allocate failed
- * returns 0 if board could not be solved or gurobi failed
+ * This function fills in *hint a hint for cell <row,col>
+ * returns 1 if succeeded solving the board.
+ * returns -1 if allocation failed
+ * returns -2 if gurobi failed.
+ * returns 0 if board could not be solved
  */
 int getHint(struct sudokuManager *manager, int row, int col, int* hint);
 
 /*
- * This function generates a new board with Y cells.
- * if has been successful,returns a pointer to a newBoard that will have Y values.
- * if fails, returns prevBoard
+ * This function updates a retBoard to contain only Y cells.
+ *  This method returns -1 if memory allocation failed,
+ *  1 if board is solvable,
+ *  and 0 if we didn't succeed in generating Y cells.
+ *  if return value == 1, retBoard will have Y values.
  */
-int* doGenerate(struct sudokuManager *prevBoard, int *newBoard, int X, int Y);
+int doGenerate(struct sudokuManager *prevBoard, int X, int Y, int *retBoard);
 
 
 
 /*
  * This method guesses a hint for cell (row, col) using LP.
- *  The method returns -1 there was a nonfatal error because of which we can't execute the command and need to continue,
- *  -2 if memory allocation failed, and 0 otherwise.
- *  User needs to free *pCellValues iff return value == 0.
+ *  The method returns -2 there was a nonfatal error because of which we can't execute the command and need to continue,
+ *  -1 if memory allocation failed,
+ *  1 if board is solvable,
+ *  and 0 if the board is unsolvable.
+ *  User needs to free *pCellValues iff return value == 1.
  */
 int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, int *pLength);
 

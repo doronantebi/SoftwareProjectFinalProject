@@ -85,10 +85,6 @@ void printNotANumber(int indexParam);
  */
 void printNotAFloat(int indexParam);
 
-/*
- * This method prints a message to the user saying that there are not enough empty cells.
- */
-void printNotEnoughEmptyCells(int emptyCells, int requiredEmptyCells);
 
 /*
  * This method prints a message to the user saying that the command entered does not exist.
@@ -161,9 +157,15 @@ void printBoardNotValidError();
 void printBoardIsValid();
 
 /*
- * Error message of illegal input value.
+ * Error message if X>emptyCells.
+ * This method prints a message to the user saying that there are not enough empty cells.
  */
-void printGenerateInputError();
+void printGenerateInputError(int emptyCells, int X);
+
+/*
+ * This method prints that we have tried generate too many times and failed.
+ */
+void printGenerateFailed();
 
 /*
  * This method prints a message to the user saying how many possible values there are.

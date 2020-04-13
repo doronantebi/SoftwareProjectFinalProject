@@ -226,7 +226,16 @@ void initNullBoard(struct sudokuManager *manager);
 /*
 * This function updated the board values by given parameters
 */
-void initBoardValues(struct sudokuManager *boardToFill, int m, int n, int *board, int *erroneous, int *fixed, int emptyCells,
-                     struct movesList *list);
+void initBoardValues(struct sudokuManager *boardToFill, int m, int n, int *board, int *erroneous, int *fixed,
+        int emptyCells, struct movesList *list);
+
+
+/*
+ * recieves a board, and index.
+ * if cell (row, col) has only one legal value to fill, it returns it.
+ * if there is no legal value, it returns -1.
+ * if there is more than one legal value, it returns 0.
+ */
+int returnLegalValue(int* board, int m, int n, int row, int col);
 
 #endif

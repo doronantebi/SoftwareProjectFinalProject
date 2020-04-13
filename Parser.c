@@ -317,7 +317,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
                     return 0;
                 } else {
                     if ((*pBoard)->emptyCells < arrInput[0]) { /* checking for number of empty cells */
-                        printNotEnoughEmptyCells((*pBoard)->emptyCells, arrInput[0]);
+                        printGenerateInputError((*pBoard)->emptyCells, arrInput[0]);
                         return 0;
                     } else {
                         if (arrCheck[1] != 1) {
