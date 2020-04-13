@@ -2,7 +2,6 @@
 #include "utilitiesBoardManager.h"
 #include "main_aux.h"
 
-#include "game.h"
 #include "solver.h"
 
 #ifndef SOFTWAREPROJECTFINALPROJECT_GUROBI_H

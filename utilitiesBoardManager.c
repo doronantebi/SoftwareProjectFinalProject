@@ -1,6 +1,5 @@
 #include "utilitiesBoardManager.h"
 #include <stdlib.h>
-#include <stdio.h>
 
 /* GENERAL METHODS */
 
@@ -294,8 +293,10 @@ int amountOfEmptyCells(struct sudokuManager *manager){
  * This method frees a given board.
  */
 void freeBoard(struct sudokuManager *board){
-    pointToFirstMoveInMovesList(board); /* points the move's list to first move */
-    killNextMoves(board); /* frees all next moves */
+    if (board->linkedList != NULL){
+        pointToFirstMoveInMovesList(board); /* points the move's list to first move */
+        killNextMoves(board); /* frees all next moves */
+    }
     free(board->fixed);
     free(board->erroneous);
     free(board->board);

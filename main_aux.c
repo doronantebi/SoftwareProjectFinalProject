@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include "main_aux.h"
-
-#include "game.h"
 #include <string.h>
+
 #define title1 "                              ,,                               \n .M\"\"\"bgd                   `7MM              `7MM                  \n,MI    \"Y                     MM                MM                  \n`MMb."
 #define title2    "     `7MM  `7MM     ,M\"\"bMM    ,pW\"Wq.     MM  ,MP'  `7MM  `7MM  \n  `YMMNq.   MM    MM   ,AP    MM   6W'   `Wb    MM ;Y       MM    MM  \n.     `MM   MM    MM   8MI    MM   8M     M8    MM;Mm       MM    MM  \nMb     dM   MM    MM   `Mb    MM   YA.   ,A9    MM `Mb.     MM    MM  \nP\"Ybmmd\"    `Mbod\"YML.  `Wbmd\"MML.  `Ybmd9'.   JMML. YA.    `Mbod\"YML."
 #define creators "Din Moshe and Doron Antebi"
@@ -259,13 +258,20 @@ void printErrorEmptyCellFixed(int row, int col){
 
 
 /*
+ * This method prints a message to the user saying that the file is too long than expected.
+ */
+void printTooLongFile(){
+    printf("Error: the file received is too long than expected.\n");
+}
+
+/*
  * This function prints an error if the path for a file, given by user, is illegal.
  */
 void printFilePathIllegal(){
     printf("Error: file path is illegal.\n");
-
-
 }
+
+
 /*
  * This method prints that the number read from a file is not in the correct range.
  */

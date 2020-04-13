@@ -10,11 +10,6 @@
 
 
 
-
-
-
-
-
 /*
  * This method returns index for (i, j, k) in a three dimensional array,
  * of which all dimensions are in size len.
@@ -463,7 +458,7 @@ int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRB
  * This method sets a constraint for each variable to be non-negative.
  * It returns -1 if gurobi had an error. Otherwise, it returns 0.
  */
-int setNonnegativityConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model){
+int setNonnegativityConstraints(int N, int *indices, GRBmodel *model){
     int i, j, k, error;
     int staticInd[1];
     double staticVal[1];
@@ -638,7 +633,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
 
     /* MAKE SURE EVERY VARIABLE >=0 */
     if(type == CONTINUOUS){
-        res = setNonnegativityConstraints(manager, N, indices, model);
+        res = setNonnegativityConstraints(N, indices, model);
         if (res){
             freeGurobi(obj, vtype, env, model);
             return res;

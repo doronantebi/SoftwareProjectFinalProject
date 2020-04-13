@@ -3,7 +3,7 @@
 #define SOFTWAREPROJECTFINALPROJECT_GAME_H
 
 #include "solver.h"
-
+#define LENGTH 258
 
 /*
  * This method is used for starting to play sudoku.

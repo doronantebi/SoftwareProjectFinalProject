@@ -173,6 +173,11 @@ void printArray(int *cellValues, int length);
 /* FILES RELATED */
 
 /*
+ * This method prints a message to the user saying that the file is too long than expected.
+ */
+void printTooLongFile();
+
+/*
  * This function prints an error if the path for a file, given by user, is illegal.
  */
 void printFilePathIllegal();
