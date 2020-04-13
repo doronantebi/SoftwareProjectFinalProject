@@ -316,7 +316,7 @@ void printBoardIsErroneous(){
  * X is column, Y is row.
  */
 void printErrorCellXYIsFixed(int col, int row){
-    printf("Error: cell <%d,%d> is fixed.\n", col, row); /* COL BEFORE ROW */
+    printf("Error: cell <%d,%d> is fixed.\n", col + 1, row + 1); /* COL BEFORE ROW */
 }
 
 /*

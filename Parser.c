@@ -170,7 +170,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
         return 0;
     }
     else {
-        if (strtok(NULL, " \t\r\n") != NULL) { /*Too many parameters*/
+        if (token != NULL) { /*Too many parameters*/
             printExtraParams(3, 4);
             return 0;
         } else {
@@ -303,7 +303,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
         printFewParams(2, 7);
         return 0;
     } else {
-        if (strtok(NULL, " \t\r\n") != NULL) { /*Too many parameters*/
+        if (token != NULL) { /*Too many parameters*/
             printExtraParams(2, 7);
             return 0;
         } else {
@@ -433,7 +433,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
         return 0;
     }
     else {
-        if (strtok(NULL, " \t\r\n") != NULL) { /*Too many parameters*/
+        if (token != NULL) { /*Too many parameters*/
             printExtraParams(2, 11);
             return 0;
         } else {

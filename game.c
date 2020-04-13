@@ -162,31 +162,32 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
                 }
             }
         }
+    }
 
-        if (fscanf(file, "%c", &nextChar) != EOF){
-            printTooLongFile();
+    if (fscanf(file, "%c", &nextChar) != EOF){
+        printTooLongFile();
+        fclose(file);
+        return -2;
+    }
+
+    if (mode1 == Solve) {
+
+        onlyFixed = (int *) (calloc(boardArea(board), sizeof(int)));
+
+        if (onlyFixed == NULL) {
+            fclose(file);
+            return -1;
+        }
+
+        copyFixedOnly(board, onlyFixed);
+
+        if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)) { /* the board is erroneous */
+            printBoardIsErroneous();
             fclose(file);
             return -2;
         }
-
-        if (mode1 == Solve) {
-
-            onlyFixed = (int *) (calloc(boardArea(board), sizeof(int)));
-
-            if (onlyFixed == NULL) {
-                fclose(file);
-                return -1;
-            }
-
-            copyFixedOnly(board, onlyFixed);
-
-            if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)) { /* the board is erroneous */
-                printBoardIsErroneous();
-                fclose(file);
-                return -2;
-            }
-        }
     }
+
 
     fclose(file);
     return 0;
