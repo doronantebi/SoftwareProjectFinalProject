@@ -497,3 +497,35 @@ void updateEmptyCellsField(struct sudokuManager *manager){
     manager->emptyCells = amountOfEmptyCells(manager);
 }
 
+/*
+ * set all pointers in board to NULL
+ * and all integers to -1
+ */
+void initNullBoard(struct sudokuManager *manager){
+    manager->board = NULL;
+    manager->linkedList = NULL;
+    manager->fixed = NULL;
+    manager->erroneous = NULL;
+    manager->m = -1;
+    manager->n = -1;
+    manager->emptyCells = -1;
+    manager->addMarks = -1;
+}
+
+/*
+ * This function updated the board values by given parameters
+ */
+void initBoardValues(struct sudokuManager *boardToFill, int m, int n, int *board, int *erroneous, int *fixed, int addMarks, int emptyCells,
+                    struct movesList *list){
+    boardToFill->m = m, boardToFill->n = n;
+    boardToFill->board = board;
+    boardToFill->erroneous = erroneous;
+    boardToFill->fixed= fixed;
+    boardToFill->addMarks = addMarks;
+    boardToFill->emptyCells = emptyCells;
+    boardToFill->linkedList = list;
+    initList(boardToFill->linkedList);
+    boardToFill->linkedList->board = boardToFill;
+}
+
+

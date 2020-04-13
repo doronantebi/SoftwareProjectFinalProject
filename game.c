@@ -229,7 +229,9 @@ int loadFile(struct sudokuManager **pPrevBoard, char *fileName, enum Mode mode1)
     }
     return 0;
 }
-}
+
+
+
 /*
  * This function uploads a file of a game to solve.
  * It returns -1 if we need to terminate. Otherwise, it returns 0.
@@ -237,6 +239,8 @@ int loadFile(struct sudokuManager **pPrevBoard, char *fileName, enum Mode mode1)
 int solve(struct sudokuManager **pPrevBoard, char *fileName) {
     return loadFile(pPrevBoard, fileName, Solve);
 }
+
+
 
 /*
  * This function uploads a file of a game to edit.
@@ -297,7 +301,10 @@ void save(struct sudokuManager *board, char* fileName){
  * redo a move previously undone by the user.
  */
 void redo(struct sudokuManager *board){
-    if (board->linkedList == NULL || board->linkedList->next == NULL){
+    if(board->linkedList == NULL){
+        printf("Error: linked list is NULL(in redo)\n");
+    }
+    if (board->linkedList->next == NULL){
         printNoNextMoveError();
     }
     else {
@@ -310,7 +317,10 @@ void redo(struct sudokuManager *board){
  * undo a move previously done by the user.
  */
 void undo(struct sudokuManager *board){
-    if (board->linkedList == NULL || board->linkedList->prev == NULL){
+    if(board->linkedList == NULL){
+        printf("Error: linked list is NULL(in undo)\n");
+    }
+    if (board->linkedList->prev == NULL){
         printNoPrevMoveError();
     }
     else {

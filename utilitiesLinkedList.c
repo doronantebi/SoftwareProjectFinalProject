@@ -81,6 +81,10 @@ void goToPrevNode(struct sudokuManager *board){
  * This function changes the pointer of the linked list to the first move.
  */
 void pointToFirstMoveInMovesList(struct sudokuManager *board){
+    if(board->linkedList == NULL){
+        printf("Error: linked list is NULL(in function pointToFirstMoveInMovesList)\n");
+        return;
+    }
     while (board->linkedList->prev != NULL){
         undoCommand(board);
     }

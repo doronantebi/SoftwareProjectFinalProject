@@ -302,23 +302,54 @@ int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValu
 }
 
 /*
+ * This function fills X random cells with legal values
+ */
+void doGenerateFillNumRandomCells(struct sudokuManager *board, int *newBoard, int cellsToFill){
+    int row, col, val, m = board->m, n = board->n;
+    while (cellsToFill > 0) {
+        row = randRangeInt(0, boardLen(board)); /* MAKE SURE!!!!!! IT DOESNT INCLUDE THE UPPER BOUND */
+        col = randRangeInt(0, boardLen(board));
+        if (newBoard[matIndex(m, n, row, col)] == 0) { /* if cell is empty */
+            val = randRangeInt(0, boardLen(board)) + 1;
+            while (neighbourContainsOnce(newBoard, m, n, row, col, val)) { /* as long as val is
+                                                                                * illegal for our curr cell */
+                val = randRangeInt(0, boardLen(board)) + 1; /* randomly choose different value  */
+            }
+            changeCellValue(newBoard, m, n, row, col, val); /* set the new value */
+            cellsToFill--; /* reduce X by one */
+        }
+    }
+}
+/*
+ * This function removes from retBoard cellsToRemove cells
+ */
+void doGenerateRemoveNumRandomCells(struct sudokuManager *board, int *retBoard, int cellsToRemove){
+    int row, col, m = board->m, n = board->n;
+    while (cellsToRemove > 0){
+        row = randRangeInt(0, boardLen(board));
+        col = randRangeInt(0, boardLen(board));
+        if(retBoard[matIndex(m, n, row, col)] != 0){
+            changeCellValue(retBoard, m, n, row, col, 0);
+            cellsToRemove --;
+        }
+    }
+}
+/*
  * This function generates a new board with Y cells.
  * if has been successful, returns a pointer to a newBoard that will have Y values.
  * if fails, returns board. If we need to terminate, it returns NULL.
  */
 int* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
     /* ALL ALLOCATIONS */
-    int* prevBoard = board->board;
-    struct sudokuManager *newManager = (struct sudokuManager*)calloc(1, sizeof(struct sudokuManager));
+    struct sudokuManager *newManager = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
     int* retBoard = (int*)calloc(boardArea(board), sizeof(int)); /* THIS WILL CONTAIN THE SOLUTION */
-
     int* erroneous = (int*)calloc(boardArea(board), sizeof(int));
     int* fixed = (int*)calloc(boardArea(board), sizeof(int));
     struct movesList *list = (struct movesList*) malloc(sizeof(struct movesList));
-    int val;
-    int row, col, retGurobi;
+    int retGurobi;
     int m = board->m, n = board->n, iter;
-    int x, cellsToRemove;
+
+    initNullBoard(newManager);
 
     if((newManager == NULL)||(retBoard == NULL) || (erroneous == NULL) || (fixed == NULL) || (list == NULL)){
         free(newManager);
@@ -332,31 +363,15 @@ int* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
     srand(time(NULL));
 
     /* INITIALIZES NEW SUDOKU MANAGER */
-    newManager->m = m, newManager->n = n;
-    newManager->erroneous = erroneous, newManager->fixed= fixed;
-    newManager->addMarks = board->addMarks;
-    newManager->linkedList = list;
-    initList(newManager->linkedList);
-    newManager->linkedList->board = newManager;
+    initBoardValues(newManager, m, n, board->board,erroneous, fixed, board->addMarks, board->emptyCells, list);
 
     /* STARTING 1000 ITERETIONS */
     for(iter = 0; iter < NUM_ITERATIONS; iter ++) {
-        duplicateBoard(prevBoard, newBoard, board->m, board->n); /* copy content of prevBoard to newBoard */
-        x = X;
+
+        duplicateBoard(board->board, newBoard, board->m, board->n); /* copy content of prevBoard to newBoard */
+
         /* RANDOMLY FILLS X CELLS */
-        while (x > 0) {
-            row = randRangeInt(0, boardLen(board)); /* MAKE SURE!!!!!! IT DOESNT INCLUDE THE UPPER BOUND */
-            col = randRangeInt(0, boardLen(board));
-            if (newBoard[matIndex(m, n, row, col)] == 0) { /* if cell is empty */
-                val = randRangeInt(0, boardLen(board)) + 1;
-                while (neighbourContainsOnce(newBoard, m, n, row, col, val)) { /* as long as val is
-                                                                                * illegal for our curr cell */
-                    val = randRangeInt(0, boardLen(board)) + 1; /* randomly choose different value  */
-                }
-                newBoard[matIndex(m, n, row, col)] = val; /* set the new value */
-                x--; /* reduce X by one */
-            }
-        }
+        doGenerateFillNumRandomCells(board, newBoard, X); /* this function fills random legal cells */
 
         newManager->board = newBoard; /* solve the board with the new X filled cells */
         /* previous board is saved in prevBoard */
@@ -367,25 +382,15 @@ int* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
         else {
             if(retGurobi == 0){ /* Gurobi error did not occur */
                 if(retBoard != NULL){ /* solution has been found!!! Hurray!!! */
-                    cellsToRemove = boardArea(board) - Y;
-
-                    while (cellsToRemove > 0){
-                        row = randRangeInt(0, boardLen(board));
-                        col = randRangeInt(0, boardLen(board));
-                        if(retBoard[matIndex(m, n, row, col)] != 0){
-                            retBoard[matIndex(m, n, row, col)] = 0;
-                            cellsToRemove --;
-                            }
-                        }
-                    prevBoard = NULL;
+                    doGenerateRemoveNumRandomCells(board, retBoard, boardArea(board) - Y); /* This function removes cells */
                     freeBoard(newManager);
                     return retBoard;
                     }
                 }
             }
         }
-    prevBoard = NULL;
     freeBoard(newManager);
+    free(retBoard);
     return board->board; /* after 1000 trys we will returns the previous board */
 }
 
