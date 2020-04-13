@@ -8,6 +8,7 @@
 
 
 static enum Mode mode = Init;
+static int addMarks = 1;
 
 /*
  * This method is used for printing the game's title.
@@ -62,7 +63,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         return -1;
     }
 
-    board->addMarks = 1;
     initList(linkedList);
     board->linkedList = linkedList;
     linkedList->board = board;
@@ -562,7 +562,7 @@ int exitGame(struct sudokuManager *board){
 /* PRINT RELATED FUNCTIONS */
 
 void printBoard(struct sudokuManager *board){
-    printSudokuGrid(board, mode);
+    printSudokuGrid(board, mode, addMarks);
     /* NEED TO CHECK THE PRINTING FORMAT */
     if (mode == Solve && board->emptyCells == 0){
         if (isAnyErroneousCell(board)){
@@ -580,8 +580,8 @@ void printBoard(struct sudokuManager *board){
  * This function sets mark error to X
  * X and mode are being checked in Parser
  */
-void markErrors(struct sudokuManager* board ,int X){
-    board->addMarks = X;
+void markErrors(int X){
+    addMarks = X;
 }
 
 

@@ -17,7 +17,6 @@ struct sudokuManager {
     int *fixed;
     int *erroneous;
     struct movesList *linkedList;
-    int addMarks;
     int emptyCells;
 };
 
@@ -227,7 +226,7 @@ void initNullBoard(struct sudokuManager *manager);
 /*
 * This function updated the board values by given parameters
 */
-void initBoardValues(struct sudokuManager *boardToFill, int m, int n, int *board, int *erroneous, int *fixed, int addMarks, int emptyCells,
+void initBoardValues(struct sudokuManager *boardToFill, int m, int n, int *board, int *erroneous, int *fixed, int emptyCells,
                      struct movesList *list);
 
 #endif

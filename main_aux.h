@@ -20,7 +20,7 @@ void printExitMessage();
 /*
  * This method prints the users board
  */
-void printSudokuGrid(struct sudokuManager *manager, enum Mode mode);
+void printSudokuGrid(struct sudokuManager *manager, enum Mode mode, int addMarks);
 
 /*
  * This message prints a message that the board is solved successfully!
@@ -113,6 +113,12 @@ void printNoNextMoveError();
  * can be called if the user tries to "Redo".
  */
 void printNoPrevMoveError();
+
+/*
+ * This function prints a change in a cell in the board.
+ * will be called from undo and redo.
+ */
+void printActionWasMade(int row, int col, int prevVal, int newVal);
 
 /* BOARD */
 

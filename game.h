@@ -23,7 +23,7 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName);
 /*
  * Sets the "mark errors" setting to X, where X is 0 or 1.
  */
-void markErrors(struct sudokuManager *board, int X);
+void markErrors(int X);
 
 /*
  * Prints the board according to the given format

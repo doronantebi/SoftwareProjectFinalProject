@@ -195,11 +195,11 @@ void printCellRow(){
 /*
  * This method prints the cell (row, col)
  */
-void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode){
+void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode, int addMarks){
     int* puzzle = manager->board;
     int addErrors = 0;
     int index;
-        if (manager->addMarks == 1 || mode == Edit){
+        if (addMarks == 1 || mode == Edit){
         addErrors = 1;
     }
     index = matIndex(manager->m, manager->n, row, col);
@@ -220,7 +220,7 @@ void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode){
 
 }
 
-void printSudokuGrid(struct sudokuManager *manager, enum Mode mode) {
+void printSudokuGrid(struct sudokuManager *manager, enum Mode mode, int addMarks) {
     int n = manager->n, m = manager->m;
     int N = boardLen(manager) ;
     int i, j, k, p;
@@ -232,7 +232,7 @@ void printSudokuGrid(struct sudokuManager *manager, enum Mode mode) {
             for (j = 0; j < m; j++){ /* column of block matrix */
                 printCellRow();
                 for (k = 0; k < n ; k++ ){ /* column inside block  */
-                    printCell(manager, i*m + p, j*n + k, mode);
+                    printCell(manager, i*m + p, j*n + k, mode, addMarks);
                 }
             }
             printCellRow();
@@ -261,7 +261,7 @@ void printNotEnoughNumbers(){
  * This method prints a message saying that an empty cell is set as fixed in the file loaded.
  */
 void printErrorEmptyCellFixed(int row, int col){
-    printf("Error: cell <%d, %d> is empty but set as fixed.\n", col, row); /* COL is printed before ROW */
+    printf("Error: cell <%d, %d> is empty but set as fixed.\n", col + 1, row + 1); /* COL is printed before ROW */
 }
 
 
@@ -323,14 +323,14 @@ void printErrorCellXYIsFixed(int col, int row){
  * This message is printed when trying to call hint with an erroneous cell
  */
 void printErrorCellIsErroneous(int col, int row){
-    printf("Error: cell <%d,%d> is erroneous.\n", col, row);
+    printf("Error: cell <%d,%d> is erroneous.\n", col + 1, row + 1);
 }
 
 /*
  * This message is printed when trying to call hint with a cell that contains a value
  */
 void printErrorCellContainsValue(int col, int row){
-    printf("Error: cell <%d,%d> already contains a value.\n", col, row);
+    printf("Error: cell <%d,%d> already contains a value.\n", col + 1 , row + 1);
 }
 
 /*
@@ -363,7 +363,7 @@ void printBoardIsSolved(){
  * This method prints a message to the user saying how many possible values there are.
  */
 void printNumOfSolutions(int num){
-    printf("There are %d solutions sfor the current board.\n", num);
+    printf("There are %d solutions for the current board.\n", num);
 }
 
 
@@ -378,4 +378,15 @@ void printArray(int *array, int length){
     }
     printf("]\n");
 }
+
+/*
+ * This function prints a change in a cell in the board.
+ * will be called from undo and redo.
+ * prints column before row
+ */
+void printActionWasMade(int row, int col, int prevVal, int newVal){
+    printf("The value in cell <%d, %d> has been changed from %d to %d.\n", col+1, row+1, prevVal, newVal);
+}
+
+
 

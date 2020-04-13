@@ -108,6 +108,7 @@ int undoCommand (struct sudokuManager *board) {
         currVal = board->linkedList->newValue;
         changeCellValue(board->board, m, n, row, col, prevVal); /* sets back the previous value */
         updateEmptyCellsSingleSet(board, currVal, prevVal);
+        printActionWasMade(row, col, currVal, prevVal);
         goToPrevNode(board);
     }
     return count;
@@ -130,6 +131,7 @@ int redoCommand (struct sudokuManager *board){
         currVal = board->linkedList->newValue;
         changeCellValue(board->board, m, n, row, col, currVal); /* sets back the new value*/
         updateEmptyCellsSingleSet(board, prevVal, currVal);
+        printActionWasMade(row, col, prevVal, currVal);
         goToNextNode(board);
     }
     return count;
