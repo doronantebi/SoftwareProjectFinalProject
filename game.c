@@ -51,7 +51,7 @@ int inputNumFromFile(FILE *file, int *pNum){
  * if the file format is illegal returns -2, if memory allocation failed, it returns -1.
  * If everything was fine, it returns 0.
  */
-int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *board){
+int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *board, int prevAddMarks){
     int n, m, i, j, success, value, *onlyFixed;
     FILE *file = NULL;
     struct movesList *linkedList;
@@ -62,7 +62,12 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         return -1;
     }
 
-    board->addMarks = 1;
+    if (mode == Init){
+        board->addMarks = 1;
+    }
+    else{
+        board->addMarks = prevAddMarks;
+    }
     initList(linkedList);
     board->linkedList = linkedList;
     linkedList->board = board;
@@ -183,9 +188,11 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
 
         if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)) { /* the board is erroneous */
             printBoardIsErroneous();
+            free(onlyFixed);
             fclose(file);
             return -2;
         }
+        free(onlyFixed);
     }
 
 
@@ -200,14 +207,20 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
 int loadFile(struct sudokuManager **pPrevBoard, char *fileName, enum Mode mode1){
     struct sudokuManager *tmp;
     struct sudokuManager *board;
-    int res;
+    int res, prevAddMarks;
     board = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
     if (board == NULL) {
         printAllocFailed();
         return -1;
     }
     initNullBoard(board);
-    res = createBoardFromFile(fileName, mode1, board);
+    if (*pPrevBoard == NULL){
+        prevAddMarks = 1;
+    }
+    else{
+        prevAddMarks = (*pPrevBoard)->addMarks;
+    }
+    res = createBoardFromFile(fileName, mode1, board, prevAddMarks);
     if (res == -1){ /* if board creation was unsuccessful */
         printAllocFailed();
         freeBoard(board); /* frees also linked list */
