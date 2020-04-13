@@ -123,6 +123,7 @@ int interpretNoArguments(char *token, enum Mode mode, int indexCommand, enum Mod
         printExtraParams(0, indexCommand);
         return -1;
     }
+
     return 0;
 }
 
@@ -178,9 +179,9 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                 printNotANumber(1);
                 return 0;
             } else {
-                if (!(arrInput[0] - 1 >= 0 && arrInput[0] - 1 < len)) {
+                if (!((arrInput[0] - 1 >= 0) && (arrInput[0] - 1 < len))) {
                     printWrongRangeInt(4, arrInput[0], 1);
-                    printf("The parameter should be an integer between 0 and %d.\n", len - 1);
+                    printf("The parameter should be an integer between 1 and %d.\n", len);
                     return 0;
                 } else {
                     if (arrCheck[1] != 1) {
@@ -189,7 +190,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                     } else {
                         if (!(arrInput[1] - 1 >= 0 && arrInput[1] - 1 < len)) {
                             printWrongRangeInt(4, arrInput[1], 2);
-                            printf("The parameter should be an integer between 0 and %d.\n", len - 1);
+                            printf("The parameter should be an integer between 1 and %d.\n", len);
                             return 0;
                         } else {
                             if (arrCheck[2] != 1) {

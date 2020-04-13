@@ -74,10 +74,14 @@ int isFixedCell(struct sudokuManager *manager, int row, int col){
 
 /*
  * Returns the amount of times that the row contains val.
+ * If val == 0, then it returns 0.
  * CHECK!!!!!!!!
  */
 int rowContains(int *board, int m, int n, int row, int val){
     int length = n*m, col, count = 0;
+    if (val == 0){
+        return 0;
+    }
     for (col = 0; col < length ; col++) {
         if(board[matIndex(m, n, row, col)] == val){
             count++;
@@ -87,10 +91,14 @@ int rowContains(int *board, int m, int n, int row, int val){
 }
 
 /*
- * Returns the amount of times that the column contains val
+ * Returns the amount of times that the column contains val.
+ * If val == 0, then it returns 0.
  */
 int colContains(int *board, int m, int n, int col, int val){
     int length = n*m, row, count = 0;
+    if (val == 0){
+        return 0;
+    }
     for (row = 0; row < length ; row++) {
         if(board[matIndex(m, n, row, col)] == val){
             count++;
@@ -102,6 +110,7 @@ int colContains(int *board, int m, int n, int col, int val){
 /*
  * Returns the amount of times that the block of (i,j)
  * contains val.
+ * If val == 0, then it returns 0.
  */
 int blockContains(int* board, int m, int n, int row, int col, int val){
     int blockRowLowBound = rowLowBound(m, row);
@@ -109,6 +118,10 @@ int blockContains(int* board, int m, int n, int row, int col, int val){
     int blockColLowBound = colLowBound(n, col);
     int blockColHighBound = colHighBound(n, col);
     int i, j, count = 0;
+
+    if (val == 0){
+        return 0;
+    }
     for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
         for(j = blockColLowBound ; j < blockColHighBound ; j++) {
             if(board[matIndex(m, n, i, j)] == val){
@@ -472,17 +485,17 @@ void updateEmptyCellsSingleSet(struct sudokuManager *manager, int prevVal, int n
 }
 
 /*
- * this method sets Z to (X,Y),
+ * this method sets Z to (row,col),
  * is called after verifying that all values are legal.
  */
-int doSet(struct sudokuManager *manager, int X, int Y, int Z){
-    int prevVal = manager->board[matIndex(manager->m, manager->n, X, Y)];
+int doSet(struct sudokuManager *manager, int row, int col, int Z){
+    int prevVal = manager->board[matIndex(manager->m, manager->n, row, col)];
     updateEmptyCellsSingleSet(manager, prevVal, Z); /* update the amount of emptyCells field */
-    changeCellValue(manager->board, manager->m, manager->n, X, Y, Z);
+    changeCellValue(manager->board, manager->m, manager->n, row, col, Z);
     if (manager->linkedList->next != NULL){
         killNextMoves(manager);
     }
-    if (createNextNode(manager, command, X, Y, Z, prevVal) == -1){
+    if (createNextNode(manager, command, row, col, Z, prevVal) == -1){
         return -1;
     }
     goToNextNode(manager);

@@ -201,10 +201,10 @@ void getFirstIndexInBlock(int m, int n, int blockNum, int* pRow, int* pCol);
 
 
 /*
- * this method sets Z to (X,Y),
+ * this method sets Z to (row,col),
  * is called after verifying that all values are legal.
  */
-int doSet(struct sudokuManager *manager, int X, int Y, int Z);
+int doSet(struct sudokuManager *manager, int row, int col, int Z);
 
 /*
  * This function updates the epmtyCells field after a single set.

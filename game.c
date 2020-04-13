@@ -301,6 +301,7 @@ void save(struct sudokuManager *board, char* fileName){
  * redo a move previously undone by the user.
  */
 void redo(struct sudokuManager *board){
+    int res, row, col;
     if(board->linkedList == NULL){
         printf("Error: linked list is NULL(in redo)\n");
     }
@@ -308,7 +309,17 @@ void redo(struct sudokuManager *board){
         printNoNextMoveError();
     }
     else {
-        redoCommand(board);
+        res = redoCommand(board);
+        if (res > 1){
+            updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
+        }
+        else{
+            if (res == 1){
+                row = board->linkedList->prev->row;
+                col = board->linkedList->prev->col;
+                updateErroneousBoardCell(board->board, board->erroneous, board->m, board->n, row, col);
+            }
+        }
         printBoard(board);
     }
 }
@@ -317,6 +328,7 @@ void redo(struct sudokuManager *board){
  * undo a move previously done by the user.
  */
 void undo(struct sudokuManager *board){
+    int res, row, col;
     if(board->linkedList == NULL){
         printf("Error: linked list is NULL(in undo)\n");
     }
@@ -324,7 +336,17 @@ void undo(struct sudokuManager *board){
         printNoPrevMoveError();
     }
     else {
-        undoCommand(board);
+        res = undoCommand(board);
+        if (res > 1){
+            updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
+        }
+        else{
+            if (res == 1){
+                row = board->linkedList->next->row;
+                col = board->linkedList->next->col;
+                updateErroneousBoardCell(board->board, board->erroneous, board->m, board->n, row, col);
+            }
+        }
         printBoard(board);
     }
 }

@@ -49,10 +49,10 @@ int createNextNode(struct sudokuManager *board, enum action action, int X, int Y
     board->linkedList->next->board = board; /* sets the board pointer to our sudokuManager */
     board->linkedList->next->action = action; /* sets the given enum function action */
     if(action == command){ /* fills the values of the action changes */
-        board->linkedList->col = Y;
-        board->linkedList->row = X;
-        board->linkedList->prevValue = prevVal;
-        board->linkedList->newValue = Z;
+        board->linkedList->next->col = Y;
+        board->linkedList->next->row = X;
+        board->linkedList->next->prevValue = prevVal;
+        board->linkedList->next->newValue = Z;
     }
     return 0;
 }
@@ -64,7 +64,7 @@ int createNextNode(struct sudokuManager *board, enum action action, int X, int Y
  * assumes next != NULL
  */
 void goToNextNode(struct sudokuManager *board){
-    board->linkedList= board->linkedList->next;
+    board->linkedList = board->linkedList->next;
 }
 
 /*
@@ -73,7 +73,7 @@ void goToNextNode(struct sudokuManager *board){
  * assumes prev != NULL
  */
 void goToPrevNode(struct sudokuManager *board){
-    board->linkedList= board->linkedList->prev;
+    board->linkedList = board->linkedList->prev;
 }
 
 
@@ -92,12 +92,16 @@ void pointToFirstMoveInMovesList(struct sudokuManager *board){
 
 /*
  * This function updates the board to the previous command
+ * assumes board->linkedlist->prev != NULL
+ * It returns the number of the cells we changed.
  */
-void undoCommand (struct sudokuManager *board) {
-    int m = board->m, n = board->n;
+int undoCommand (struct sudokuManager *board) {
+    int m = board->m, n = board->n, count = 0;
     int currVal, prevVal, row, col;
-    goToPrevNode(board); /* board after every action is always at seperator, we change it to previous node so now action==command */
-    while (board->linkedList->prev->action != separator) {
+    goToPrevNode(board); /* board after every action is always at seperator,
+                        * we change it to previous node so now action==command */
+    while (board->linkedList->action != separator) {
+        count++;
         row = board->linkedList->row;
         col = board->linkedList->col;
         prevVal = board->linkedList->prevValue;
@@ -106,16 +110,20 @@ void undoCommand (struct sudokuManager *board) {
         updateEmptyCellsSingleSet(board, currVal, prevVal);
         goToPrevNode(board);
     }
+    return count;
 }
 
 /*
  * This function updates the board to the previous command
+ * assumes board->linkedlist->next != NULL
+ * It returns the number of the cells we changed.
  */
-void redoCommand (struct sudokuManager *board){
-    int m = board->m, n = board->n;
+int redoCommand (struct sudokuManager *board){
+    int m = board->m, n = board->n, count = 0;
     int currVal, prevVal, row, col;
-    goToPrevNode(board); /* board after every action is always at finishCommand */
-    while (board->linkedList->next->action != separator) {
+    goToNextNode(board); /* board after every action is always at finishCommand */
+    while (board->linkedList->action != separator) {
+        count++;
         row = board->linkedList->row;
         col = board->linkedList->col;
         prevVal = board->linkedList->prevValue;
@@ -124,6 +132,7 @@ void redoCommand (struct sudokuManager *board){
         updateEmptyCellsSingleSet(board, prevVal, currVal);
         goToNextNode(board);
     }
+    return count;
 }
 
 

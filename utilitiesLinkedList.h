@@ -53,15 +53,17 @@ void pointToFirstMoveInMovesList(struct sudokuManager *board);
 /*
  * This function updates the board to the previous command
  * assumes board->linkedlist->prev != NULL
+ * It returns the number of the cells we changed.
  */
-void undoCommand (struct sudokuManager *board);
+int undoCommand (struct sudokuManager *board);
 
 
 /*
  * This function updates the board to the next command
  * assumes board->linkedlist->next != NULL
+ * It returns the number of the cells we changed.
  */
-void redoCommand (struct sudokuManager *board);
+int redoCommand (struct sudokuManager *board);
 
 
 /*

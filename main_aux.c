@@ -56,7 +56,7 @@ void printExtraParamsExtend(int *arrNumOfParams, int len, int indexCommand){
     int i;
 
     printf("Error: too many parameters were entered.\n"
-           "The number of parameters expected for the %s command is .\n", commandList[indexCommand]);
+           "The number of parameters expected for the %s command is ", commandList[indexCommand]);
     for (i = 0; i < len; i++){
         if (i == len - 1){
             if (i == 0){
@@ -119,7 +119,7 @@ void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *available
  * This method prints a message to the user saying that the value entered is not in the correct range.
  */
 void printWrongRangeInt(int indexCommand, int value, int indexParam){
-    printf("Error: the value %d entered is in the wrong range"
+    printf("Error: the value %d entered is in the wrong range "
            "for parameter number %d of the %s command\n", value, indexParam, commandList[indexCommand]);
 }
 
@@ -204,16 +204,17 @@ void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode){
     }
     index = matIndex(manager->m, manager->n, row, col);
     if(isFixedCell(manager, row, col)){
-        printf("%2d.",puzzle[index]);
+        printf(" %2d.",puzzle[index]);
         return;
     }
+
     if(isErroneous(manager, row, col) && addErrors){
-        printf("%2d*",puzzle[index]);
+        printf(" %2d*",puzzle[index]);
     } else {
         if(puzzle[index] == 0){
-            printf("  ");
+            printf("    ");
         } else{
-            printf("%2d",puzzle[index]);
+            printf(" %2d ",puzzle[index]);
         }
     }
 
@@ -222,17 +223,24 @@ void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode){
 void printSudokuGrid(struct sudokuManager *manager, enum Mode mode) {
     int n = manager->n, m = manager->m;
     int N = boardLen(manager) ;
-    int i, j, k;
-    for (i = 0; i < m; i++) {
+    int i, j, k, p;
+
+
+    for (i = 0; i < n; i++) { /* row of block matrix */
         printSeparatorRow(4*N + m + 1);
-        for (j = 0; j < n; j++){
-            printCellRow();
-            for (k = 0; k < m ; k++ ){
-                printCell(manager, i*n + j, j*m + k, mode);
+        for (p = 0; p < m; p++){ /* row inside block */
+            for (j = 0; j < m; j++){ /* column of block matrix */
+                printCellRow();
+                for (k = 0; k < n ; k++ ){ /* column inside block  */
+                    printCell(manager, i*m + p, j*n + k, mode);
+                }
             }
-            printSeparatorRow(4*N + m + 1);
+            printCellRow();
+            printf("\n");
         }
     }
+    printSeparatorRow(4*N + m + 1);
+
 }
 
 /*

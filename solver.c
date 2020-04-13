@@ -382,13 +382,15 @@ int* doGenerate(struct sudokuManager *board, int *newBoard, int X, int Y){
         else {
             if(retGurobi == 0){ /* Gurobi error did not occur */
                 if(retBoard != NULL){ /* solution has been found!!! Hurray!!! */
-                    doGenerateRemoveNumRandomCells(board, retBoard, boardArea(board) - Y); /* This function removes cells */
+                    doGenerateRemoveNumRandomCells(board, retBoard, boardArea(board) - Y);
+                    /* This function removes cells */
+
                     freeBoard(newManager);
                     return retBoard;
-                    }
                 }
             }
         }
+    }
     freeBoard(newManager);
     free(retBoard);
     return board->board; /* after 1000 trys we will returns the previous board */
