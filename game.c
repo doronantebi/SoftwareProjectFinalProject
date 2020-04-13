@@ -316,6 +316,9 @@ void save(struct sudokuManager *board, char* fileName){
  * redo a move previously undone by the user.
  */
 void redo(struct sudokuManager *board){
+    if(board->linkedList == NULL){
+        printf("Error: linked list is NULL(in redo)\n");
+    }
     if (board->linkedList->next == NULL){
         printNoNextMoveError();
     }
@@ -329,6 +332,9 @@ void redo(struct sudokuManager *board){
  * undo a move previously done by the user.
  */
 void undo(struct sudokuManager *board){
+    if(board->linkedList == NULL){
+        printf("Error: linked list is NULL(in undo)\n");
+    }
     if (board->linkedList->prev == NULL){
         printNoPrevMoveError();
     }

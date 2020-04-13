@@ -283,7 +283,7 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
  * It returns
  */
 int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode) {
-    int i = 0, emptyCells;
+    int i = 0;
     enum Mode availableModes[1] = {Edit};
     int arrInput[2], arrCheck[2];  /*arrCheck saves whether we succeeded in converting
                                     * the string into a number for every parameter*/
@@ -315,9 +315,9 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
                     printf("The parameter should be an integer greater than or equal to 0.\n");
                     return 0;
                 } else {
-                    emptyCells = amountOfEmptyCells(*pBoard);
-                    if (emptyCells < arrInput[0]) { /* checking for number of empty cells */
-                        printNotEnoughEmptyCells(emptyCells, arrInput[0]);
+
+                    if ((*pBoard)->emptyCells < arrInput[0]) { /* checking for number of empty cells */
+                        printNotEnoughEmptyCells((*pBoard)->emptyCells, arrInput[0]);
                         return 0;
                     } else {
                         if (arrCheck[1] != 1) {
