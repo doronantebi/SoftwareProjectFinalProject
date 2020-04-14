@@ -560,7 +560,9 @@ int generate(struct sudokuManager **pManager, int X, int Y){
  */
 int exitGame(struct sudokuManager *board){
     printExitMessage();
-    freeBoard(board);
+    if (board != NULL){
+        freeBoard(board);
+    }
     return 2;
 }
 

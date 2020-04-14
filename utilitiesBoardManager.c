@@ -346,14 +346,14 @@ int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed){
 }
 
 /*
- * This method copies currentGrid to retGrid.
+ * This method copies array from to array to.
  */
-void duplicateBoard(int* currentGrid, int *retGrid, int m, int n){
+void duplicateBoard(int* from, int *to, int m, int n){
     int i,j;
     int size = n*m;
     for (i = 0; i < size ; i++) { /* for each row */
         for (j = 0; j < size ; j++) { /* for each column */
-            retGrid[matIndex(m, n, i, j)] = currentGrid[matIndex(m, n, i, j)];
+            to[matIndex(m, n, i, j)] = from[matIndex(m, n, i, j)];
         }
     }
 }

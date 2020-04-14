@@ -251,7 +251,7 @@ int backtracking(struct sudokuManager *manager){
         return -1;
     }
 
-    duplicateBoard(solutionBoard, manager->board, manager->m, manager->n);
+    duplicateBoard(manager->board, solutionBoard, manager->m, manager->n);
     res = recBacktracking(manager, solutionBoard);
 
     free(solutionBoard);

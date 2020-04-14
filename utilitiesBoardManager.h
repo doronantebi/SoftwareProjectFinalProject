@@ -174,9 +174,9 @@ void changeCellValue(int *board, int m, int n, int row, int col, int val);
 int *copyFixedOnly(struct sudokuManager *board, int *onlyFixed);
 
 /*
- * This method copies currentGrid to retGrid.
- */
-void duplicateBoard(int* currentGrid, int *retGrid, int m, int n);
+* This method copies array from to array to.
+*/
+void duplicateBoard(int* from, int *to, int m, int n);
 
 
 /*

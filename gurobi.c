@@ -31,22 +31,31 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
     int i, j, height;
     int blockRowLowBound, blockRowHighBound, blockColLowBound, blockColHighBound;
     int count = 0;
+    printf("In updae3DIndices\n");
     for (row = 0; row < length; row++) {
         for(col = 0; col < length; col++){
             val = board[matIndex(m,n,row,col)];
+            printf("cell (%d, %d), value: %d\n", row, col, val);
             if(val == 0){ /* cell is free */
                 continue;
             }
+            val--;
+            printf("deleting values for current cell\n");
             /* update for all values for this cell */
             for(height = 0; height < length; height++){
+                printf("deleted value %d for cell (%d, %d)\n", height+1, row, col);
                 indices[threeDIndex(length, row, col, height)] = -1; /* */
             }
             /* update for all row */
+            printf("deleting value %d for all row\n", val);
             for(j = 0; j < length; j++){
+                printf("deleted value %d for cell (%d, %d)\n", val, row, j);
                 indices[threeDIndex(length, row, j, val)] = -1;
             }
             /* update for all column */
+            printf("deleting value %d for all column\n", val);
             for(i = 0; i < length; i++){
+                printf("deleted value %d for cell (%d, %d)\n", val, i, col);
                 indices[threeDIndex(length, i, col, val)] = -1;
             }
             /* update for all block */
@@ -54,24 +63,30 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
             blockRowHighBound = rowHighBound(m, row);
             blockColLowBound = colLowBound(n, col);
             blockColHighBound = colHighBound(n, col);
+            printf("deleting value %d for all block\n", val);
             for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
                 for(j = blockColLowBound ; j < blockColHighBound ; j++) {
+                    printf("deleted value %d for cell (%d, %d)\n", val, i, j);
                     indices[threeDIndex(length, i, j, val)] = -1;
+                    printf("wrote\n");
                 }
             }
         }
     }
+    printf("indices left:\n");
     for(row = 0; row < length; row++){
         for(col = 0; col<length; col++){
             for (height = 0; height < length ;height ++) {
                 if(indices[threeDIndex(length, row, col, height)] != -1){ /* only if we want to have this variable */
                     indices[threeDIndex(length, row, col, height)] = count; /* update in the relevant cell
                                                                             * its variable index number  */
+                    printf("(row, col, value) = (%d, %d, %d) is variable number %d\n", row, col, height+1, count);
                     count ++;
                 }
             }
         }
     }
+    printf("finished. count = %d\n", count);
     return count; /* returns the amount of variables */
 }
 
@@ -307,7 +322,7 @@ int setRowConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
     double *val;
 
     for(i = 0; i < N ; i++){
-        for(k = 1; k <= N ; k++){
+        for(k = 0; k < N ; k++){
             constraintLength = getConstraintRowLength(k, i, manager, indices);
             if(constraintLength == 0){
                 continue;
@@ -343,7 +358,7 @@ int setColConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
     double *val;
 
     for(j = 0; j < N ; j++){
-        for(k = 1; k <= N ; k++){
+        for(k = 0; k < N ; k++){
             constraintLength = getConstraintColLength(k, j, manager, indices);
             if(constraintLength == 0){
                 continue;
@@ -416,7 +431,7 @@ int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRB
     double *val;
 
     for(b = 0; b < N ; b++){ /* b = #block */
-        for(k = 1; k <= N ; k++){ /* k = value */
+        for(k = 0; k < N ; k++){ /* k = value */
             getFirstIndexInBlock(manager->m, manager->n, b, &i, &j);
             constraintLength = getConstraintBlockLength(k, i, j, manager, indices);
             if(constraintLength == 0){
@@ -533,11 +548,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
     char      *vtype = NULL; /* V */
     int       optimstatus;
     double    objval; /* */
-    /*
-    double    *sol = NULL;
-    int       amountOfVariables = 0;
-    int       *indices = NULL;
-    */
+    int       currIndex;
 
     res = initGurobi(&env, &model, &obj, &vtype, amountOfVariables);
     if (res){
@@ -683,16 +694,24 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
         }
 
         if (type != CONTINUOUS){
+            printf("type == %d\n", type);
             for(i = 0; i < N; i++){
                 for(j = 0; j < N; j++){
                     index = matIndex(manager->m, manager->n, i, j);
+                    printf("cell (%d, %d)\n", i, j);
                     if(manager->board[index] != 0){
+                        printf("manager->board[%d][%d] != 0\n", i, j);
                         (*retBoard)[index] = manager->board[index];
+                        printf("(*retBoard)[%d][%d] = %d\n", i, j, (*retBoard)[index]);
                     }
                     else{
+                        printf("manager->board[%d][%d] == 0\n", i, j);
                         for (k = 0; k < N ; k++) {
-                            if(sol[indices[threeDIndex(N, i, j, k)]] == 1){
+                            printf("k = %d\n", k);
+                            currIndex = indices[threeDIndex(N, i, j, k)];
+                            if((currIndex != -1) && (sol[currIndex] == 1.0)){
                                 (*retBoard)[index] = k + 1;
+                                printf("(*retBoard)[%d][%d] = %d\n", i, j, (*retBoard)[index]);
                                 break;
                             }
                         }
@@ -737,7 +756,9 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
     int N = boardLen(manager), amountOfVariables, res;
     int *indices = NULL;
     double *sol = NULL;
+    printf("entered solveBoard\n");
     indices = init3DArray(N);
+    printf("allocated indices. address: %p\n", (void *)indices);
     if (indices == NULL){
         return -2; /* terminate program */
     }
