@@ -359,7 +359,7 @@ void undo(struct sudokuManager *board){
  * This function resets the board to start position by undoing all moves.
 */
 void reset(struct sudokuManager *board){
-    pointToFirstMoveInMovesList(board);
+    pointToFirstMoveInMovesList(board, 1);
     updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
     printBoard(board);
 }

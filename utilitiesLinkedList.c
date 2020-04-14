@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "utilitiesLinkedList.h"
+#include "main_aux.h"
+
 
 /*
  * This method initializes list with default values.
@@ -80,13 +82,13 @@ void goToPrevNode(struct sudokuManager *board){
 /*
  * This function changes the pointer of the linked list to the first move.
  */
-void pointToFirstMoveInMovesList(struct sudokuManager *board){
+void pointToFirstMoveInMovesList(struct sudokuManager *board, int isToPrint){
     if(board->linkedList == NULL){
         printf("Error: linked list is NULL(in function pointToFirstMoveInMovesList)\n");
         return;
     }
     while (board->linkedList->prev != NULL){
-        undoCommand(board);
+        undoCommand(board, isToPrint);
     }
 }
 
@@ -95,7 +97,7 @@ void pointToFirstMoveInMovesList(struct sudokuManager *board){
  * assumes board->linkedlist->prev != NULL
  * It returns the number of the cells we changed.
  */
-int undoCommand (struct sudokuManager *board) {
+int undoCommand (struct sudokuManager *board, int isToPrint) {
     int m = board->m, n = board->n, count = 0;
     int currVal, prevVal, row, col;
     goToPrevNode(board); /* board after every action is always at seperator,
@@ -108,7 +110,9 @@ int undoCommand (struct sudokuManager *board) {
         currVal = board->linkedList->newValue;
         changeCellValue(board->board, m, n, row, col, prevVal); /* sets back the previous value */
         updateEmptyCellsSingleSet(board, currVal, prevVal);
-        printActionWasMade(row, col, currVal, prevVal);
+        if(isToPrint){
+            printActionWasMade(row, col, currVal, prevVal);
+        }
         goToPrevNode(board);
     }
     return count;
@@ -119,7 +123,7 @@ int undoCommand (struct sudokuManager *board) {
  * assumes board->linkedlist->next != NULL
  * It returns the number of the cells we changed.
  */
-int redoCommand (struct sudokuManager *board){
+int redoCommand (struct sudokuManager *board, int isToPrint){
     int m = board->m, n = board->n, count = 0;
     int currVal, prevVal, row, col;
     goToNextNode(board); /* board after every action is always at finishCommand */
@@ -131,7 +135,9 @@ int redoCommand (struct sudokuManager *board){
         currVal = board->linkedList->newValue;
         changeCellValue(board->board, m, n, row, col, currVal); /* sets back the new value*/
         updateEmptyCellsSingleSet(board, prevVal, currVal);
-        printActionWasMade(row, col, prevVal, currVal);
+        if(isToPrint){
+            printActionWasMade(row, col, prevVal, currVal);
+        }
         goToNextNode(board);
     }
     return count;

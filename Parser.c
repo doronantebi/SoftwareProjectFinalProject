@@ -58,7 +58,7 @@ int interpretEdit(char *token, struct sudokuManager **pBoard){
  * Available in Solve mode only.
  * It returns
  */
-int interpretMarkErrors(char *token, struct sudokuManager *board, enum Mode mode){
+int interpretMarkErrors(char *token, enum Mode mode){
     enum Mode availableModes[1] = {Solve};
     int input, check;
     if (mode != Solve){
@@ -80,7 +80,7 @@ int interpretMarkErrors(char *token, struct sudokuManager *board, enum Mode mode
             check = sscanf(token, "%d", &input);
             if (check == 1){
                 if (input == 0 || input == 1){
-                    markErrors(board, input);
+                    markErrors(input);
                     return 0;
                 }
                 else{
@@ -567,7 +567,7 @@ int interpret(char *command, struct sudokuManager **pBoard, enum Mode mode){
             case 1:
                 return interpretEdit(token, pBoard);
             case 2:
-                return interpretMarkErrors(token, board, mode);
+                return interpretMarkErrors(token, mode);
             case 3:
                 return interpretPrintBoard(token, board, mode);
             case 4:

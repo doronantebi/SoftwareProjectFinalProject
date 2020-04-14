@@ -3,7 +3,7 @@
 #include "gurobi.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "gurobi_sys"
+#include "gurobi_c.h"
 #include "utilitiesBoardManager.h"
 #include "main_aux.h"
 #include <time.h>

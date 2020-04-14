@@ -48,14 +48,14 @@ void goToNextNode(struct sudokuManager *board);
 /*
  * This function changes the pointer of the linked list to the first move.
  */
-void pointToFirstMoveInMovesList(struct sudokuManager *board);
+void pointToFirstMoveInMovesList(struct sudokuManager *board, int isToPrint);
 
 /*
  * This function updates the board to the previous command
  * assumes board->linkedlist->prev != NULL
  * It returns the number of the cells we changed.
  */
-int undoCommand (struct sudokuManager *board);
+int undoCommand (struct sudokuManager *board, int isToPrint);
 
 
 /*
@@ -63,7 +63,7 @@ int undoCommand (struct sudokuManager *board);
  * assumes board->linkedlist->next != NULL
  * It returns the number of the cells we changed.
  */
-int redoCommand (struct sudokuManager *board);
+int redoCommand (struct sudokuManager *board, int isToPrint);
 
 
 /*

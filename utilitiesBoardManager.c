@@ -307,7 +307,7 @@ int amountOfEmptyCells(struct sudokuManager *manager){
  */
 void freeBoard(struct sudokuManager *board){
     if (board->linkedList != NULL){
-        pointToFirstMoveInMovesList(board); /* points the move's list to first move */
+        pointToFirstMoveInMovesList(board, 0); /* points the move's list to first move */
         killNextMoves(board); /* frees all next moves */
     }
     free(board->fixed);
