@@ -262,8 +262,7 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName){
 void save(struct sudokuManager *board, char* fileName){
     FILE *file;
     int N = boardLen(board), m=board->m, n=board->n, row, col, currVal;
-    int valid = validateBoard(board);
-    if(valid == 1){ /* the board is valid */
+    if((mode == Solve)||(validateBoard(board))){ /* the board is valid or the mode == Solve*/
         file = fopen(fileName, "w");
         if(file == NULL){
             printFilePathIllegal();
@@ -453,21 +452,22 @@ int validate(struct sudokuManager *board){
  * Valid only in Solve mode.
  * X = COLUMN, Y = ROW
  */
-int hint(struct sudokuManager *board, int X, int Y){
+int hint(struct sudokuManager *board, int col, int row){
     int hint = -3, ret;
-    if(board->erroneous[matIndex(board->m, board->n, Y, X)]){
-        printErrorCellIsErroneous(X, Y);
+    row--, col--;
+    if(isAnyErroneousCell(board)){
+        printBoardIsErroneous();
         return 0;
     }
-    if(board->fixed[matIndex(board->m, board->n, Y, X)]){
-        printErrorCellXYIsFixed(X, Y);
+    if(board->fixed[matIndex(board->m, board->n, row, col)]){
+        printErrorCellXYIsFixed(row, col);
         return 0;
     }
-    if(board->board[matIndex(board->m, board->n, Y, X)] != 0){
-        printErrorCellContainsValue(X, Y);
+    if(board->board[matIndex(board->m, board->n, row, col)] != 0){
+        printErrorCellContainsValue(row, col);
         return 0;
     }
-    ret = getHint(board, Y, X, &hint);
+    ret = getHint(board, row, col, &hint);
     if(ret == -1){
         return -1; /* alloc failed */
     }

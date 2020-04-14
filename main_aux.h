@@ -10,22 +10,20 @@
  */
 void printGameTitle();
 
+/*
+ * This message prints a message that the board is solved successfully!
+ */
+void printBoardIsSolved();
 
 /*
  * This function prints the exit message.
  */
 void printExitMessage();
 
-
 /*
  * This method prints the users board
  */
 void printSudokuGrid(struct sudokuManager *manager, enum Mode mode, int addMarks);
-
-/*
- * This message prints a message that the board is solved successfully!
- */
-void printBoardIsSolved();
 
 
 /* PARSER METHODS*/
@@ -38,7 +36,8 @@ void printBoardIsSolved();
 int commandNum (char* word);
 
 /*
- * The function prints a message to the user saying that not enough parameters were entered.
+ * The function prints a message to the user saying
+ * that not enough parameters were entered.
  */
 void printFewParams(int numOfParams, int indexCommand);
 
@@ -55,7 +54,7 @@ void printExtraParamsExtend(int *arrNumOfParams, int len, int indexCommand);
 void printExtraParams(int numOfParams, int indexCommand);
 
 /*
- * This method returns a string description of mode.
+ * This method returns a string description of the mode of the game.
  */
 char* modeToString(enum Mode mode);
 
@@ -71,28 +70,36 @@ void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *available
 void printWrongRangeInt(int indexCommand, int value, int indexParam);
 
 /*
- * This method prints a message to the user saying that the value entered is not in the correct range.
+ * This method prints a message to the user saying that
+ * the value entered is not in the correct range.
  */
 void printWrongRangeFloat(int indexCommand, float value, int indexParam);
 
 /*
- * This method prints a message to the user saying that the received parameter is not a number.
+ * This method prints a message to the user saying that
+ * the received parameter is not a number.
  */
 void printNotANumber(int indexParam);
 
 /*
- * This method prints a message to the user saying that the received parameter is not a number.
+ * This method prints a message to the user saying that
+ * the received parameter is not a number.
  */
 void printNotAFloat(int indexParam);
-
 
 /*
  * This method prints a message to the user saying that the command entered does not exist.
  */
 void printInvalidCommand();
 
-/* END OF PARSER METHODS*/
+/*
+ * This function prints an error message if the user calls "generate"
+ * with X that is larger than the amount of empty cells in the board.
+ * X > emptyCells.
+ */
+void printGenerateInputError(int emptyCells, int X);
 
+/* END OF PARSER METHODS*/
 
 /* ERRORS */
 
@@ -105,8 +112,8 @@ void printInvalidCommand();
 void printNoNextMoveError();
 
 /*
- * This method announces that there is no more next moves,
- * can be called if the user tries to "Redo".
+ * This method announces that there is no more next moves, can be called
+ * if the user tries to "undo" of functions that uses it (e.g. "reset").
  */
 void printNoPrevMoveError();
 
@@ -119,82 +126,86 @@ void printActionWasMade(int row, int col, int prevVal, int newVal);
 /* BOARD */
 
 /*
- * This method prints a message that the board is erronous
+ * This function prints a message that the board is erroneous.
+ * Can be called when scanning an erroneous board from file (via: "solve"),
+ * or when calling one of the following functions:
+ * "autofill", "validate", "guess", "edit", and "guessHint".
  */
 void printBoardIsErroneous();
 
 /*
- * This method announces that the user has been trying to set a fixed cell
- * X is column, Y is row.
+ * This function prints an error when the user tries
+ * to change the value of a fixed cell.
+ * Can be called from "set", "hint" and "guessHint".
+ * The format of cell print is <col, row>, similar to "set".
  */
 void printErrorCellXYIsFixed(int col, int row);
 
 /*
- * This message is printed when trying to call hint with an erroneous cell
- */
-void printErrorCellIsErroneous(int col, int row);
-
-/*
- * This message is printed when trying to call hint with a cell that contains a value
+ * This function prints an error when the user tries
+ * to receive a hint for a cell that contains a value.
+ * The format of cell print is <col, row>, similar to "set".
  */
 void printErrorCellContainsValue(int col, int row);
 
-/* VALIDATE */
+/* GUROBI RELATED PRINTS */
 
 /*
- * This message is printed if the gurobi has failed.
+ * his function is called if Gurobi process has failed.
  */
 void printGurobiFailedTryAgain();
 
 /*
- * Error message of invalid board
+ * This function is called if the user called "validate",
+ * and the board turned out to be invalid.
  */
 void printBoardNotValidError();
 
 /*
- * This method prints that the board is solvable (valid).
+ * This function is called if the user called "validate",
+ * and the board turned out to be valid.
  */
 void printBoardIsValid();
 
 /*
- * Error message if X>emptyCells.
- * This method prints a message to the user saying that there are not enough empty cells.
- */
-void printGenerateInputError(int emptyCells, int X);
-
-/*
- * This method prints that we have tried generate too many times and failed.
+ * This function prints a message that function "generate" has failed
+ * solving the board in all its attempts.
  */
 void printGenerateFailed();
 
 /*
- * This method prints a message to the user saying how many possible values there are.
+ * This function prints the amount of possible solutions of the board,
+ * returned by "numSolutions".
  */
 void printNumOfSolutions(int num);
 
 
 /*
- * prints the array of possible legal values for guess hint
+ * This function prints the possible values for a cell,
+ * calculated by "guessHint" function for a single cell.
+ * The format of cell print is <col, row>, similar to "set".
  */
-void printArray(int *cellValues, int length);
+void printValuesAndScores(int row, int col, int *cellValues, int length, double *scores);
 
 /* FILES RELATED */
 
 /*
- * This method prints a message to the user saying that the file is too long than expected.
+ * This function prints a message to the user if
+ * the given file contains more characters than expected,
+ * i.e. the format if the file is illegal.
  */
 void printTooLongFile();
 
 /*
- * This function prints an error if the path for a file, given by user, is illegal.
+ * This function prints an error to the user if the file path is illegal.
  */
 void printFilePathIllegal();
 
 /*
- * This method prints that the number read from a file is not in the correct range.
+ * This function prints a message that a number read from a file
+ * is not in the correct range for the game.
  */
 void printWrongRangeFile(int number, int start, int end);
-
 
 /*
  * This function prints a message that the input is not an integer.
@@ -202,27 +213,21 @@ void printWrongRangeFile(int number, int start, int end);
 void printNotAnInteger();
 
 /*
- * This method prints a message saying that an
- * empty cell is set as fixed in the file loaded.
+ * This function prints a message if an empty cell is set
+ * as fixed by the addition of "." to the value in the file loaded.
+ * The format of cell print is <col, row>, similar to "set".
  */
 void printErrorEmptyCellFixed(int row, int col);
 
-
 /*
- * This method prints that no input was received.
+ * This function prints that no input was received.
  */
 void printNoInput();
 
 /*
- * This method prints that not enough numbers were entered.
+ * This function prints that not enough numbers were entered.
  */
 void printNotEnoughNumbers();
-
-/*
- * This method prints a message saying that an
- * empty cell is set as fixed in the file loaded.
- */
-void printErrorEmptyCellFixed(int row, int col);
 
 /* MEMORY ALLOCATION FAILURE */
 
@@ -230,10 +235,6 @@ void printErrorEmptyCellFixed(int row, int col);
  * This function prints an error that allocation failed~
  */
 void printAllocFailed();
-
-
-
-
 
 
 #endif

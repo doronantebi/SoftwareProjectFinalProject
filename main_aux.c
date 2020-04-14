@@ -11,17 +11,97 @@ static char* commandList[] = {"solve", "edit", "mark_errors", "print_board", "se
                               "guess", "generate", "undo", "redo", "save", "hint", "guess_hint",
                               "num_solutions", "autofill", "reset", "exit"};
 
+
+/* GENERAL GAME RELATED METHODS */
+
+/*
+ * This function prints the title of the game.
+ */
 void printGameTitle(){
-    printf("%s%s\n\n             Creators: %s.\n", title1, title2, creators);
+    printf("%s%s\n\n             Creators: %s.\n\n", title1, title2, creators);
 }
 
 /*
- * This function prints the exit message.
+ * this function prints an announcement that the user have solved the game.
+ */
+void printBoardIsSolved(){
+    printf("Congratulations! The board is successfully solved!\n");
+}
+
+/*
+ * This function prints an exit message once the user asks to exit the game.
  */
 void printExitMessage(){
     printf("Bye bye! (:\n");
 }
 
+/* BOARD PRINT AUXILIARY FUNCTIONS */
+
+/*
+ * This function prints the cell (row, col).
+ * Prints "." after the cell value if the cell is fixed.
+ * Prints "*" after the cell value if it is erroneous.
+ * Prints whitespaces if the cell does not contain value (value is 0).
+ */
+void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode, int addMarks){
+    int addErrors = 0;
+    int index = matIndex(manager->m, manager->n, row, col);
+
+    if (addMarks == 1 || mode == Edit){
+        addErrors = 1; /* Errors will be marked with "*" */
+    }
+    if(isFixedCell(manager, row, col)){
+        printf(" %2d.",manager->board[index]);
+        return;
+    }
+    /* Can not be fixed */
+    if(isErroneous(manager, row, col) && addErrors){
+        printf(" %2d*",manager->board[index]);
+    }
+    else { /* cell is not fixed nor erroneous */
+        if(manager->board[index] == 0){
+            printf("    ");
+        } else{
+            printf(" %2d ",manager->board[index]);
+        }
+    }
+}
+
+/*
+ * This function prints a line separator for the blocks of the board.
+ * For our purposes; length must be equal to 4N+m+1.
+ */
+void printSeparatorRow(int length){
+    int i;
+    for (i = 0; i < length ; i++) {
+        printf("-");
+    }
+    printf("\n");
+}
+
+/*
+ * This function prints the board of the sudokuManager it receives as an input.
+ * Mode, addMarks parameters defines if errors will be marked, or not.
+ */
+void printSudokuGrid(struct sudokuManager *manager, enum Mode mode, int addMarks) {
+    int n = manager->n, m = manager->m;
+    int N = boardLen(manager) ;
+    int i, j, k, p;
+
+    for (i = 0; i < n; i++) { /* row of block matrix */
+        printSeparatorRow(4*N + m + 1);
+        for (p = 0; p < m; p++){ /* row inside block */
+            for (j = 0; j < m; j++){ /* column of block matrix */
+                printf("|");
+                for (k = 0; k < n ; k++ ){ /* column inside block  */
+                    printCell(manager, i*m + p, j*n + k, mode, addMarks);
+                }
+            }
+            printf("|\n");
+        }
+    }
+    printSeparatorRow(4*N + m + 1);
+}
 
 /* PARSER METHODS */
 
@@ -41,7 +121,8 @@ int commandNum (char* word){
 }
 
 /*
- * The function prints a message to the user saying that not enough parameters were entered.
+ * The function prints a message to the user saying
+ * that not enough parameters were entered.
  */
 void printFewParams(int numOfParams, int indexCommand){
     printf("Error: not enough parameters were entered.\n"
@@ -49,14 +130,24 @@ void printFewParams(int numOfParams, int indexCommand){
 }
 
 /*
- * The function prints a message to the user saying that too many parameters were entered.
- * There are some possibilities for a valid number of parameters, all of which are in the array arrNumOfParams.
+ * This function receives a command string,
+ * and prints an error that notifies that too many parameters were entered.
+ */
+void printErrorTooManyParametersEntered(char* command){
+    printf("Error: too many parameters were entered.\n"
+           "The number of parameters expected for the %s command is ", command);
+}
+
+/*
+ * The function prints a message to the user saying that
+ * too many parameters were entered.
+ * There are some possibilities for a valid number of parameters,
+ * all of which are in the array arrNumOfParams.
  */
 void printExtraParamsExtend(int *arrNumOfParams, int len, int indexCommand){
     int i;
+    printErrorTooManyParametersEntered(commandList[indexCommand]);
 
-    printf("Error: too many parameters were entered.\n"
-           "The number of parameters expected for the %s command is ", commandList[indexCommand]);
     for (i = 0; i < len; i++){
         if (i == len - 1){
             if (i == 0){
@@ -88,7 +179,7 @@ void printExtraParams(int numOfParams, int indexCommand){
 }
 
 /*
- * This method returns a string description of mode.
+ * This method returns a string description of the mode of the game.
  */
 char* modeToString(enum Mode mode){
     static char *strings[3] = {"Init", "Edit", "Solve"};
@@ -96,7 +187,8 @@ char* modeToString(enum Mode mode){
 }
 
 /*
- * The function prints a message to the user saying that the command is not available in the current mode.
+ * The function prints a message to the user saying that
+ * the command is not available in the current mode.
  * It receives an array of modes in which the command is available and its length.
  */
 void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *availableModes, int length){
@@ -114,9 +206,9 @@ void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *available
     printf("\n");
 }
 
-
 /*
- * This method prints a message to the user saying that the value entered is not in the correct range.
+ * This method prints a message to the user saying that
+ * the value entered is not in the correct range.
  */
 void printWrongRangeInt(int indexCommand, int value, int indexParam){
     printf("Error: the value %d entered is in the wrong range "
@@ -124,7 +216,8 @@ void printWrongRangeInt(int indexCommand, int value, int indexParam){
 }
 
 /*
- * This method prints a message to the user saying that the value entered is not in the correct range.
+ * This method prints a message to the user saying that
+ * the value entered is not in the correct range.
  */
 void printWrongRangeFloat(int indexCommand, float value, int indexParam){
     printf("Error: the value %f entered is in the wrong range"
@@ -133,197 +226,185 @@ void printWrongRangeFloat(int indexCommand, float value, int indexParam){
 
 
 /*
- * This method prints a message to the user saying that the received parameter is not a number.
+ * This method prints a message to the user saying that
+ * the received parameter is not a number.
  */
 void printNotANumber(int indexParam){
     printf("Error: an integer was expected for parameter %d, but was not received.\n", indexParam);
 }
 
 /*
- * This method prints a message to the user saying that the received parameter is not a number.
+ * This method prints a message to the user saying that
+ * the received parameter is not a number.
  */
 void printNotAFloat(int indexParam){
     printf("Error: a float was expected for parameter %d, but was not received.\n", indexParam);
 }
 
-
 /*
- * This method prints a message to the user saying that the command entered does not exist.
+ * This method prints a message to the user saying that
+ * the command entered does not exist.
  */
 void printInvalidCommand(){
-    printf("Error: the command entered does not exist. Please enter a new command.\n");
+    printf("Error: the command entered does not exist. "
+           "Please enter a new command.\n");
+}
+
+/*
+ * This function prints an error message if the user calls "generate"
+ * with X that is larger than the amount of empty cells in the board.
+ * X > emptyCells.
+ */
+void printGenerateInputError(int emptyCells, int X){
+    printf("Error: a request has been received to fill %d cells, while there are"
+           " only %d empty cells.\n", emptyCells, X);
 }
 
 /* END OF PARSER METHODS*/
 
+/* ERRORS */
 
+/* MOVES LIST RELATED */
 
+/*
+ * This function announces that there is no more next moves,
+ * can be called if the user tries to use "redo" function.
+ */
 void printNoNextMoveError(){
     printf("Error: there are no more next moves.\n");
 }
 
+/*
+ * This method announces that there is no more next moves, can be called
+ * if the user tries to "undo" of functions that uses it (e.g. "reset").
+ */
 void printNoPrevMoveError(){
     printf("Error: there are no more previous moves.\n");
 }
 
-/* PRINT RELATED METHODS */
 /*
- * length should be equal to 4N+m+1
+ * This function prints a change of a cell in the board.
+ * Can be called from "undo" and "redo".
+ * The format of cell print is <col, row>, similar to "set".
  */
-void printSeparatorRow(int length){
-    int i;
-    for (i = 0; i < length ; i++) {
-        printf("-");
-    }
-    printf("\n");
+void printActionWasMade(int row, int col, int prevVal, int newVal){
+    printf("The value in cell <%d, %d> has"
+           " been changed from %d to %d.\n", col+1, row+1, prevVal, newVal);
 }
+
+/* BOARD */
 
 /*
- *
- */
-void printCellRow(){
-    printf("|");
-}
-
-/*
- * This method prints the cell (row, col)
- */
-void printCell(struct sudokuManager *manager, int row, int col, enum Mode mode, int addMarks){
-    int* puzzle = manager->board;
-    int addErrors = 0;
-    int index;
-        if (addMarks == 1 || mode == Edit){
-        addErrors = 1;
-    }
-    index = matIndex(manager->m, manager->n, row, col);
-    if(isFixedCell(manager, row, col)){
-        printf(" %2d.",puzzle[index]);
-        return;
-    }
-
-    if(isErroneous(manager, row, col) && addErrors){
-        printf(" %2d*",puzzle[index]);
-    } else {
-        if(puzzle[index] == 0){
-            printf("    ");
-        } else{
-            printf(" %2d ",puzzle[index]);
-        }
-    }
-
-}
-
-void printSudokuGrid(struct sudokuManager *manager, enum Mode mode, int addMarks) {
-    int n = manager->n, m = manager->m;
-    int N = boardLen(manager) ;
-    int i, j, k, p;
-
-
-    for (i = 0; i < n; i++) { /* row of block matrix */
-        printSeparatorRow(4*N + m + 1);
-        for (p = 0; p < m; p++){ /* row inside block */
-            for (j = 0; j < m; j++){ /* column of block matrix */
-                printCellRow();
-                for (k = 0; k < n ; k++ ){ /* column inside block  */
-                    printCell(manager, i*m + p, j*n + k, mode, addMarks);
-                }
-            }
-            printCellRow();
-            printf("\n");
-        }
-    }
-    printSeparatorRow(4*N + m + 1);
-
-}
-
-/*
- * This method prints that no input was received.
- */
-void printNoInput(){
-    printf("Error: no input was received.\n");
-}
-
-/*
- * This method prints that not enough numbers were entered.
- */
-void printNotEnoughNumbers(){
-    printf("Error: not enough numbers were inserted.\n");
-}
-
-/*
- * This method prints a message saying that an empty cell is set as fixed in the file loaded.
- */
-void printErrorEmptyCellFixed(int row, int col){
-    printf("Error: cell <%d, %d> is empty but set as fixed.\n", col + 1, row + 1); /* COL is printed before ROW */
-}
-
-
-/*
- * This method prints a message to the user saying that the file is too long than expected.
- */
-void printTooLongFile(){
-    printf("Error: the file received is too long than expected.\n");
-}
-
-/*
- * This function prints an error if the path for a file, given by user, is illegal.
- */
-void printFilePathIllegal(){
-    printf("Error: file path is illegal.\n");
-}
-
-
-/*
- * This method prints that the number read from a file is not in the correct range.
- */
-void printWrongRangeFile(int number, int start, int end){
-    printf("Error: the number %d read from the file is not in the correct range."
-           "The correct range is %d to %d.\n", number, start, end);
-}
-
-/* */
-void printGurobiFailedTryAgain(){
-    printf("Error: Gurobi has failed. Please try again.\n");
-}
-
-void printBoardNotValidError(){
-    printf("Error: the board is invalid.\n");
-}
-
-/*
- * This function prints an error that allocation failed~
- */
-void printAllocFailed(){
-    printf("Error: allocation failed.\n");
-}
-
-/*
- * This method prints a message that the board is erronous
+ * This function prints a message that the board is erroneous.
+ * Can be called when scanning an erroneous board from file (via: "solve"),
+ * or when calling one of the following functions:
+ * "autofill", "validate", "guess", "edit", and "guessHint".
  */
 void printBoardIsErroneous(){
     printf("Error: the board is erroneous.\n");
 }
 
 /*
- * This method announces that the user has been trying to set a fixed cell
- * X is column, Y is row.
+ * This function prints an error when the user tries
+ * to change the value of a fixed cell.
+ * Can be called from "set", "hint" and "guessHint".
+ * The format of cell print is <col, row>, similar to "set".
  */
 void printErrorCellXYIsFixed(int col, int row){
     printf("Error: cell <%d,%d> is fixed.\n", col + 1, row + 1); /* COL BEFORE ROW */
 }
 
 /*
- * This message is printed when trying to call hint with an erroneous cell
- */
-void printErrorCellIsErroneous(int col, int row){
-    printf("Error: cell <%d,%d> is erroneous.\n", col + 1, row + 1);
-}
-
-/*
- * This message is printed when trying to call hint with a cell that contains a value
+ * This function prints an error when the user tries
+ * to receive a hint for a cell that contains a value.
+ * The format of cell print is <col, row>, similar to "set".
  */
 void printErrorCellContainsValue(int col, int row){
     printf("Error: cell <%d,%d> already contains a value.\n", col + 1 , row + 1);
+}
+
+/* GUROBI RELATED PRINTS */
+
+/*
+ * This function is called if Gurobi process has failed.
+ */
+void printGurobiFailedTryAgain(){
+    printf("Error: Gurobi has failed. Please try again.\n");
+}
+
+/*
+ * This function is called if the user called "validate",
+ * and the board turned out to be invalid.
+ */
+void printBoardNotValidError(){
+    printf("The board is invalid.\n");
+}
+
+/*
+ * This function is called if the user called "validate",
+ * and the board turned out to be valid.
+ */
+void printBoardIsValid(){
+    printf("The board is valid.\n");
+}
+
+/*
+ * This function prints a message that function "generate" has failed
+ * solving the board in all its attempts.
+ */
+void printGenerateFailed(){
+    printf("Error: board generation failed after several attempts.\n");
+}
+
+/*
+ * This function prints the amount of possible solutions of the board,
+ * returned by "numSolutions".
+ */
+void printNumOfSolutions(int num){
+    printf("There are %d solutions for the current board.\n", num);
+}
+
+/*
+ * This function prints the possible values for a cell,
+ * calculated by "guessHint" function for a single cell.
+ * The format of cell print is <col, row>, similar to "set".
+ */
+void printValuesAndScores(int row, int col, int *array, int length, double *scores){
+    int i;
+    printf("The legal values for cell <%d,%d> "
+           "and their scores are:\n", col + 1, row +1);
+    printf("[");
+    for (i = 0; i < length; i++){
+        printf("(%d, %2f) ", array[i], scores[i]);
+    }
+    printf("]\n");
+}
+
+/* FILES RELATED */
+
+/*
+ * This function prints a message to the user if
+ * the given file contains more characters than expected,
+ * i.e. the format if the file is illegal.
+ */
+void printTooLongFile(){
+    printf("Error: the file received is too long than expected.\n");
+}
+
+/*
+ * This function prints an error to the user if the file path is illegal.
+ */
+void printFilePathIllegal(){
+    printf("Error: file path is illegal.\n");
+}
+
+/*
+ * This function prints a message that a number read from a file
+ * is not in the correct range for the game.
+ */
+void printWrongRangeFile(int number, int start, int end){
+    printf("Error: the number %d read from the file is not in the correct range."
+           "The correct range is %d to %d.\n", number, start, end);
 }
 
 /*
@@ -334,61 +415,35 @@ void printNotAnInteger(){
 }
 
 /*
- *
+ * This function prints a message if an empty cell is set
+ * as fixed by the addition of "." to the value in the file loaded.
+ * The format of cell print is <col, row>, similar to "set".
  */
-void printBoardIsValid(){
-    printf("The board is valid.\n");
-}
-
-
-/*
- * Error message if X>emptyCells.
- * This method prints a message to the user saying that there are not enough empty cells.
- */
-void printGenerateInputError(int emptyCells, int X){
-    printf("Error: a request has been received to fill %d cells, while there are"
-           " only %d empty cells.\n", emptyCells, X);
+void printErrorEmptyCellFixed(int row, int col){
+    printf("Error: cell <%d, %d> is empty but set as fixed.\n", col + 1, row + 1); /* COL is printed before ROW */
 }
 
 /*
- * This method prints that we have tried generate too many times and failed.
+ * This function prints that no input was received.
  */
-void printGenerateFailed(){
-    printf("Error: board generation failed after several attempts.\n");
-}
-
-void printBoardIsSolved(){
-    printf("Congratulations! The board is successfully solved!\n");
+void printNoInput(){
+    printf("Error: no input was received.\n");
 }
 
 /*
- * This method prints a message to the user saying how many possible values there are.
+ * This function prints that not enough numbers were entered.
  */
-void printNumOfSolutions(int num){
-    printf("There are %d solutions for the current board.\n", num);
+void printNotEnoughNumbers(){
+    printf("Error: not enough numbers were inserted.\n");
 }
 
+/* MEMORY ALLOCATION FAILURE */
 
 /*
- * prints the array of possible legal values for guess hint
+ * This function prints an error that allocation failed~
  */
-void printArray(int *array, int length){
-    int i;
-    printf("[");
-    for (i = 0; i < length; i++){
-        printf("%d ", array[i]);
-    }
-    printf("]\n");
+void printAllocFailed(){
+    printf("Error: allocation failed.\n");
 }
-
-/*
- * This function prints a change in a cell in the board.
- * will be called from undo and redo.
- * prints column before row
- */
-void printActionWasMade(int row, int col, int prevVal, int newVal){
-    printf("The value in cell <%d, %d> has been changed from %d to %d.\n", col+1, row+1, prevVal, newVal);
-}
-
 
 
