@@ -203,6 +203,7 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
             getNextIndex(manager, pRow, pCol); /* we can't be in the last cell of the matrix */
             if (findNextFreeCell(manager, pRow, pCol)) { /* */
                 numSolutions++;
+                printf("num_solutions is %d\n", numSolutions);
                 value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
                 if (value == N + 1) {
                     changeCellValue(solutionBoard, m, n, node->row, node->col, 0);
@@ -253,6 +254,8 @@ int backtracking(struct sudokuManager *manager){
     duplicateBoard(solutionBoard, manager->board, manager->m, manager->n);
     res = recBacktracking(manager, solutionBoard);
 
+    free(solutionBoard);
+
     return res;
 }
 
@@ -271,21 +274,14 @@ int validateBoard(struct sudokuManager *manager){
         return -1;
     }
     res = solveBoard(manager, &retBoard);
+    free(retBoard);
     if(res == -1){ /* gurobi error */
         return -2;
     }
-    else {
-        if (res == -2) { /* memory allocation error */
-            return -1;
-        } else {
-            if (retBoard == NULL) {
-                /* the board is not valid */
-                return 0;
-            } else {
-                return 1;
-            }
-        }
+    if (res == -2) { /* memory allocation error */
+        return -1;
     }
+    return res;
 }
 
 /*
@@ -296,18 +292,17 @@ int validateBoard(struct sudokuManager *manager){
  *  and 0 if the board is unsolvable.
  *  User needs to free *pCellValues iff return value == 1.
  */
-int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, int *pLength) {
+int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, double **pScores, int *pLength) {
     int res;
     /* initializing *pCellValues and *pLength */
     *pCellValues = NULL;
     *pLength = 0;
-    res = guessCellValues(manager, row, col, pCellValues, pLength);
-    if (res == -1){
+    res = guessCellValues(manager, row, col, pCellValues, pScores, pLength);
+    if (res == -1){ /* gurobi error */
         return -2;
     }
 
-
-    if (res == -2){
+    if (res == -2){ /* memory allocation error */
         return -1;
     }
 

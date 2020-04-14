@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include "gurobi_c.h"
 #include "utilitiesBoardManager.h"
-#include "main_aux.h"
 #include <time.h>
 
 
@@ -21,8 +20,8 @@ int threeDIndex(int len, int i, int j, int k){
 
 /*
  * This function gets a sudokuManager, and 3 dimensional array initialized with zeros.
- * will update the ***indices such that a cell will contain -1 if we don't want it to become a variable,
- * and with its variable index.
+ * will update indices such that a cell will contain -1 if we don't want it to become a variable,
+ * and otherwise with its variable index.
  * the function returns the amount of variables we need in our gurobi program.
  */
 int update3DIndices(struct sudokuManager *manager, int *indices){
@@ -66,7 +65,8 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
         for(col = 0; col<length; col++){
             for (height = 0; height < length ;height ++) {
                 if(indices[threeDIndex(length, row, col, height)] != -1){ /* only if we want to have this variable */
-                    indices[threeDIndex(length, row, col, height)] = count; /* update in the relevant cell its variable index number  */
+                    indices[threeDIndex(length, row, col, height)] = count; /* update in the relevant cell
+                                                                            * its variable index number  */
                     count ++;
                 }
             }
@@ -80,10 +80,6 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
  */
 int *init3DArray(int length){
     int *array = (int *)calloc(length * length * length, sizeof(int));
-    if(array == NULL){
-        printAllocFailed();
-        return NULL;
-    }
     return array;
 }
 
@@ -136,7 +132,6 @@ int *getConstraintRow(int val, int row, struct sudokuManager *manager, int *indi
     int *constraint;
     constraint = malloc(constraintLen* sizeof(int));
     if(constraint == NULL) {
-        printAllocFailed();
         return NULL;
     }
     for(col = 0; col < length; col++){
@@ -174,7 +169,6 @@ int *getConstraintCol(int val, int col, struct sudokuManager *manager, int *indi
     int *constraint;
     constraint = malloc(constraintLen* sizeof(int));
     if(constraint == NULL) {
-        printAllocFailed();
         return NULL;
     }
     for(row = 0; row < length; row++){
@@ -226,7 +220,6 @@ int* getConstraintBlock(int val, int row, int col, struct sudokuManager *manager
 
     constraint = malloc(constraintLen* sizeof(int));
     if(constraint == NULL) {
-        printAllocFailed();
         return NULL;
     }
     for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
@@ -264,7 +257,6 @@ int* getConstraintCell(int row, int col, struct sudokuManager *manager, int *ind
     int *constraint;
     constraint = malloc(constraintLen* sizeof(int));
     if(constraint == NULL) {
-        printAllocFailed();
         return NULL;
     }
     for(val = 0; val < boardLen(manager); val++){
@@ -284,7 +276,6 @@ double* onesArray(int len){
     int i;
     double* array = (double*)malloc(len* sizeof(double));
     if(array == NULL){
-        printAllocFailed();
         return NULL;
     }
     for(i = 0 ; i < len ; i ++){
@@ -311,7 +302,7 @@ void freeGurobi(double *obj, char *vtype, GRBenv *env, GRBmodel *model) {
  * This method set constraints for each row of the sudoku board.
  * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
  */
-int setRowConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model){
+int setRowConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, k, constraintLength, error, *ind;
     double *val;
 
@@ -347,7 +338,7 @@ int setRowConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
  * This method set constraints for each column of the sudoku board.
  * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
  */
-int setColConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model){
+int setColConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int j, k, constraintLength, error, *ind;
     double *val;
 
@@ -383,7 +374,7 @@ int setColConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
  * This method set constraints for each cell of the sudoku board.
  * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
  */
-int setCellsConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model){
+int setCellsConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, j, constraintLength, error, *ind;
     double *val;
 
@@ -420,7 +411,7 @@ int setCellsConstraints(struct sudokuManager *manager, int N, int *indices, GRBm
  * This method set constraints for each block of the sudoku board.
  * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
  */
-int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model){
+int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, j, k , b, constraintLength, error, *ind;
     double *val;
 
@@ -458,7 +449,7 @@ int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRB
  * This method sets a constraint for each variable to be non-negative.
  * It returns -1 if gurobi had an error. Otherwise, it returns 0.
  */
-int setNonnegativityConstraints(int N, int *indices, GRBmodel *model){
+int setNonnegativityConstraints(int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, j, k, error;
     int staticInd[1];
     double staticVal[1];
@@ -471,7 +462,7 @@ int setNonnegativityConstraints(int N, int *indices, GRBmodel *model){
                 }
                 staticInd[0] = indices[threeDIndex(N, i, j, k)];
                 staticVal[0] = 1;
-                error = GRBaddconstr(model, 1, ind, val, GRB_GREATER_EQUAL, 0, NULL);
+                error = GRBaddconstr(model, 1, staticInd, staticVal, GRB_GREATER_EQUAL, 0, NULL);
                 if (error) {
                     printf("ERROR %d 1st GRBaddconstr(): %s\n", error, GRBgeterrormsg(env));
                     return -1;
@@ -510,14 +501,12 @@ int initGurobi(GRBenv **pEnv, GRBmodel **pModel,
 
     *pObj = malloc(amountOfVariables * sizeof(double));
     if(*pObj == NULL){
-        printAllocFailed();
         freeGurobi(*pObj, *pVtype, *pEnv, *pModel);
         return -2;
     }
 
     *pVtype = malloc(amountOfVariables * sizeof(char));
     if(*pVtype == NULL){
-        printAllocFailed();
         freeGurobi(*pObj, *pVtype, *pEnv, *pModel);
         return -2;
     }
@@ -550,7 +539,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
     int       *indices = NULL;
     */
 
-    res = initGurobi(manager, &env, &model, &obj, &vtype, amountOfVariables);
+    res = initGurobi(&env, &model, &obj, &vtype, amountOfVariables);
     if (res){
         return res;
     }
@@ -605,28 +594,28 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
 
 
     /* ROWS */
-    res = setRowConstraints(manager, N, indices, model);
+    res = setRowConstraints(manager, N, indices, model, env);
     if (res){
         freeGurobi(obj, vtype, env, model);
         return res;
     }
 
     /* COLS */
-    res = setColConstraints(manager, N, indices, model);
+    res = setColConstraints(manager, N, indices, model, env);
     if (res){
         freeGurobi(obj, vtype, env, model);
         return res;
     }
 
     /* CELLS */
-    res = setCellsConstraints(manager, N, indices, model);
+    res = setCellsConstraints(manager, N, indices, model, env);
     if (res){
         freeGurobi(obj, vtype, env, model);
         return res;
     }
 
     /* BLOCKS - MUST ADD we only need one constraint per block for each value */
-    res = setBlocksConstraints(manager, N, indices, model);
+    res = setBlocksConstraints(manager, N, indices, model, env);
     if (res){
         freeGurobi(obj, vtype, env, model);
         return res;
@@ -634,7 +623,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
 
     /* MAKE SURE EVERY VARIABLE >=0 */
     if(type == CONTINUOUS){
-        res = setNonnegativityConstraints(N, indices, model);
+        res = setNonnegativityConstraints(N, indices, model, env);
         if (res){
             freeGurobi(obj, vtype, env, model);
             return res;
@@ -739,8 +728,10 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
 /*
  * This method solves the current board using ILP.
  * The solution is returned through retBoard.
- * The method returns -1 if Gurobi had an error, -2 if memory allocation failed, 1 if *retBoard is filled with
- * a solution, and 0 otherwise.
+ * The method returns -1 if Gurobi had an error,
+ * -2 if memory allocation failed
+ * 1 if *retBoard is filled with a solution (the board is solvable),
+ * and 0 if the board is unsolvable.
  */
 int solveBoard(struct sudokuManager *manager, int **retBoard){
     int N = boardLen(manager), amountOfVariables, res;
@@ -755,7 +746,6 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
 
     sol = (double*)malloc(amountOfVariables * sizeof(double));
     if(sol == NULL){
-        printAllocFailed();
         free(indices);
         return -2;
     }
@@ -780,7 +770,7 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
  * User needs to free *pCellValues iff return value == 1.
 */
 int guessCellValues(struct sudokuManager *manager, int row, int col,
-                    int **pCellValues, int *pLength){
+                    int **pCellValues, double **pScores, int *pLength){
     int N = boardLen(manager), amountOfVariables, res, k, index;
     int *indices = NULL, *retBoard = NULL;
     double *sol = NULL;
@@ -795,7 +785,6 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
 
     sol = (double*)malloc(amountOfVariables * sizeof(double));
     if(sol == NULL){
-        printAllocFailed();
         free(indices);
         return -2;
     }
@@ -808,10 +797,12 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
         return res;
     }
 
-
+    *pScores = (double *)malloc(N * sizeof(double));
     *pCellValues = (int *)malloc(N * sizeof(int));
 
-    if (*pCellValues == NULL){
+    if (*pCellValues == NULL || *pScores == NULL){
+        free(*pScores);
+        free(*pCellValues);
         free(indices);
         free(sol);
         return -2;
@@ -824,15 +815,19 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
         }
         if (sol[indices[index]] != 0){
             (*pCellValues)[count] = k + 1;
+            (*pScores)[count] = sol[indices[index]];
             count++;
         }
     }
     *pLength = count;
     *pCellValues = (int *)realloc(*pCellValues, count);
+    *pScores = (double *)realloc(*pScores, count);
     free(indices);
     free(sol);
 
-    if (*pCellValues == NULL){ /* shouldn't happen */
+    if (*pCellValues == NULL || *pScores == NULL){ /* shouldn't happen */
+        free(*pScores);
+        free(*pCellValues);
         return -2;
     }
 
@@ -892,7 +887,6 @@ int guessSolution(struct sudokuManager *manager,
 
     sol = (double *) malloc(amountOfVariables * sizeof(double));
     if (sol == NULL) {
-        printAllocFailed();
         free(indices);
         return -2;
     }

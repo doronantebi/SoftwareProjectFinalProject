@@ -310,7 +310,7 @@ void printBoardIsErroneous(){
  * Can be called from "set", "hint" and "guessHint".
  * The format of cell print is <col, row>, similar to "set".
  */
-void printErrorCellXYIsFixed(int col, int row){
+void printErrorCellXYIsFixed(int row, int col){
     printf("Error: cell <%d,%d> is fixed.\n", col + 1, row + 1); /* COL BEFORE ROW */
 }
 
@@ -319,7 +319,7 @@ void printErrorCellXYIsFixed(int col, int row){
  * to receive a hint for a cell that contains a value.
  * The format of cell print is <col, row>, similar to "set".
  */
-void printErrorCellContainsValue(int col, int row){
+void printErrorCellContainsValue(int row, int col){
     printf("Error: cell <%d,%d> already contains a value.\n", col + 1 , row + 1);
 }
 
@@ -369,7 +369,7 @@ void printNumOfSolutions(int num){
  * calculated by "guessHint" function for a single cell.
  * The format of cell print is <col, row>, similar to "set".
  */
-void printValuesAndScores(int row, int col, int *array, int length, double *scores){
+void printValuesAndScores(int row, int col, int *array, double *scores, int length){
     int i;
     printf("The legal values for cell <%d,%d> "
            "and their scores are:\n", col + 1, row +1);

@@ -18,8 +18,10 @@ typedef enum {
 /*
  * This method solves the current board using ILP.
  * The solution is returned through retBoard.
- * The method returns -1 if Gurobi had an error, -2 if memory allocation failed, 1 if *retBoard is filled with
- * a solution, and 0 otherwise.
+ * The method returns -1 if Gurobi had an error,
+ * -2 if memory allocation failed
+ * 1 if *retBoard is filled with a solution (the board is solvable),
+ * and 0 if the board is unsolvable.
  */
 int solveBoard(struct sudokuManager *manager, int **retBoard);
 
@@ -32,7 +34,7 @@ int solveBoard(struct sudokuManager *manager, int **retBoard);
  * User needs to free *pCellValues iff return value == 1.
 */
 int guessCellValues(struct sudokuManager *manager, int row, int col,
-                    int **pCellValues, int *pLength);
+                    int **pCellValues, double **pScores, int *pLength);
 
 /* This method solves the current board using LP.
 * The method returns -1 if Gurobi had an error,

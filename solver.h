@@ -49,7 +49,7 @@ int doGenerate(struct sudokuManager *prevBoard, int X, int Y, int *retBoard);
  *  and 0 if the board is unsolvable.
  *  User needs to free *pCellValues iff return value == 1.
  */
-int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, int *pLength);
+int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, double **pScores, int *pLength);
 
 
 /*

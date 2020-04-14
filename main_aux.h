@@ -139,19 +139,19 @@ void printBoardIsErroneous();
  * Can be called from "set", "hint" and "guessHint".
  * The format of cell print is <col, row>, similar to "set".
  */
-void printErrorCellXYIsFixed(int col, int row);
+void printErrorCellXYIsFixed(int row, int col);
 
 /*
  * This function prints an error when the user tries
  * to receive a hint for a cell that contains a value.
  * The format of cell print is <col, row>, similar to "set".
  */
-void printErrorCellContainsValue(int col, int row);
+void printErrorCellContainsValue(int row, int col);
 
 /* GUROBI RELATED PRINTS */
 
 /*
- * his function is called if Gurobi process has failed.
+ * This function is called if Gurobi process has failed.
  */
 void printGurobiFailedTryAgain();
 
@@ -185,7 +185,7 @@ void printNumOfSolutions(int num);
  * calculated by "guessHint" function for a single cell.
  * The format of cell print is <col, row>, similar to "set".
  */
-void printValuesAndScores(int row, int col, int *cellValues, int length, double *scores);
+void printValuesAndScores(int row, int col, int *cellValues, double *scores, int length);
 
 /* FILES RELATED */
 

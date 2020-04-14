@@ -83,10 +83,10 @@ void save(struct sudokuManager *board, char* fileName);
 int hint(struct sudokuManager *board, int X, int Y);
 
 /*
- * This function shows the solution to cell <Y,X>
+ * This function shows the solution to cell <row,col>
  * Valid only in Solve mode.
  */
-int guessHint(struct sudokuManager *board, int X, int Y);
+int guessHint(struct sudokuManager *board, int col, int row);
 
 /*
  * Prints the amount of possible solutions of the board.

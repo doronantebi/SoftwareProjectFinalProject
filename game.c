@@ -261,8 +261,9 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName){
  */
 void save(struct sudokuManager *board, char* fileName){
     FILE *file;
+    int valid;
     int N = boardLen(board), m=board->m, n=board->n, row, col, currVal;
-    if((mode == Solve)||(validateBoard(board))){ /* the board is valid or the mode == Solve*/
+    if((mode == Solve)||((valid = validateBoard(board)) == 1)){ /* the board is valid or the mode == Solve*/
         file = fopen(fileName, "w");
         if(file == NULL){
             printFilePathIllegal();
@@ -293,7 +294,8 @@ void save(struct sudokuManager *board, char* fileName){
     else if(valid == -1){
         return;
     }
-    else{ /* valid == -2 - gurobi failed */
+    else{
+        if (valid == -2)/* gurobi failed */
         printGurobiFailedTryAgain();
     }
 }
@@ -312,7 +314,7 @@ void redo(struct sudokuManager *board){
         printNoNextMoveError();
     }
     else {
-        res = redoCommand(board);
+        res = redoCommand(board, 1);
         if (res > 1){
             updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
         }
@@ -339,7 +341,7 @@ void undo(struct sudokuManager *board){
         printNoPrevMoveError();
     }
     else {
-        res = undoCommand(board);
+        res = undoCommand(board, 1);
         if (res > 1){
             updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
         }
@@ -589,37 +591,40 @@ void markErrors(int X){
 
 
 /*
- * This function shows the solution to cell <Y,X>
+ * This function shows the solution to cell <row,col>
  * Valid only in Solve mode.
  */
-int guessHint(struct sudokuManager *board, int X, int Y){
+int guessHint(struct sudokuManager *board, int col, int row){
     int length, *cellValues = NULL, res;
-    X--, Y--;
+    double *scores;
+    col--, row--;
     if (isAnyErroneousCell(board)){
         printBoardIsErroneous();
         return 0;
     }
-    if (isFixedCell(board, Y, X)){ /* cell is fixed */
-        printErrorCellXYIsFixed(X, Y);
+    if (isFixedCell(board, row, col)){ /* cell is fixed */
+        printErrorCellXYIsFixed(row, col);
         return 0;
     }
-    if (board->board[matIndex(board->m, board->n, Y, X)] != 0){
-        printErrorCellContainsValue(X, Y);
+    if (board->board[matIndex(board->m, board->n, row, col)] != 0){
+        printErrorCellContainsValue(row, col);
         return 0;
     }
 
-    res = doGuessHint(board, Y, X, &cellValues, &length);
-
-    if (res == -1){
-        return 0;
-    }
+    res = doGuessHint(board, row, col, &cellValues, &scores, &length);
 
     if (res == -2){
+        printGurobiFailedTryAgain();
+        return 0;
+    }
+
+    if (res == -1){
+        printAllocFailed();
         return -1;
     }
 
-    if (res == 0){ /* we have succeeded and we need to free cellValues */
-        printArray(cellValues, length);
+    if (res == 1){ /* we have succeeded and we need to free cellValues */
+        printValuesAndScores(row, col, cellValues, scores, length);
         free(cellValues);
         return 0;
     }
