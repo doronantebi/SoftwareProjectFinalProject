@@ -52,19 +52,26 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
             /* update for all values for this cell */
             for(height = 0; height < length; height++){
                 /*printf("deleted value %d for cell (%d, %d)\n", height+1, row, col);*/
-                indices[threeDIndex(length, row, col, height)] = -1; /* */
+                if(indices[threeDIndex(length, row, col, height)] == 0) {
+                    indices[threeDIndex(length, row, col, height)] = -1;
+                }
             }
+
             /* update for all row */
             /*printf("deleting value %d for all row\n", val);*/
             for(j = 0; j < length; j++){
                 /*printf("deleted value %d for cell (%d, %d)\n", val, row, j);*/
-                indices[threeDIndex(length, row, j, val)] = -1;
+                if(indices[threeDIndex(length, row, j, val)] == 0) {
+                    indices[threeDIndex(length, row, j, val)] = -1;
+                }
             }
             /* update for all column */
             /*printf("deleting value %d for all column\n", val);*/
             for(i = 0; i < length; i++){
                 /*printf("deleted value %d for cell (%d, %d)\n", val, i, col);*/
-                indices[threeDIndex(length, i, col, val)] = -1;
+                if(indices[threeDIndex(length, i, col, val)] == 0) {
+                    indices[threeDIndex(length, i, col, val)] = -1;
+                }
             }
             /* update for all block */
             blockRowLowBound = rowLowBound(m, row);
@@ -75,16 +82,22 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
             for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
                 for(j = blockColLowBound ; j < blockColHighBound ; j++) {
                     /*printf("deleted value %d for cell (%d, %d)\n", val, i, j);*/
-                    indices[threeDIndex(length, i, j, val)] = -1;
+                    if(indices[threeDIndex(length, i, j, val)] == 0) {
+                        indices[threeDIndex(length, i, j, val)] = -1;
+                    }
                 }
             }
+            /* after filling the row, column, cell and block with -1 we set -2 in the cell that
+            * represents the actual value(+1) of the cell in manager->board */
+            indices[threeDIndex(length, row, col, val)] = -2;
         }
     }
     /*printf("indices left:\n");*/
     for(row = 0; row < length; row++){
-        for(col = 0; col<length; col++){
+        for(col = 0; col < length; col++){
             for (height = 0; height < length ;height ++) {
-                if(indices[threeDIndex(length, row, col, height)] != -1){ /* only if we want to have this variable */
+                val = indices[threeDIndex(length, row, col, height)];
+                if((val != -1)&&(val != -2)){ /* only if we want to have this variable */
                     indices[threeDIndex(length, row, col, height)] = count; /* update in the relevant cell
                                                                             * its variable index number  */
                     /*printf("(row, col, value) = (%d, %d, %d) is variable number %d\n", row, col, height+1, count);*/
@@ -131,7 +144,12 @@ void initVariableType(GurobiOption type, char *vtype, int amountOfVariables) {
 }
 
 /*
- * This method returns the size of the constraint builds on a row
+ * This function returns the size of the constraint builds on a row.
+ * if it returns -1, it means that there is already a cell in the row with val",
+ * therefore, we don't have to make a constraint for it.
+ * if it returns 0, it means that no cell in the row that contains val,
+ * but val is illegal for all cells in row;
+ * Which means that the board can not be solved.
  */
 int getConstraintRowLength(int val, int row, struct sudokuManager *manager, int *indices){
     int length = boardLen(manager);
@@ -139,6 +157,9 @@ int getConstraintRowLength(int val, int row, struct sudokuManager *manager, int 
     for(col = 0; col < length; col++){
         if(indices[threeDIndex(length, row, col, val)] == -1){
             continue;
+        }
+        if(indices[threeDIndex(length, row, col, val)] == -2){
+            return -1;
         }
         count ++;
     }
@@ -158,6 +179,7 @@ int *getConstraintRow(int val, int row, struct sudokuManager *manager, int *indi
     }
     for(col = 0; col < length; col++){
         if(indices[threeDIndex(length, row, col, val)] == -1){
+            /* none of them can be -2, because we wouldn't build a constraint in that case */
             continue;
         }
         constraint[count] = indices[threeDIndex(length, row, col, val)];
@@ -168,6 +190,11 @@ int *getConstraintRow(int val, int row, struct sudokuManager *manager, int *indi
 
 /*
  * This method returns the size of the constraint built on a col
+ * if it returns -1, it means that there is already a cell in the column with val,
+ * therefore, we don't have to make a constraint for it.
+ * if it returns 0, it means that no cell in the column col that contains val,
+ * but val is illegal for all cells in the column;
+ * Which means that the board can not be solved.
  */
 int getConstraintColLength(int val, int col, struct sudokuManager *manager, int *indices){
     int length = boardLen(manager);
@@ -175,6 +202,9 @@ int getConstraintColLength(int val, int col, struct sudokuManager *manager, int 
     for(row = 0; row < length; row++){
         if(indices[threeDIndex(length, row, col, val)] == -1){
             continue;
+        }
+        if(indices[threeDIndex(length, row, col, val)] == -2){
+            return -1;
         }
         count ++;
     }
@@ -195,6 +225,7 @@ int *getConstraintCol(int val, int col, struct sudokuManager *manager, int *indi
     }
     for(row = 0; row < length; row++){
         if(indices[threeDIndex(length, row, col, val)] == -1){
+            /* none of them can be -2, because we wouldn't build a constraint in that case */
             continue;
         }
         constraint[count] = indices[threeDIndex(length, row, col, val)];
@@ -206,6 +237,11 @@ int *getConstraintCol(int val, int col, struct sudokuManager *manager, int *indi
 
 /*
  * This method returns the size of the constraint built on a block
+ * if it returns -1, it means that there is already a cell in the block with val,
+ * therefore, we don't have to make a constraint for it.
+ * if it returns 0, it means that no cell in the block that contains val,
+ * but val is illegal for all cells in the block;
+ * Which means that the board can not be solved.
  */
 int getConstraintBlockLength(int val, int row, int col, struct sudokuManager *manager, int *indices){
     int m = manager->m, n = manager->n;
@@ -219,6 +255,9 @@ int getConstraintBlockLength(int val, int row, int col, struct sudokuManager *ma
         for(j = blockColLowBound ; j < blockColHighBound ; j++) {
             if(indices[threeDIndex(boardLen(manager), i, j, val)] == -1){
                 continue;
+            }
+            if(indices[threeDIndex(boardLen(manager), i, j, val)] == -2){
+                return -1;
             }
             count ++;
         }
@@ -247,6 +286,7 @@ int* getConstraintBlock(int val, int row, int col, struct sudokuManager *manager
     for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
         for(j = blockColLowBound ; j < blockColHighBound ; j++) {
             if(indices[threeDIndex(length, i, j, val)] == -1){
+                /* none of them can be -2, because we wouldn't build a constraint in that case */
                 continue;
             }
             constraint[count] = indices[threeDIndex(length, i, j, val)];
@@ -258,12 +298,20 @@ int* getConstraintBlock(int val, int row, int col, struct sudokuManager *manager
 
 /*
  * This function builds an array of a constraint of a col by a given length.
+ * if it returns -1, it means that there is already a value in that cell,
+ * therefore, we don't have to make a constraint for it.
+ * if it returns 0, it means that there is no value setted in that cell,
+ * but all values are illegal it;
+ * Which means that the board can not be solved.
  */
 int getConstraintCellLength(int row, int col, struct sudokuManager *manager, int *indices){
     int count = 0, val, length = boardLen(manager);
     for(val = 0; val < boardLen(manager) ; val++){
         if(indices[threeDIndex(length, row, col, val)] == -1){
             continue;
+        }
+        if(indices[threeDIndex(length, row, col, val)] == -2){
+            return -1;
         }
         count++;
     }
@@ -283,6 +331,7 @@ int* getConstraintCell(int row, int col, struct sudokuManager *manager, int *ind
     }
     for(val = 0; val < boardLen(manager); val++){
         if(indices[threeDIndex(length, row, col, val)] == -1){
+            /* none of them can be -2, because we wouldn't build a constraint in that case */
             continue;
         }
         constraint[count] = indices[threeDIndex(length, row, col, val)];
@@ -292,7 +341,7 @@ int* getConstraintCell(int row, int col, struct sudokuManager *manager, int *ind
 }
 
 /*
- * This function creates an array and fills it with ones
+ * This function creates an array and fills it with double ones
  */
 double* onesArray(int len){
     int i;
@@ -307,7 +356,7 @@ double* onesArray(int len){
 }
 
 /*
- * This method frees gurobi model and environment, and everything related.
+ * This method frees Gurobi model and environment, and everything related.
  */
 void freeGurobi(double *obj, char *vtype, GRBenv *env, GRBmodel *model) {
     free(obj);
@@ -322,7 +371,8 @@ void freeGurobi(double *obj, char *vtype, GRBenv *env, GRBmodel *model) {
 
 /*
  * This method set constraints for each row of the sudoku board.
- * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
+ * It returns -2 if memory allocation failed, -1 if Gurobi had an error,
+ * returns 1 for finishing building the constraints successfully, and 0 if the board is invalid.
  */
 int setRowConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, k, constraintLength, error, *ind;
@@ -331,8 +381,13 @@ int setRowConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
     for(i = 0; i < N ; i++){
         for(k = 0; k < N ; k++){
             constraintLength = getConstraintRowLength(k, i, manager, indices);
-            if(constraintLength == 0){
+            if(constraintLength == -1){
+                /* k is setted somewhere in the row */
                 continue;
+            }
+            if(constraintLength == 0){
+                /* k is illegal for all cells in that row, the board is invalid */
+                return 0;
             }
             ind = getConstraintRow(k, i, manager, indices, constraintLength);
             if(ind == NULL){
@@ -353,12 +408,13 @@ int setRowConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
 
         }
     }
-    return 0;
+    return 1;
 }
 
 /*
  * This method set constraints for each column of the sudoku board.
- * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
+ * It returns -2 if memory allocation failed, -1 if Gurobi had an error,
+ * returns 1 for finishing building the constraints successfully, and 0 if the board is invalid.
  */
 int setColConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int j, k, constraintLength, error, *ind;
@@ -367,8 +423,13 @@ int setColConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
     for(j = 0; j < N ; j++){
         for(k = 0; k < N ; k++){
             constraintLength = getConstraintColLength(k, j, manager, indices);
-            if(constraintLength == 0){
+            if(constraintLength == -1){
+                /* k is setted somewhere in the col */
                 continue;
+            }
+            if(constraintLength == 0){
+                /* k is illegal for all cells in that col, the board is invalid */
+                return 0;
             }
             ind = getConstraintCol(k, j, manager, indices, constraintLength);
             if(ind == NULL){
@@ -389,12 +450,13 @@ int setColConstraints(struct sudokuManager *manager, int N, int *indices, GRBmod
             }
         }
     }
-    return 0;
+    return 1;
 }
 
 /*
  * This method set constraints for each cell of the sudoku board.
- * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
+ * It returns -2 if memory allocation failed, -1 if Gurobi had an error,
+ * returns 1 for finishing building the constraints successfully, and 0 if the board is invalid.
  */
 int setCellsConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, j, constraintLength, error, *ind;
@@ -403,8 +465,13 @@ int setCellsConstraints(struct sudokuManager *manager, int N, int *indices, GRBm
     for(i = 0; i < N ; i++){
         for(j = 0; j < N ; j++){
             constraintLength = getConstraintCellLength(i, j, manager, indices);
-            if(constraintLength == 0){
+            if(constraintLength == -1){
+                /* there is a value in cell (i,j) already */
                 continue;
+            }
+            if(constraintLength == 0){
+                /* all values for cell (i,j) are illegal, the board is invalid */
+                return 0;
             }
             ind = getConstraintCell(i, j, manager, indices, constraintLength);
             if(ind == NULL){
@@ -426,12 +493,13 @@ int setCellsConstraints(struct sudokuManager *manager, int N, int *indices, GRBm
             }
         }
     }
-    return 0;
+    return 1;
 }
 
 /*
  * This method set constraints for each block of the sudoku board.
- * It returns -2 if memory allocation failed, -1 if gurobi had an error and 0 otherwise.
+ * It returns -2 if memory allocation failed, -1 if Gurobi had an error,
+ * returns 1 for finishing building the constraints successfully, and 0 if the board is invalid.
  */
 int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, j, k , b, constraintLength, error, *ind;
@@ -441,8 +509,13 @@ int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRB
         for(k = 0; k < N ; k++){ /* k = value */
             getFirstIndexInBlock(manager->m, manager->n, b, &i, &j);
             constraintLength = getConstraintBlockLength(k, i, j, manager, indices);
-            if(constraintLength == 0){
+            if(constraintLength == -1){
+                /* value k is already in the block */
                 continue;
+            }
+            if(constraintLength == 0){
+                /* value k is illegal for all cells in the block, the board is invalid */
+                return 0;
             }
             ind = getConstraintBlock(k, i, j, manager, indices, constraintLength);
             if(ind == NULL){
@@ -464,12 +537,12 @@ int setBlocksConstraints(struct sudokuManager *manager, int N, int *indices, GRB
             }
         }
     }
-    return 0;
+    return 1;
 }
 
 /*
  * This method sets a constraint for each variable to be non-negative.
- * It returns -1 if gurobi had an error. Otherwise, it returns 0.
+ * It returns -1 if Gurobi had an error. Otherwise, it returns 0.
  */
 int setNonnegativityConstraints(int N, int *indices, GRBmodel *model, GRBenv *env){
     int i, j, k, error;
@@ -479,7 +552,7 @@ int setNonnegativityConstraints(int N, int *indices, GRBmodel *model, GRBenv *en
     for(i = 0; i < N; i ++){
         for(j = 0; j < N; j ++){
             for(k = 0; k < N; k ++ ){
-                if(indices[threeDIndex(N, i, j, k)] == -1){
+                if((indices[threeDIndex(N, i, j, k)] == -1)||(indices[threeDIndex(N, i, j, k)] == -2)){
                     continue;
                 }
                 staticInd[0] = indices[threeDIndex(N, i, j, k)];
@@ -613,28 +686,28 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
 
     /* ROWS */
     res = setRowConstraints(manager, N, indices, model, env);
-    if (res){
+    if (res != 1){ /* if it equals 1, constraints setting went successfully */
         freeGurobi(obj, vtype, env, model);
         return res;
     }
 
     /* COLS */
     res = setColConstraints(manager, N, indices, model, env);
-    if (res){
+    if (res != 1){ /* if it equals 1, constraints setting went successfully */
         freeGurobi(obj, vtype, env, model);
         return res;
     }
 
     /* CELLS */
     res = setCellsConstraints(manager, N, indices, model, env);
-    if (res){
+    if (res != 1){ /* if it equals 1, constraints setting went successfully */
         freeGurobi(obj, vtype, env, model);
         return res;
     }
 
     /* BLOCKS - MUST ADD we only need one constraint per block for each value */
     res = setBlocksConstraints(manager, N, indices, model, env);
-    if (res){
+    if (res != 1){ /* if it equals 1, constraints setting went successfully */
         freeGurobi(obj, vtype, env, model);
         return res;
     }
