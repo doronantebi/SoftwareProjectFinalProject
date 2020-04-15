@@ -8,6 +8,15 @@
 #include <time.h>
 
 
+/*
+ * This function is raffles a double between min and max.
+ */
+double randRangeDouble(double min, double max)
+{
+    double range = (max - min);
+    double div = RAND_MAX / range;
+    return min + (rand() / div);
+}
 
 /*
  * This method returns index for (i, j, k) in a three dimensional array,

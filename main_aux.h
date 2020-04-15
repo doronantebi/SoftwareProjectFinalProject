@@ -187,6 +187,12 @@ void printNumOfSolutions(int num);
  */
 void printValuesAndScores(int row, int col, int *cellValues, double *scores, int length);
 
+/*
+ * This function prints the hint for the cell, as the user requested.
+ * The format of cell print is <col, row>, similar to "set".
+ */
+void printHint(int row, int col, int hint);
+
 /* FILES RELATED */
 
 /*

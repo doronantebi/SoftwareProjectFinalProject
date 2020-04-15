@@ -145,7 +145,7 @@ int redoCommand (struct sudokuManager *board, int isToPrint){
 
 
 /*
- * This function will update the list of the board after Generate.
+ * This function will update the list of the board after "generate" and "guess"
  */
 int updateBoardLinkedList(struct sudokuManager *manager,int *retBoard){
     int row, col, length = boardLen(manager), index;

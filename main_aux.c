@@ -380,6 +380,14 @@ void printValuesAndScores(int row, int col, int *array, double *scores, int leng
     printf("]\n");
 }
 
+/*
+ * This function prints the hint for the cell, as the user requested.
+ * The format of cell print is <col, row>, similar to "set".
+ */
+void printHint(int row, int col, int hint){
+    printf("Hint: set cell <%d,%d> to %d.\n", col + 1, row + 1, hint);
+}
+
 /* FILES RELATED */
 
 /*
