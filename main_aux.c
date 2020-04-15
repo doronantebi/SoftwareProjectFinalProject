@@ -365,6 +365,14 @@ void printNumOfSolutions(int num){
 }
 
 /*
+ * This function prints a message saying that the board is full.
+ * Called only by numSolutions.
+ */
+void printBoardIsFull(){
+    printf("The board is completely filled. It is the only solution for the board.\n");
+}
+
+/*
  * This function prints the possible values for a cell,
  * calculated by "guessHint" function for a single cell.
  * The format of cell print is <col, row>, similar to "set".
@@ -373,7 +381,7 @@ void printValuesAndScores(int row, int col, int *array, double *scores, int leng
     int i;
     printf("The legal values for cell <%d,%d> "
            "and their scores are:\n", col + 1, row +1);
-    printf("[");
+    printf("[ ");
     for (i = 0; i < length; i++){
         printf("(%d, %2f) ", array[i], scores[i]);
     }

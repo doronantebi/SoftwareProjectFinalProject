@@ -40,31 +40,30 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
     int i, j, height;
     int blockRowLowBound, blockRowHighBound, blockColLowBound, blockColHighBound;
     int count = 0;
-    printf("In updae3DIndices\n");
     for (row = 0; row < length; row++) {
         for(col = 0; col < length; col++){
             val = board[matIndex(m,n,row,col)];
-            printf("cell (%d, %d), value: %d\n", row, col, val);
+            /*printf("cell (%d, %d), value: %d\n", row, col, val);*/
             if(val == 0){ /* cell is free */
                 continue;
             }
             val--;
-            printf("deleting values for current cell\n");
+            /*printf("deleting values for current cell\n");*/
             /* update for all values for this cell */
             for(height = 0; height < length; height++){
-                printf("deleted value %d for cell (%d, %d)\n", height+1, row, col);
+                /*printf("deleted value %d for cell (%d, %d)\n", height+1, row, col);*/
                 indices[threeDIndex(length, row, col, height)] = -1; /* */
             }
             /* update for all row */
-            printf("deleting value %d for all row\n", val);
+            /*printf("deleting value %d for all row\n", val);*/
             for(j = 0; j < length; j++){
-                printf("deleted value %d for cell (%d, %d)\n", val, row, j);
+                /*printf("deleted value %d for cell (%d, %d)\n", val, row, j);*/
                 indices[threeDIndex(length, row, j, val)] = -1;
             }
             /* update for all column */
-            printf("deleting value %d for all column\n", val);
+            /*printf("deleting value %d for all column\n", val);*/
             for(i = 0; i < length; i++){
-                printf("deleted value %d for cell (%d, %d)\n", val, i, col);
+                /*printf("deleted value %d for cell (%d, %d)\n", val, i, col);*/
                 indices[threeDIndex(length, i, col, val)] = -1;
             }
             /* update for all block */
@@ -72,30 +71,29 @@ int update3DIndices(struct sudokuManager *manager, int *indices){
             blockRowHighBound = rowHighBound(m, row);
             blockColLowBound = colLowBound(n, col);
             blockColHighBound = colHighBound(n, col);
-            printf("deleting value %d for all block\n", val);
+            /*printf("deleting value %d for all block\n", val);*/
             for(i = blockRowLowBound ; i < blockRowHighBound ; i++){
                 for(j = blockColLowBound ; j < blockColHighBound ; j++) {
-                    printf("deleted value %d for cell (%d, %d)\n", val, i, j);
+                    /*printf("deleted value %d for cell (%d, %d)\n", val, i, j);*/
                     indices[threeDIndex(length, i, j, val)] = -1;
-                    printf("wrote\n");
                 }
             }
         }
     }
-    printf("indices left:\n");
+    /*printf("indices left:\n");*/
     for(row = 0; row < length; row++){
         for(col = 0; col<length; col++){
             for (height = 0; height < length ;height ++) {
                 if(indices[threeDIndex(length, row, col, height)] != -1){ /* only if we want to have this variable */
                     indices[threeDIndex(length, row, col, height)] = count; /* update in the relevant cell
                                                                             * its variable index number  */
-                    printf("(row, col, value) = (%d, %d, %d) is variable number %d\n", row, col, height+1, count);
+                    /*printf("(row, col, value) = (%d, %d, %d) is variable number %d\n", row, col, height+1, count);*/
                     count ++;
                 }
             }
         }
     }
-    printf("finished. count = %d\n", count);
+    /*printf("finished. count = %d\n", count);*/
     return count; /* returns the amount of variables */
 }
 
@@ -676,51 +674,50 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
         return -1;
     }
 
-    /* get the objective -- the optimal result of the function */
-    error = GRBgetdblattr(model, GRB_DBL_ATTR_OBJVAL, &objval);
-    if (error) {
-        printf("ERROR %d GRBgettdblattr(): %s\n", error, GRBgeterrormsg(env));
-        freeGurobi(obj, vtype, env, model);
-        return -1;
-    }
 
-    /* get the solution - the assignment to each variable */
-    error = GRBgetdblattrarray(model, GRB_DBL_ATTR_X, 0, amountOfVariables, sol);
-    if (error) {
-        printf("ERROR %d GRBgetdblattrarray(): %s\n", error, GRBgeterrormsg(env));
-        freeGurobi(obj, vtype, env, model);
-        return -1;
-    }
 
     /* print results */
     printf("\nOptimization complete\n");
 
     /* solution found */
     if (optimstatus == GRB_OPTIMAL) {
+        /* get the objective -- the optimal result of the function */
+        error = GRBgetdblattr(model, GRB_DBL_ATTR_OBJVAL, &objval);
+        if (error) {
+            printf("ERROR %d GRBgettdblattr(): %s\n", error, GRBgeterrormsg(env));
+            freeGurobi(obj, vtype, env, model);
+            return -1;
+        }
+
+        /* get the solution - the assignment to each variable */
+        error = GRBgetdblattrarray(model, GRB_DBL_ATTR_X, 0, amountOfVariables, sol);
+        if (error) {
+            printf("ERROR %d GRBgetdblattrarray(): %s\n", error, GRBgeterrormsg(env));
+            freeGurobi(obj, vtype, env, model);
+            return -1;
+        }
         printf("Optimal objective: %.4e\n", objval);
         for(i = 0; i < amountOfVariables ; i++){
             printf("variable i=%d is equal to %.2f, \n", i, sol[i]);
         }
 
         if (type != CONTINUOUS){
-            printf("type == %d\n", type);
             for(i = 0; i < N; i++){
                 for(j = 0; j < N; j++){
                     index = matIndex(manager->m, manager->n, i, j);
-                    printf("cell (%d, %d)\n", i, j);
+                    /*printf("cell (%d, %d)\n", i, j);*/
                     if(manager->board[index] != 0){
-                        printf("manager->board[%d][%d] != 0\n", i, j);
+                        /*printf("manager->board[%d][%d] != 0\n", i, j);*/
                         (*retBoard)[index] = manager->board[index];
-                        printf("(*retBoard)[%d][%d] = %d\n", i, j, (*retBoard)[index]);
+                        /*printf("(*retBoard)[%d][%d] = %d\n", i, j, (*retBoard)[index]);*/
                     }
                     else{
-                        printf("manager->board[%d][%d] == 0\n", i, j);
+                        /*printf("manager->board[%d][%d] == 0\n", i, j);*/
                         for (k = 0; k < N ; k++) {
-                            printf("k = %d\n", k);
                             currIndex = indices[threeDIndex(N, i, j, k)];
                             if((currIndex != -1) && (sol[currIndex] == 1.0)){
                                 (*retBoard)[index] = k + 1;
-                                printf("(*retBoard)[%d][%d] = %d\n", i, j, (*retBoard)[index]);
+                                /*printf("(*retBoard)[%d][%d] = %d\n", i, j, (*retBoard)[index]);*/
                                 break;
                             }
                         }
@@ -765,9 +762,7 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
     int N = boardLen(manager), amountOfVariables, res;
     int *indices = NULL;
     double *sol = NULL;
-    printf("entered solveBoard\n");
     indices = init3DArray(N);
-    printf("allocated indices. address: %p\n", (void *)indices);
     if (indices == NULL){
         return -2; /* terminate program */
     }
@@ -796,14 +791,15 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
  * -2 if memory allocation failed,
  * 1 if we succeeded in guessing the values (the board is solvable),
  * and 0 if the board is unsolvable.
- * It returns all the possible values of cell (row, col) through *pCellValues, and its length through *pLength.
- * User needs to free *pCellValues iff return value == 1.
+ * It returns all the possible values of cell (row, col) through *pCellValues its score through *pScores.
+ * The length of *pCellValues and *pScores is returned through *pLength.
+ * User needs to free *pCellValues and *pScores iff return value == 1.
 */
 int guessCellValues(struct sudokuManager *manager, int row, int col,
                     int **pCellValues, double **pScores, int *pLength){
     int N = boardLen(manager), amountOfVariables, res, k, index;
-    int *indices = NULL, *retBoard = NULL;
-    double *sol = NULL;
+    int *indices = NULL, *retBoard = NULL, *realloc1;
+    double *sol = NULL, *realloc2;
     int count = 0;
 
     indices = init3DArray(N);
@@ -843,23 +839,36 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
         if (indices[index] == -1){
             continue;
         }
-        if (sol[indices[index]] != 0){
+        if (sol[indices[index]] > 0){
             (*pCellValues)[count] = k + 1;
             (*pScores)[count] = sol[indices[index]];
             count++;
         }
     }
-    *pLength = count;
-    *pCellValues = (int *)realloc(*pCellValues, count);
-    *pScores = (double *)realloc(*pScores, count);
+
     free(indices);
     free(sol);
 
-    if (*pCellValues == NULL || *pScores == NULL){ /* shouldn't happen */
-        free(*pScores);
+    *pLength = count;
+    realloc1 = (int *)realloc(*pCellValues, count * sizeof(int));
+
+    if (realloc1 == NULL){ /*realloc failed*/
         free(*pCellValues);
+        free(*pScores);
         return -2;
     }
+    /*realloc succeeded and freed *pCellValues*/
+    *pCellValues = realloc1;
+
+    realloc2 = (double *)realloc(*pScores, count * sizeof(double));
+
+    if (realloc2 == NULL){ /*realloc failed*/
+        free(*pCellValues);
+        free(*pScores);
+        return -2;
+    }
+    /*realloc succeeded and freed *pScores*/
+    *pScores = realloc2;
 
     return 1;
 }
@@ -871,7 +880,7 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
  * in *pSumScores.
  */
 void createAvailableValues(struct sudokuManager *manager, int *availableValues, float *scores, float threshold,
-                           int *indices, double *sol, int *pLength, float *pSumScores, int row, int col){
+                           int *indices, double *sol, int *pLength, float *pSumScores, int row, int col, int *retBoard){
     int k, index, N = boardLen(manager);
     *pLength = 0;
     *pSumScores = 0;
@@ -881,7 +890,7 @@ void createAvailableValues(struct sudokuManager *manager, int *availableValues, 
             continue;
         }
         if (sol[indices[index]] >= threshold){ /*score is above the threshold we got*/
-            if (!neighbourContainsOnce(manager->board, manager->m, manager->n, row, col, k + 1)){
+            if (!neighbourContainsOnce(retBoard, manager->m, manager->n, row, col, k + 1)){
                 /*value is not erroneous for this cell*/
                 availableValues[*pLength] = k + 1;
                 scores[*pLength] = (float)(sol[indices[index]]);
@@ -893,16 +902,17 @@ void createAvailableValues(struct sudokuManager *manager, int *availableValues, 
 }
 
 /* This method solves the current board using LP.
+ * retBoard is a copy of manager->board.
 * The method returns -1 if Gurobi had an error,
  * -2 if memory allocation failed,
  * 1 if we succeeded in guessing the values (the board is solvable),
  * and 0 if the board is unsolvable.
- * It fills the board with the solution guessed iff return value == 1.
+ * It fills retBoard with the solution guessed iff return value == 1.
 */
 int guessSolution(struct sudokuManager *manager,
-                  float threshold) {
+                  float threshold, int *retBoard) {
     int N = boardLen(manager), amountOfVariables, res;
-    int *indices = NULL, *retBoard = NULL;
+    int *indices = NULL, *retBoardGurobi = NULL;
     double *sol = NULL;
     int i, j, k, length;
     int *availableValues = NULL;
@@ -921,7 +931,7 @@ int guessSolution(struct sudokuManager *manager,
         return -2;
     }
 
-    res = solveGurobi(manager, CONTINUOUS, &retBoard, sol, indices, amountOfVariables); /*running gurobi*/
+    res = solveGurobi(manager, CONTINUOUS, &retBoardGurobi, sol, indices, amountOfVariables); /*running gurobi*/
 
     if (res == -1 || res == -2 || res == 0){
         free(indices);
@@ -942,25 +952,20 @@ int guessSolution(struct sudokuManager *manager,
 
     for (i = 0; i < N; i++){
         for (j = 0; j < N; j++){
-            if (isFixedCell(manager, i, j) || manager->board[matIndex(manager->m, manager->n, i, j)] != 0){
+            if (retBoard[matIndex(manager->m, manager->n, i, j)] != 0){
                 /*if the cell is not empty, we need to continue to the next cell*/
                 continue;
             }
             /*length is the actual length of availableValues and scores */
             /*sumScores is the sum of scores of available values for this cell = (i, j) */
-            createAvailableValues(manager, availableValues, scores, threshold, indices, sol, &length, &sumScores, i, j);
+            createAvailableValues(manager, availableValues, scores, threshold,
+                                 indices, sol, &length, &sumScores, i, j, retBoard);
             randScore = (((float)(rand())) / RAND_MAX) * sumScores; /*getting a random number between 0 and sumScores*/
             currScore = 0;
             for (k = 0; k < length; k++){
                 if ((randScore >= currScore) && (randScore <= scores[k] + currScore)){
-                    if (doSet(manager, i, j, availableValues[k]) == -1){
-                        free(indices);
-                        free(sol);
-                        free(availableValues);
-                        free(scores);
-                        return -2;
-                    }
                     /*updating the board if the randScore tells us to choose avialableValues[k]*/
+                    changeCellValue(retBoard, manager->m, manager->n, i, j, availableValues[k]);
                     break;
                 }
                 else{
@@ -970,10 +975,6 @@ int guessSolution(struct sudokuManager *manager,
             }
         }
     }
-    if(createNextNode(manager, separator, 0, 0, 0, 0) == -1){
-        return -2;
-    }
-    goToNextNode(manager);
 
     free(indices);
     free(sol);

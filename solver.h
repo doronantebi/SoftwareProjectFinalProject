@@ -29,9 +29,9 @@ int validateBoard(struct sudokuManager *manager);
  * -2: Gurobi failure.
  * -1: memory allocation failed.
  *  0: The board is invalid.
- *  1: The board is valid and the guessed solution is filled in board.
+ *  1: The board is valid and the guessed solution is filled in retBoard.
  */
-int doGuess(struct sudokuManager *manager, float threshold);
+int doGuess(struct sudokuManager *manager, float threshold, int *retBoard);
 
 /* GENERATE */
 

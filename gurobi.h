@@ -30,21 +30,23 @@ int solveBoard(struct sudokuManager *manager, int **retBoard);
  * -2 if memory allocation failed,
  * 1 if we succeeded in guessing the values (the board is solvable),
  * and 0 if the board is unsolvable.
- * It returns all the possible values of cell (row, col) through *pCellValues, and its length through *pLength.
- * User needs to free *pCellValues iff return value == 1.
+ * It returns all the possible values of cell (row, col) through *pCellValues its score through *pScores.
+ * The length of *pCellValues and *pScores is returned through *pLength.
+ * User needs to free *pCellValues and *pScores iff return value == 1.
 */
 int guessCellValues(struct sudokuManager *manager, int row, int col,
                     int **pCellValues, double **pScores, int *pLength);
 
 /* This method solves the current board using LP.
+ * retBoard is a copy of manager->board.
 * The method returns -1 if Gurobi had an error,
  * -2 if memory allocation failed,
  * 1 if we succeeded in guessing the values (the board is solvable),
  * and 0 if the board is unsolvable.
- * It fills the board with the solution guessed iff return value == 1.
+ * It fills retBoard with the solution guessed iff return value == 1.
 */
 int guessSolution(struct sudokuManager *manager,
-                  float threshold);
+                  float threshold, int *retBoard);
 
 
 #endif

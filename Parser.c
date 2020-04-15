@@ -8,10 +8,54 @@
 
 
 /*
+ * This function checks that the token received is an integer.
+ * If *token == '\0', it returns 1.
+ */
+int isAllDigits(char *token){
+    char tav;
+    while ((tav = *token) != '\0'){
+        if (tav < '0' || tav > '9'){
+            return 0;
+        }
+        token++;
+    }
+    return 1;
+}
+
+/*
+ * This function checks that the token received is a float.
+ */
+int isAFloat(char *token){
+    char tav;
+
+    tav = *token;
+    if (tav < '0' || tav > '9')
+        return 0;
+    token++;
+    while((tav = *token) != '.'){
+        if (tav == '\0'){ /*if it is an integer - only digits*/
+            return 1;
+        }
+        if (tav < '0' || tav > '9'){
+            return 0;
+        }
+        token++;
+    }
+    /*tav == '.'*/
+    token++;
+    tav = *token;
+    if ((tav == '\0') || (tav < '0') || (tav > '9')){ /*we require to have digits after the decimal ppoint*/
+        return 0;
+    }
+    token++;
+    return isAllDigits(token);
+}
+
+/*
  * This method assumes the command entered is solve,
  * checks the validity of the rest of the command and executes it.
  * Available in every mode.
- * It returns
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretSolve(char *token, struct sudokuManager **pBoard){
 
@@ -36,7 +80,7 @@ int interpretSolve(char *token, struct sudokuManager **pBoard){
  * This method assumes the command entered is edit,
  * checks the validity of the rest of the command and executes it.
  * Available in every mode.
- * It returns
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretEdit(char *token, struct sudokuManager **pBoard){
     int arrNumOfParams[2] = {0, 1};
@@ -56,7 +100,7 @@ int interpretEdit(char *token, struct sudokuManager **pBoard){
  * This method assumes the command entered is mark_errors,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve mode only.
- * It returns
+ * It returns 0.
  */
 int interpretMarkErrors(char *token, enum Mode mode){
     enum Mode availableModes[1] = {Solve};
@@ -66,7 +110,7 @@ int interpretMarkErrors(char *token, enum Mode mode){
         return 0;
     }
     token = strtok(NULL, " \t\r\n");
-
+    check = isAllDigits(token);
     if(token == NULL){
         printFewParams(1, 2);
         return 0;
@@ -77,8 +121,12 @@ int interpretMarkErrors(char *token, enum Mode mode){
             return 0;
         }
         else{
-            check = sscanf(token, "%d", &input);
-            if (check == 1){
+            if (!check){
+                printNotANumber(1);
+                return 0;
+            }
+            check = sscanf(token, "%d", &input); /*?*/
+            if (check == 1){ /* sanity check */
                 if (input == 0 || input == 1){
                     markErrors(input);
                     return 0;
@@ -149,7 +197,7 @@ int interpretPrintBoard(char *token, struct sudokuManager *board, enum Mode mode
 /*
  * This method assumes the command entered is set, checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns 0.
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
     int i = 0;
@@ -162,7 +210,8 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
         return 0;
     }
     while ((token = strtok(NULL, " \t\r\n")) != NULL && i < 3){
-        arrCheck[i] = sscanf(token, "%d", &arrInput[i]);
+        arrCheck[i] = isAllDigits(token);
+        sscanf(token, "%d", &arrInput[i]);
         i++;
     }
     if (i < 3){ /* Not enough parameters*/
@@ -175,7 +224,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
             return 0;
         } else {
             len = boardLen(board);
-            if (arrCheck[0] != 1) {
+            if (!arrCheck[0]) {
                 printNotANumber(1);
                 return 0;
             } else {
@@ -184,7 +233,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                     printf("The parameter should be an integer between 1 and %d.\n", len);
                     return 0;
                 } else {
-                    if (arrCheck[1] != 1) {
+                    if (!arrCheck[1]) {
                         printNotANumber(2);
                         return 0;
                     } else {
@@ -193,7 +242,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                             printf("The parameter should be an integer between 1 and %d.\n", len);
                             return 0;
                         } else {
-                            if (arrCheck[2] != 1) {
+                            if (!arrCheck[2]) {
                                 printNotANumber(2);
                                 return 0;
                             } else {
@@ -219,7 +268,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
  * This method assumes the command entered is validate,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretValidate(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};
@@ -235,7 +284,7 @@ int interpretValidate(char *token, struct sudokuManager *board, enum Mode mode) 
  * This method assumes the command entered is guess,
  * checks the validity of the rest of the command and executes it.
  * Available only in Solve mode.
- * It returns
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[1] = {Solve};
@@ -247,6 +296,7 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
         return 0;
     }
     token = strtok(NULL, " \t\r\n");
+    check = isAFloat(token);
 
     if (token == NULL){ /* Not enough parameters */
         printFewParams(1, 6);
@@ -258,8 +308,12 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
             return 0;
         }
         else{
+            if (!check){ /*not a float*/
+                printNotAFloat(1);
+                return 0;
+            }
             check = sscanf(token, "%f", &input);
-            if (check != 1){ /* Input is not a float*/
+            if (check != 1){ /* sanity check */
                 printNotAFloat(1);
                 return 0;
             }
@@ -281,7 +335,7 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
  * This method assumes the command entered is generate,
  * checks the validity of the rest of the command and executes it.
  * Available only in Edit mode.
- * It returns
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode) {
     int i = 0;
@@ -295,7 +349,8 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
     }
 
     while ((token = strtok(NULL, " \t\r\n")) != NULL && i < 2) {
-        arrCheck[i] = sscanf(token, "%d", &arrInput[i]);
+        arrCheck[i] = isAllDigits(token);
+        sscanf(token, "%d", &arrInput[i]);
         i++;
     }
 
@@ -307,11 +362,11 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
             printExtraParams(2, 7);
             return 0;
         } else {
-            if (arrCheck[0] != 1) {
+            if (!arrCheck[0]) {
                 printNotANumber(1);
                 return 0;
             } else {
-                if (arrInput[0] < 0 || arrInput[0] > boardLen(*pBoard)) {
+                if (arrInput[0] < 0 || arrInput[0] > boardArea(*pBoard)) {
                     printWrongRangeInt(7, arrInput[0], 1);
                     printf("The parameter should be an integer greater than or equal to 0.\n");
                     return 0;
@@ -320,11 +375,11 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
                         printGenerateInputError((*pBoard)->emptyCells, arrInput[0]);
                         return 0;
                     } else {
-                        if (arrCheck[1] != 1) {
+                        if (!arrCheck[1]) {
                             printNotANumber(2);
                             return 0;
                         } else {
-                            if (arrInput[1] <= 0 || arrInput[1] > boardLen(*pBoard)) {
+                            if (arrInput[1] <= 0 || arrInput[1] > boardArea(*pBoard)) {
                                 printWrongRangeInt(7, arrInput[1], 2);
                                 printf("The parameter should be an integer greater than 0.\n");
                                 return 0;
@@ -343,7 +398,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
  * This method assumes the command entered is undo,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0.
  */
 int interpretUndo(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};
@@ -362,7 +417,7 @@ int interpretUndo(char *token, struct sudokuManager *board, enum Mode mode) {
  * This method assumes the command entered is redo,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0.
  */
 int interpretRedo(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};
@@ -379,7 +434,7 @@ int interpretRedo(char *token, struct sudokuManager *board, enum Mode mode) {
  * This method assumes the command entered is save,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0.
  */
 int interpretSave(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};
@@ -412,7 +467,7 @@ int interpretSave(char *token, struct sudokuManager *board, enum Mode mode) {
  * checks the validity of the rest of the command and executes it.
  * Available in Solve mode only.
  * It receives a boolean parameter saying if it is hint or guess_hint.
- * It returns 0.
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHint, enum Mode mode){
     int i = 0;
@@ -425,7 +480,8 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
         return 0;
     }
     while ((token = strtok(NULL, " \t\r\n")) != NULL && i < 2){
-        arrCheck[i] = sscanf(token, "%d", &arrInput[i]);
+        arrCheck[i] = isAllDigits(token);
+        sscanf(token, "%d", &arrInput[i]);
         i++;
     }
     if (i < 2){ /* Not enough parameters*/
@@ -438,7 +494,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
             return 0;
         } else {
             len = boardLen(board);
-            if (arrCheck[0] != 1) {
+            if (!arrCheck[0]) {
                 printNotANumber(1);
                 return 0;
             } else {
@@ -447,7 +503,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
                     printf("The parameter should be an integer between 0 and %d.\n", len - 1);
                     return 0;
                 } else {
-                    if (arrCheck[1] != 1) {
+                    if (!arrCheck[1]) {
                         printNotANumber(2);
                         return 0;
                     } else {
@@ -475,7 +531,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
  * This method assumes the command entered is num_solutions,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};
@@ -483,8 +539,7 @@ int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mo
         return 0;
     }
     else{
-        numSolutions(board);
-        return 0;
+        return numSolutions(board);
     }
 }
 
@@ -492,7 +547,7 @@ int interpretNumSolutions(char *token, struct sudokuManager *board, enum Mode mo
  * This method assumes the command entered is autofill,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0 if we need to continue, and -1 if we need to terminate.
  */
 int interpretAutofill(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve};
@@ -500,8 +555,7 @@ int interpretAutofill(char *token, struct sudokuManager *board, enum Mode mode) 
         return 0;
     }
     else{
-        autofill(board);
-        return 0;
+        return autofill(board);
     }
 }
 
@@ -509,7 +563,7 @@ int interpretAutofill(char *token, struct sudokuManager *board, enum Mode mode) 
  * This method assumes the command entered is reset,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns
+ * It returns 0.
  */
 int interpretReset(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};

@@ -45,11 +45,11 @@ int validateBoard(struct sudokuManager *manager){
  * -2: Gurobi failure.
  * -1: memory allocation failed.
  *  0: The board is invalid.
- *  1: The board is valid and the guessed solution is filled in board.
+ *  1: The board is valid and the guessed solution is filled in retBoard.
  */
-int doGuess(struct sudokuManager *manager, float threshold){
+int doGuess(struct sudokuManager *manager, float threshold, int *retBoard){
     int res;
-    res = guessSolution(manager, threshold);
+    res = guessSolution(manager, threshold, retBoard);
     if (res == -2){
         return -1;
     }
@@ -149,7 +149,7 @@ int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
     /* STARTING 1000 ITERETIONS */
     for(iter = 0; iter < NUM_ITERATIONS; iter ++) {
 
-        duplicateBoard(board->board, newBoard, board->m, board->n); /* copy content of prevBoard to newBoard */
+        duplicateBoard(board->board, newBoard, board->m, board->n); /* copy content of board->board to newBoard */
 
         /* RANDOMLY FILLS X CELLS */
         if (doGenerateFillNumRandomCells(board, newBoard, X) == 0) { /* this function fills random legal cells */
@@ -170,7 +170,7 @@ int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
         }
     }
     freeBoard(newManager);
-    return 0; /* after 1000 trys we will returns the previous board */
+    return 0; /* after 1000 trys we return we didn't succeed*/
 }
 
 /* HINT */
@@ -195,6 +195,7 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
     }
     else{
         if(res == -2){ /* alloc failed in gurobi  */
+            free(retBoard);
             return -1;
         }
         else{
@@ -373,7 +374,7 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
     int row = 0, col = 0, numSolutions = 0, N = boardLen(manager), value;
     int *pRow = &row, *pCol = &col;
     Node *node;
-    int check;
+
     Stack *s = (Stack *) malloc(sizeof(Stack));
     if (s == NULL) {
         return -1;
@@ -402,46 +403,57 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
     changeCellValue(solutionBoard, m, n, row, col, value);
 
     while (!isEmpty(s)) { /* while the stack is not empty and there are more
-                                                    * possible values for the current cell */
+                        * possible values for the current cell */
+
         node = top(s);
+
+        if (node->value == N + 1){ /* checking if there are more possible values for the current cell.
+                                    *node->value == N + 1 iff there are no more legal values to check for this cell*/
+            changeCellValue(solutionBoard, m, n, node->row, node->col, 0); /*deleting the value in this cell*/
+            pop(s); /*deleting the node from the stack*/
+            if (!isEmpty(s)){ /*if the stack is not empty, we need to advance the value of the next node*/
+                node = top(s);
+                value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
+                changeCellValue(solutionBoard, m, n, node->row, node->col, value);
+                node->value = value;
+            }
+            continue; /*continuing to the next iteration*/
+        }
+
         *pRow = node->row;
         *pCol = node->col;
-        /*if (isLastCellInMatrix(N, node->row, node->col)) {
-            numSolutions++;
-            changeCellValue(solutionBoard, m, n, node->row, node->col, 0); if we filled the last cell,
-                                                                                * it has only one legal value
-            pop(s);
 
-        } else {*/
-        getNextIndex(manager, pRow, pCol); /* we can't be in the last cell of the matrix */
-        check = findNextFreeCell(manager, pRow, pCol);
+        printf("cell is (%d, %d)\n", *pRow, *pCol);
 
-        if (check) {
+        if (isLastCellInMatrix(N, node->row, node->col)) {
             numSolutions++;
+            printf("num_solutions is %d\n", numSolutions);
             value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
-            if (value == N + 1) {
-                changeCellValue(solutionBoard, m, n, node->row, node->col, 0);
-                pop(s);
-            } else {
+            changeCellValue(solutionBoard, m, n, node->row, node->col, value);
+            node->value = value;
+        }
+        else{
+            getNextIndex(manager, pRow, pCol); /* going to the next cell. If we are the last cell
+                                            * in the matrix, we stay put */
+            if (findNextFreeCell(manager, pRow, pCol)) { /* There are no more cells to fill */
+                numSolutions++;
+                printf("num_solutions is %d\n", numSolutions);
+                value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
                 changeCellValue(solutionBoard, m, n, node->row, node->col, value);
-            }
-        } else {
-            value = findNextLegalValue(m, n, *pRow, *pCol, solutionBoard);
-            if (value == N + 1) {
-                changeCellValue(solutionBoard, m, n, node->row, node->col, 0);
-                pop(s);
-            } else { /* value < N + 1*/
+                node->value = value;
+            } else { /*cell (*pRow, *pCol) needs to be filled*/
+                value = findNextLegalValue(m, n, *pRow, *pCol, solutionBoard); /*finding value for (*pRow, *pCol)*/
                 node = (Node *) malloc(sizeof(Node));
                 if (node == NULL) {
+                    printAllocFailed();
                     return -1;
                 }
                 initNode(node, value, *pRow, *pCol);
                 changeCellValue(solutionBoard, m, n, node->row, node->col, value);
-                push(s, node);
+                push(s, node); /*pushing this cell to the stack*/
             }
         }
     }
-
     free(s);
     return numSolutions;
 }
@@ -462,6 +474,7 @@ int backtracking(struct sudokuManager *manager){
     }
 
     duplicateBoard(manager->board, solutionBoard, manager->m, manager->n);
+
     res = recBacktracking(manager, solutionBoard);
 
     free(solutionBoard);

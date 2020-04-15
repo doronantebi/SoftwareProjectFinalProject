@@ -179,6 +179,11 @@ void printGenerateFailed();
  */
 void printNumOfSolutions(int num);
 
+/*
+ * This function prints a message saying that the board is full.
+ * Called only by numSolutions.
+ */
+void printBoardIsFull();
 
 /*
  * This function prints the possible values for a cell,

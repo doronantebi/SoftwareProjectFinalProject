@@ -52,7 +52,7 @@ int inputNumFromFile(FILE *file, int *pNum){
 /*
  * This function loads a file and creates a sudoku board for it.
  * if the file format is illegal returns -2, if memory allocation failed, it returns -1.
- * If no memory allocations occurs and file contains a legal format of a board, it returns 0.
+ * If no memory allocation error occurs and file contains a legal format of a board, it returns 0.
  */
 int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *board){
     int n, m, i, j, success, value, *onlyFixed;
@@ -381,6 +381,7 @@ void reset(struct sudokuManager *board){
 /*
  * This function sets val into the board in cell <col, row>.
  * Will not allow setting a value into a fixed cell.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int set(struct sudokuManager *manager, int col, int row, int val){
     col--, row--;
@@ -395,7 +396,8 @@ int set(struct sudokuManager *manager, int col, int row, int val){
     }
     else {
         goToNextNode(manager);
-        updateErroneousBoardCell(manager->board, manager->erroneous, manager->m, manager->n, row, col);
+        updateErroneousBoardCell(manager->board, manager->erroneous,
+                                manager->m, manager->n, row, col);
         printBoard(manager);
         return 0;
     }
@@ -405,6 +407,7 @@ int set(struct sudokuManager *manager, int col, int row, int val){
 /*
  * This function automatically fill "obvious" values: cells which contain only a single legal value.
  * This function will print an error when used on erroneous board.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int autofill(struct sudokuManager *board){
     if(isAnyErroneousCell(board)) {
@@ -458,6 +461,7 @@ int validate(struct sudokuManager *board){
 /*
  * This function shows a possible solution to cell <col, row> using ILP.
  * If the board has several solutions, a hint for a single cell might change.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int hint(struct sudokuManager *board, int col, int row){
     int hint, ret;
@@ -494,25 +498,44 @@ int hint(struct sudokuManager *board, int col, int row){
  * This function guesses a solution to the current board using LP.
  * It fills cells with probability higher than X to appear in a valid solution.
  * If The board is erroneous, prints an error message.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int guess(struct sudokuManager *board, float X){
-    int res;
+    int res, *retBoard;
     if (isAnyErroneousCell(board)){
         printBoardIsErroneous();
         return 0;
     }
-
-    res = doGuess(board, X);
+    retBoard = (int *)calloc(boardArea(board), sizeof(int));
+    if (retBoard == NULL){
+        printAllocFailed();
+        return -1;
+    }
+    duplicateBoard(board->board, retBoard, board->m, board->n);
+    res = doGuess(board, X, retBoard);
     if (res == -1){
         printAllocFailed();
+        free(retBoard);
         return -1;
     }
 
     if (res == -2){
         printGurobiFailedTryAgain();
+        free(retBoard);
         return 0;
     }
-    printBoard(board);
+    if (res == 0){
+        free(retBoard);
+    }
+    if (res == 1){
+        if (updateBoardLinkedList(board, retBoard) == -1){
+            printAllocFailed();
+            free(retBoard);
+            return -1;
+        }
+        printBoard(board);
+    }
+    free(retBoard);
     return 0;
 }
 
@@ -520,6 +543,7 @@ int guess(struct sudokuManager *board, float X){
  * This function generates a board from the current board by filling X random cells,
  * solving the filled board, and leaving Y cells filled.
  * If Generate fails the board will remain the previous board.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int generate(struct sudokuManager **pManager, int X, int Y){
     int *retBoard; /* THIS WILL CONTAIN THE SOLUTION */
@@ -561,6 +585,7 @@ int generate(struct sudokuManager **pManager, int X, int Y){
 
 /*
  * This function terminates the game, and frees used resources.
+ * It returns 2.
  */
 int exitGame(struct sudokuManager *board){
     printExitMessage();
@@ -597,6 +622,7 @@ void printBoard(struct sudokuManager *board){
  * and prints the scored (probabilities) for each value.
  * This function prints an error if the user tries to execute it when one of the following:
  * The board is erroneous, the cell is fixed, or the cell is filled with a value.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int guessHint(struct sudokuManager *board, int col, int row){
     int length, *cellValues = NULL, res;
@@ -627,9 +653,10 @@ int guessHint(struct sudokuManager *board, int col, int row){
         return -1;
     }
 
-    if (res == 1){ /* we have succeeded and we need to free cellValues */
+    if (res == 1){ /* we have succeeded and we need to free cellValues and scores */
         printValuesAndScores(row, col, cellValues, scores, length);
         free(cellValues);
+        free(scores);
         return 0;
     }
 
@@ -639,9 +666,22 @@ int guessHint(struct sudokuManager *board, int col, int row){
 /*
  * This function prints the amount of possible solutions of the board,
  * by using exhaustive backtracking.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int numSolutions(struct sudokuManager *board){
     int res;
+
+    if (isAnyErroneousCell(board)){
+        printBoardIsErroneous();
+        return 0;
+    }
+    /* board is not erroneous */
+    if (board->emptyCells == 0){ /* board is solved */
+        printNumOfSolutions(1);
+        printBoardIsFull();
+        return 0;
+    }
+
     res = backtracking(board);
     if (res == -1){
         printAllocFailed();
