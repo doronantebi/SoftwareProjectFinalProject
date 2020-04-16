@@ -857,6 +857,40 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
 }
 
 
+/*
+ * This function counts  how many possible values there are for cell (row, col) and returns it.
+ */
+int countPossibleValues(int row, int col, double *sol, int *indices, int N){
+    int k, index, count = 0;
+    for (k = 0; k < N; k++){
+        index = threeDIndex(N, row, col, k);
+        if (indices[index] == -1 || indices[index] == -2){
+            continue;
+        }
+        if (sol[indices[index]] > 0){
+            count++;
+        }
+    }
+    return count;
+}
+
+/*
+ * This function updates the possible values and their scores for cell (row, col)
+ */
+void updateCellPossibleValues(int row, int col, double *sol, int *indices, int N, int *cellValues, double *scores){
+    int count = 0, k, index;
+    for (k = 0; k < N; k++){
+        index = threeDIndex(N, row, col, k);
+        if (indices[index] == -1 || indices[index] == -2){
+            continue;
+        }
+        if (sol[indices[index]] > 0){
+            cellValues[count] = k + 1;
+            scores[count] = sol[indices[index]];
+            count++;
+        }
+    }
+}
 
 
 /* This method solves the current board using LP.
@@ -870,9 +904,9 @@ int solveBoard(struct sudokuManager *manager, int **retBoard){
 */
 int guessCellValues(struct sudokuManager *manager, int row, int col,
                     int **pCellValues, double **pScores, int *pLength){
-    int N = boardLen(manager), amountOfVariables, res, k, index;
-    int *indices = NULL, *retBoard = NULL, *realloc1;
-    double *sol = NULL, *realloc2;
+    int N = boardLen(manager), amountOfVariables, res;
+    int *indices = NULL, *retBoard = NULL;
+    double *sol = NULL;
     int count = 0;
 
     indices = init3DArray(N);
@@ -896,8 +930,15 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
         return res;
     }
 
-    *pScores = (double *)malloc(N * sizeof(double));
-    *pCellValues = (int *)malloc(N * sizeof(int));
+    count = countPossibleValues(row, col, sol, indices, N);
+    if (count == 0){ /* there is no possible value for (row, col)*/
+        free(indices);
+        free(sol);
+        return 0;
+    }
+
+    *pScores = (double *)malloc(count * sizeof(double));
+    *pCellValues = (int *)malloc(count * sizeof(int));
 
     if (*pCellValues == NULL || *pScores == NULL){
         free(*pScores);
@@ -907,41 +948,12 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
         return -2;
     }
 
-    for (k = 0; k < N; k++){
-        index = threeDIndex(N, row, col, k);
-        if (indices[index] == -1 || indices[index] == -2){
-            continue;
-        }
-        if (sol[indices[index]] > 0){
-            (*pCellValues)[count] = k + 1;
-            (*pScores)[count] = sol[indices[index]];
-            count++;
-        }
-    }
+    *pLength = count;
+
+    updateCellPossibleValues(row, col, sol, indices, N, *pCellValues, *pScores);
 
     free(indices);
     free(sol);
-
-    *pLength = count;
-    realloc1 = (int *)realloc(*pCellValues, count * sizeof(int));
-
-    if (realloc1 == NULL){ /*realloc failed*/
-        free(*pCellValues);
-        free(*pScores);
-        return -2;
-    }
-    /*realloc succeeded and freed *pCellValues*/
-    *pCellValues = realloc1;
-
-    realloc2 = (double *)realloc(*pScores, count * sizeof(double));
-
-    if (realloc2 == NULL){ /*realloc failed*/
-        free(*pCellValues);
-        free(*pScores);
-        return -2;
-    }
-    /*realloc succeeded and freed *pScores*/
-    *pScores = realloc2;
 
     return 1;
 }

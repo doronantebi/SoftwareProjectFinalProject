@@ -261,9 +261,10 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName){
  * This game can be uploaded by its file with "edit" and "solve" commands.
  * Invalid board can not be saved in Edit mode.
  * If an allocation failed during validation, the program terminates.
- * If a ILP error cause the validation to fail, it returns a relevant message.
+ * If a ILP error cause the validation to fail, it prints a relevant message.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
-void save(struct sudokuManager *board, char* fileName){
+int save(struct sudokuManager *board, char* fileName){
     FILE *file;
     int valid;
     int N = boardLen(board), m=board->m, n=board->n, row, col, currVal;
@@ -271,7 +272,7 @@ void save(struct sudokuManager *board, char* fileName){
         file = fopen(fileName, "w");
         if(file == NULL){
             printFilePathIllegal();
-            return;
+            return 0;
         }
         fprintf(file, "%d %d \n", m, n);
         for (row = 0; row < N; row++) {
@@ -297,12 +298,13 @@ void save(struct sudokuManager *board, char* fileName){
     }
     else if(valid == -1){
         printAllocFailed();
-        return;
+        return -1;
     }
     else{
         if (valid == -2)/* gurobi failed */
         printGurobiFailedTryAgain();
     }
+    return 0;
 }
 
 /* MOVES RELATED FUNCTIONS */
@@ -525,6 +527,7 @@ int guess(struct sudokuManager *board, float X){
         return 0;
     }
     if (res == 0){
+        printBoardNotValidError();
         free(retBoard);
     }
     if (res == 1){
@@ -660,7 +663,7 @@ int guessHint(struct sudokuManager *board, int col, int row){
         free(scores);
         return 0;
     }
-
+    printBoardNotValidError();
     return 0;
 }
 
@@ -714,6 +717,9 @@ int startGame(){
         /*The line is not blank*/
         res = interpret(command, &board, mode);
         if (res == -1){ /* There is any error */
+            if (board != NULL){
+                freeBoard(board);
+            }
             return -1;
         }
         if (res == 2) { /* exit command was entered*/

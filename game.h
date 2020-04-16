@@ -30,8 +30,9 @@ int edit(struct sudokuManager **pPrevBoard, char *fileName);
 /*
  * This function saves the board to file path "fileName".
  * Invalid board will not be saved in Edit mode.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
-void save(struct sudokuManager *board, char* fileName);
+int save(struct sudokuManager *board, char* fileName);
 
 /*
  * This function prints the board according to the given format.

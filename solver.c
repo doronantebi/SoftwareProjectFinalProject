@@ -273,7 +273,7 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
  *  User needs to free *pCellValues iff return value == 1.
  */
 int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, double **pScores, int *pLength) {
-    int res;
+    int res, value;
     struct  sudokuManager *newManager;
 
     if (helperManager(&newManager, manager) == -1){ /* allocation failed */
@@ -281,6 +281,22 @@ int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValu
     }
 
     /* initializing *pCellValues and *pLength */
+    value = newManager->board[matIndex(manager->m, manager->n,  row, col)];
+    if (value != 0){
+        *pCellValues = (int *)malloc(1 * sizeof(int));
+        *pScores = (double *)malloc(1 * sizeof(double));
+        if ((*pScores == NULL) || (*pCellValues == NULL)){
+            free(*pScores);
+            free(*pCellValues);
+            return -1;
+        }
+        (*pScores)[0] = 1;
+        (*pCellValues)[0] = value;
+        *pLength = 1;
+        freeBoard(newManager);
+        return 1;
+    }
+
     *pCellValues = NULL;
     *pLength = 0;
 
@@ -479,11 +495,8 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
         *pRow = node->row;
         *pCol = node->col;
 
-        printf("cell is (%d, %d)\n", *pRow, *pCol);
-
         if (isLastCellInMatrix(N, node->row, node->col)) {
             numSolutions++;
-            printf("num_solutions is %d\n", numSolutions);
             value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
             changeCellValue(solutionBoard, m, n, node->row, node->col, value);
             node->value = value;
@@ -493,7 +506,6 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
                                             * in the matrix, we stay put */
             if (findNextFreeCell(manager, pRow, pCol)) { /* There are no more cells to fill */
                 numSolutions++;
-                printf("num_solutions is %d\n", numSolutions);
                 value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
                 changeCellValue(solutionBoard, m, n, node->row, node->col, value);
                 node->value = value;

@@ -434,7 +434,7 @@ int interpretRedo(char *token, struct sudokuManager *board, enum Mode mode) {
  * This method assumes the command entered is save,
  * checks the validity of the rest of the command and executes it.
  * Available in Solve and Edit modes.
- * It returns 0.
+ * It returns -1 if we need to terminate, and 0 otherwise.
  */
 int interpretSave(char *token, struct sudokuManager *board, enum Mode mode) {
     enum Mode availableModes[2] = {Solve, Edit};
@@ -454,8 +454,7 @@ int interpretSave(char *token, struct sudokuManager *board, enum Mode mode) {
             return 0;
         }
         else{
-            save(board, token);
-            return 0;
+            return save(board, token);
         }
     }
 }
