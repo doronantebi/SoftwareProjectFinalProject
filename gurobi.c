@@ -145,7 +145,7 @@ void initVariableType(GurobiOption type, char *vtype, int amountOfVariables) {
 
 /*
  * This function returns the size of the constraint builds on a row.
- * if it returns -1, it means that there is already a cell in the row with val",
+ * if it returns -1, it means that there is already a cell in the row with val,
  * therefore, we don't have to make a constraint for it.
  * if it returns 0, it means that no cell in the row that contains val,
  * but val is illegal for all cells in row;
@@ -650,7 +650,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
     /* randomizes coefficients for objective function */
 
     for (i = 0; i < amountOfVariables; i++) {
-        obj[i] = randRangeDouble(1.0, (double)N);
+        obj[i] = randRangeDouble(1.0, (double)3*N);
     }
 
 
@@ -909,7 +909,7 @@ int guessCellValues(struct sudokuManager *manager, int row, int col,
 
     for (k = 0; k < N; k++){
         index = threeDIndex(N, row, col, k);
-        if (indices[index] == -1){
+        if (indices[index] == -1 || indices[index] == -2){
             continue;
         }
         if (sol[indices[index]] > 0){
@@ -959,7 +959,8 @@ void createAvailableValues(struct sudokuManager *manager, int *availableValues, 
     *pSumScores = 0;
     for (k = 0; k < N; k++){
         index = threeDIndex(N, row, col, k);
-        if (indices[index] == -1){ /*this value was erroneous from the first place*/
+        if (indices[index] == -1 || indices[index] == -2){ /*this value was erroneous from the first place
+                                                            * or contained a value*/
             continue;
         }
         if (sol[indices[index]] >= threshold){ /*score is above the threshold we got*/

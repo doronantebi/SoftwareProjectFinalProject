@@ -511,7 +511,7 @@ int guess(struct sudokuManager *board, float X){
         printAllocFailed();
         return -1;
     }
-    duplicateBoard(board->board, retBoard, board->m, board->n);
+
     res = doGuess(board, X, retBoard);
     if (res == -1){
         printAllocFailed();
@@ -533,9 +533,10 @@ int guess(struct sudokuManager *board, float X){
             free(retBoard);
             return -1;
         }
+        free(retBoard);
         printBoard(board);
     }
-    free(retBoard);
+
     return 0;
 }
 

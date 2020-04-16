@@ -8,6 +8,46 @@
 
 #define NUM_ITERATIONS 1000
 
+
+/*
+ * This function creates a helper manager for gurobi purposes.
+ * It is a copy of manager which we autofill before sending to gurobi module.
+ * User needs to free *newManager iff return value == 0.
+ */
+int helperManager(struct sudokuManager **newManager, struct sudokuManager *manager){
+
+    int* erroneous = (int*)calloc(boardArea(manager), sizeof(int));
+    int* fixed = (int*)calloc(boardArea(manager), sizeof(int));
+    struct movesList *list = (struct movesList*) malloc(sizeof(struct movesList));
+    int *newBoard = calloc(boardArea(manager), sizeof(int));
+    int m = manager->m, n = manager->n;
+    *newManager = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
+
+    initNullBoard(*newManager);
+
+    if((*newManager == NULL) || (newBoard == NULL) || (erroneous == NULL)
+       || (fixed == NULL) || (list == NULL) || (newBoard == NULL)){
+        free(*newManager);
+        free(newBoard);
+        free(erroneous);
+        free(list);
+        free(fixed);
+        free(newBoard);
+        return -1;
+    }
+
+    duplicateBoard(manager->board, newBoard, m, n);
+
+    /* INITIALIZES NEW SUDOKU MANAGER */
+    initBoardValues(*newManager, m, n, newBoard, erroneous, fixed, manager->emptyCells, list);
+
+    if(updateAutofillValuesBoard(*newManager) == -1){ /* autofilling values in the new manager */
+        freeBoard(*newManager);
+        return -1;
+    }
+    return 0;
+}
+
 /* VALIDATE */
 
 /*
@@ -20,12 +60,17 @@
  */
 int validateBoard(struct sudokuManager *manager){
     int res;
-    int *retBoard = calloc(boardArea(manager),sizeof(int));
-    if(retBoard == NULL){
+    int *retBoard;
+    struct  sudokuManager *newManager;
+
+    if (helperManager(&newManager, manager) == -1){
         return -1;
     }
-    res = solveBoard(manager, &retBoard);
-    free(retBoard);
+
+    retBoard = newManager->board;
+
+    res = solveBoard(newManager, &retBoard);
+    freeBoard(newManager);
     if(res == -1){ /* gurobi error */
         return -2;
     }
@@ -49,7 +94,14 @@ int validateBoard(struct sudokuManager *manager){
  */
 int doGuess(struct sudokuManager *manager, float threshold, int *retBoard){
     int res;
-    res = guessSolution(manager, threshold, retBoard);
+    struct sudokuManager *newManager;
+
+    if (helperManager(&newManager, manager) == -1){ /* memory allocation failed */
+        return -1;
+    }
+    duplicateBoard(manager->board, retBoard, manager->m, manager->n);
+    res = guessSolution(newManager, threshold, retBoard);
+    freeBoard(newManager);
     if (res == -2){
         return -1;
     }
@@ -120,31 +172,14 @@ void doGenerateRemoveNumRandomCells(struct sudokuManager *board, int *retBoard, 
  */
 int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
     /* ALL ALLOCATIONS */
-    struct sudokuManager *newManager = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
-    int* erroneous = (int*)calloc(boardArea(board), sizeof(int));
-    int* fixed = (int*)calloc(boardArea(board), sizeof(int));
-    struct movesList *list = (struct movesList*) malloc(sizeof(struct movesList));
-    int *newBoard = (int*)calloc(boardArea(board), sizeof(int));
-    int retGurobi;
-    int m = board->m, n = board->n, iter;
+    int *newBoard, iter, retGurobi;
+    struct  sudokuManager *newManager;
 
-    initNullBoard(newManager);
-
-    if((newManager == NULL) || (retBoard == NULL) || (erroneous == NULL)
-       || (fixed == NULL) || (list == NULL) || (newBoard == NULL)){
-        free(newManager);
-        free(retBoard);
-        free(erroneous);
-        free(list);
-        free(fixed);
-        free(newBoard);
+    if (helperManager(&newManager, board) == -1){ /* memory allocation failed */
         return -1;
     }
 
-    srand(time(NULL));
-
-    /* INITIALIZES NEW SUDOKU MANAGER */
-    initBoardValues(newManager, m, n, newBoard, erroneous, fixed, board->emptyCells, list);
+    newBoard = newManager->board;
 
     /* STARTING 1000 ITERETIONS */
     for(iter = 0; iter < NUM_ITERATIONS; iter ++) {
@@ -156,8 +191,14 @@ int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
             continue; /* if a raffled index had no illegal values, we need to try again */
         }
 
+        if(updateAutofillValuesBoard(newManager) == -1){ /* autofilling values in the new manager */
+            freeBoard(newManager);
+            return -1;
+        }
+
         retGurobi = solveBoard(newManager, &retBoard); /* solve the board with the new X filled cells */
         if(retGurobi == -2){ /* allocation failed... */
+            freeBoard(newManager);
             return -1;
         }
         else {
@@ -173,6 +214,8 @@ int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
     return 0; /* after 1000 trys we return we didn't succeed*/
 }
 
+
+
 /* HINT */
 
 /*
@@ -184,28 +227,33 @@ int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
  */
 int getHint(struct sudokuManager *manager, int row, int col, int* hint){
     int res;
-    int *retBoard = calloc(boardArea(manager),sizeof(int));
-    if(retBoard == NULL){
+    int *retBoard;
+    struct  sudokuManager *newManager;
+
+    if (helperManager(&newManager, manager) == -1){ /* memory allocation failed */
         return -1;
     }
-    res = solveBoard(manager, &retBoard);
+
+    retBoard = newManager->board;
+
+    res = solveBoard(newManager, &retBoard);
     if(res == -1){
-        free(retBoard);
+        freeBoard(newManager);
         return -2;
     }
     else{
         if(res == -2){ /* alloc failed in gurobi  */
-            free(retBoard);
+            freeBoard(newManager);
             return -1;
         }
         else{
             if(res == 0){/* the board is not valid */
-                free(retBoard);
+                freeBoard(newManager);
                 return 0;
             }
             else {
                 *hint = retBoard[matIndex(manager->m, manager->n, row, col)];
-                free(retBoard);
+                freeBoard(newManager);
                 return 1;
             }
         }
@@ -226,10 +274,18 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
  */
 int doGuessHint(struct sudokuManager *manager, int row, int col, int **pCellValues, double **pScores, int *pLength) {
     int res;
+    struct  sudokuManager *newManager;
+
+    if (helperManager(&newManager, manager) == -1){ /* allocation failed */
+        return -1;
+    }
+
     /* initializing *pCellValues and *pLength */
     *pCellValues = NULL;
     *pLength = 0;
-    res = guessCellValues(manager, row, col, pCellValues, pScores, pLength);
+
+    res = guessCellValues(newManager, row, col, pCellValues, pScores, pLength);
+    freeBoard(newManager);
     if (res == -1){ /* Gurobi error */
         return -2;
     }
