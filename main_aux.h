@@ -1,3 +1,9 @@
+
+/*
+ * This modules deals with all the printings we need to have.
+ * Whenever a module needs to print an error, it calls the right function in this module.
+ */
+
 #ifndef SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 #define SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 
@@ -70,6 +76,16 @@ void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *available
 void printWrongRangeInt(int indexCommand, int value, int indexParam);
 
 /*
+ * This function prints the wrong range for the parameter.
+ * start - the start of the range,
+ * end - the end of the range,
+ * includingStart - 1 if the parameter can be equal to start, and 0 otherwise,
+ * includingEnd - 1 if the parameter can be equal to end, and 0 otherwise,
+ * type - can be "positive" or "non-negative".
+ */
+void printRangeInt(int start, int end, char *type);
+
+/*
  * This method prints a message to the user saying that
  * the value entered is not in the correct range.
  */
@@ -122,6 +138,11 @@ void printNoPrevMoveError();
  * will be called from undo and redo.
  */
 void printActionWasMade(int row, int col, int prevVal, int newVal);
+
+/*
+ * This function prints that the board was reset successfuly.
+ */
+void printReset();
 
 /* BOARD */
 
@@ -219,6 +240,12 @@ void printFilePathIllegal();
 void printWrongRangeFile(int number, int start, int end);
 
 /*
+ * This function prints a message that a number read from a file
+ * is not in the correct range for the game.
+ */
+void printWrongRangeFilePositive(int number);
+
+/*
  * This function prints a message that the input is not an integer.
  */
 void printNotAnInteger();
@@ -239,6 +266,21 @@ void printNoInput();
  * This function prints that not enough numbers were entered.
  */
 void printNotEnoughNumbers();
+
+/*
+ * This function prints that the board containing only the fixed cells of the current board is erroneous.
+ */
+void printBoardOnlyFixedIsErroneous();
+
+/*
+ * This function prints that the board was loaded successfully.
+ */
+void printFileLoadedSuccess();
+
+/*
+ * This function prints that the board was saved successfully.
+ */
+void printBoardSaved();
 
 /* MEMORY ALLOCATION FAILURE */
 

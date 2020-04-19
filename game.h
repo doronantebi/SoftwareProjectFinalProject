@@ -1,3 +1,9 @@
+
+/*
+ * This module is meant to handle the game commands, and execute them.
+ * It runs the game and receives commands from the user.
+ */
+
 #ifndef SOFTWAREPROJECTFINALPROJECT_GAME_H
 #define SOFTWAREPROJECTFINALPROJECT_GAME_H
 

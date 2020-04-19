@@ -1,8 +1,15 @@
+
+/*
+ * This module deals with everything that has to do with the sudokuManager struct.
+ * It have methods regarding this struct which can be used by any module which includes utilitiesBoardManager.c
+ * and uses sudokuManager struct.
+ */
+
 #include "utilitiesBoardManager.h"
 #include <stdlib.h>
 
-/* GENERAL METHODS */
 
+/* GENERAL METHODS */
 
 /*
  * This function calculates the row's lower bound of the block.

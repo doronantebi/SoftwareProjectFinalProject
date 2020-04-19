@@ -1,3 +1,10 @@
+
+/*
+ * This modules deals with all the printings we need to have.
+ * Whenever a module needs to print an error, it calls the right function in this module.
+ */
+
+
 #include <stdio.h>
 #include "main_aux.h"
 #include <string.h>
@@ -10,6 +17,7 @@
 static char* commandList[] = {"solve", "edit", "mark_errors", "print_board", "set", "validate",
                               "guess", "generate", "undo", "redo", "save", "hint", "guess_hint",
                               "num_solutions", "autofill", "reset", "exit"};
+
 
 
 /* GENERAL GAME RELATED METHODS */
@@ -203,7 +211,7 @@ void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *available
             printf(", %s", modeToString(availableModes[i]));
         }
     }
-    printf("\n");
+    printf(".\n");
 }
 
 /*
@@ -212,7 +220,19 @@ void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *available
  */
 void printWrongRangeInt(int indexCommand, int value, int indexParam){
     printf("Error: the value %d entered is in the wrong range "
-           "for parameter number %d of the %s command\n", value, indexParam, commandList[indexCommand]);
+           "for parameter number %d of the %s command.\n", value, indexParam, commandList[indexCommand]);
+}
+
+/*
+ * This function prints the wrong range for the parameter.
+ * start - the start of the range,
+ * end - the end of the range,
+ * includingStart - 1 if the parameter can be equal to start, and 0 otherwise,
+ * includingEnd - 1 if the parameter can be equal to end, and 0 otherwise,
+ * type - can be "positive" or "non-negative".
+ */
+void printRangeInt(int start, int end, char *type){
+    printf("The parameter should be a %s integer between %d and %d.\n", type, start, end);
 }
 
 /*
@@ -220,8 +240,8 @@ void printWrongRangeInt(int indexCommand, int value, int indexParam){
  * the value entered is not in the correct range.
  */
 void printWrongRangeFloat(int indexCommand, float value, int indexParam){
-    printf("Error: the value %f entered is in the wrong range"
-           "for parameter number %d of the %s command\n", value, indexParam, commandList[indexCommand]);
+    printf("Error: the value %f entered is in the wrong range "
+           "for parameter number %d of the %s command.\n", value, indexParam, commandList[indexCommand]);
 }
 
 
@@ -257,7 +277,7 @@ void printInvalidCommand(){
  */
 void printGenerateInputError(int emptyCells, int X){
     printf("Error: a request has been received to fill %d cells, while there are"
-           " only %d empty cells.\n", emptyCells, X);
+           " only %d empty cells.\n", X, emptyCells);
 }
 
 /* END OF PARSER METHODS*/
@@ -290,6 +310,13 @@ void printNoPrevMoveError(){
 void printActionWasMade(int row, int col, int prevVal, int newVal){
     printf("The value in cell <%d, %d> has"
            " been changed from %d to %d.\n", col+1, row+1, prevVal, newVal);
+}
+
+/*
+ * This function prints that the board was reset successfuly.
+ */
+void printReset(){
+    printf("Board returned to its initial state.\n");
 }
 
 /* BOARD */
@@ -353,7 +380,7 @@ void printBoardIsValid(){
  * solving the board in all its attempts.
  */
 void printGenerateFailed(){
-    printf("Error: board generation failed after several attempts.\n");
+    printf("Error: board generation failed after 1000 attempts.\n");
 }
 
 /*
@@ -361,7 +388,17 @@ void printGenerateFailed(){
  * returned by "numSolutions".
  */
 void printNumOfSolutions(int num){
-    printf("There are %d solutions for the current board.\n", num);
+    if (num == 0){
+        printf("There is no solution for the current board.\n");
+    }
+    else{
+        if (num == 1){
+            printf("There is 1 solution for the current board.\n");
+        }
+        else{
+            printf("There are %d solutions for the current board.\n", num);
+        }
+    }
 }
 
 /*
@@ -383,7 +420,7 @@ void printValuesAndScores(int row, int col, int *array, double *scores, int leng
            "and their scores are:\n", col + 1, row +1);
     printf("[ ");
     for (i = 0; i < length; i++){
-        printf("(%d, %2f) ", array[i], scores[i]);
+        printf("(%d, %.2f) ", array[i], scores[i]);
     }
     printf("]\n");
 }
@@ -419,8 +456,17 @@ void printFilePathIllegal(){
  * is not in the correct range for the game.
  */
 void printWrongRangeFile(int number, int start, int end){
-    printf("Error: the number %d read from the file is not in the correct range."
-           "The correct range is %d to %d.\n", number, start, end);
+    printf("Error: the number %d read from the file is not in the correct range.\n"
+           "It should be an integer between %d and %d.\n", number, start, end);
+}
+
+/*
+ * This function prints a message that a number read from a file
+ * is not in the correct range for the game.
+ */
+void printWrongRangeFilePositive(int number){
+    printf("Error: the number %d read from the file is not in the correct range.\n "
+           "It should be a positive integer.\n", number);
 }
 
 /*
@@ -453,13 +499,34 @@ void printNotEnoughNumbers(){
     printf("Error: not enough numbers were inserted.\n");
 }
 
+/*
+ * This function prints that the board containing only the fixed cells of the current board is erroneous.
+ */
+void printBoardOnlyFixedIsErroneous(){
+    printf("Error: when ignoring non-fixed cells, the board is erroneous.\n");
+}
+
+/*
+ * This function prints that the board was loaded successfully.
+ */
+void printFileLoadedSuccess(){
+    printf("Board was loaded successfully.\n");
+}
+
+/*
+ * This function prints that the board was saved successfully.
+ */
+void printBoardSaved(){
+    printf("Board was saved successfully.\n");
+}
+
 /* MEMORY ALLOCATION FAILURE */
 
 /*
  * This function prints an error that allocation failed~
  */
 void printAllocFailed(){
-    printf("Error: allocation failed.\n");
+    printf("Error: memory allocation failed.\n");
 }
 
 

@@ -1,4 +1,13 @@
 
+
+/*
+ * This module handles everything that has to do with solving the board.
+ * It communicates with game.c and gurobi.c. game.c tells this module what command it wants to be done,
+ * and this module prepares everything needed to call functions from gurobi.c to solve the board, or validate it.
+ * In addition, it contains everything regarding the backtracking algorithm used to count the number of possible
+ * solutions to the current board.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "solver.h"
@@ -99,8 +108,10 @@ int doGuess(struct sudokuManager *manager, float threshold, int *retBoard){
     if (helperManager(&newManager, manager) == -1){ /* memory allocation failed */
         return -1;
     }
-    duplicateBoard(manager->board, retBoard, manager->m, manager->n);
+    duplicateBoard(newManager->board, retBoard, manager->m, manager->n);
+
     res = guessSolution(newManager, threshold, retBoard);
+
     freeBoard(newManager);
     if (res == -2){
         return -1;

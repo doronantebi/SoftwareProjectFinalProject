@@ -1,4 +1,10 @@
 
+/*
+ * This module deals with everything that has to do with the sudokuManager struct.
+ * It have methods regarding this struct which can be used by any module which includes utilitiesBoardManager.c
+ * and uses sudokuManager struct.
+ */
+
 #ifndef SOFTWAREPROJECTFINALPROJECT_UTILITIESBOARDMANAGER_H
 #define SOFTWAREPROJECTFINALPROJECT_UTILITIESBOARDMANAGER_H
 

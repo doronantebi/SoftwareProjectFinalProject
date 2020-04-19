@@ -1,5 +1,13 @@
 
-#include "Parser.h"
+/*
+ * This module is meant to handle the parsing of commands received from the user.
+ * It receives the commands from the game.c module and interprets them to see if they are valid,
+ * have the right number of parameters and that the parameters are in the correct range.
+ * If the command is valid, it runs the matching command by calling to the right function from the game.c module.
+ * If it is not valid, it outputs an informative message to the user, saying what ought to be fixed.
+ */
+
+
 #include <stdio.h>
 #include <string.h>
 #include "game.h"
@@ -13,6 +21,14 @@
  */
 int isAllDigits(char *token){
     char tav;
+    tav = *token;
+    if (tav == '\0'){
+        return 1;
+    }
+    if ((tav != '-') && (tav < '0' || tav > '9') ){
+        return 0;
+    }
+    token++;
     while ((tav = *token) != '\0'){
         if (tav < '0' || tav > '9'){
             return 0;
@@ -27,10 +43,19 @@ int isAllDigits(char *token){
  */
 int isAFloat(char *token){
     char tav;
-
     tav = *token;
-    if (tav < '0' || tav > '9')
-        return 0;
+
+    if (tav == '-'){
+        token++;
+        tav = *token;
+        if (tav < '0' || tav > '9')
+            return 0;
+    }
+    else{
+        if (tav < '0' || tav > '9')
+            return 0;
+    }
+
     token++;
     while((tav = *token) != '.'){
         if (tav == '\0'){ /*if it is an integer - only digits*/
@@ -110,7 +135,6 @@ int interpretMarkErrors(char *token, enum Mode mode){
         return 0;
     }
     token = strtok(NULL, " \t\r\n");
-    check = isAllDigits(token);
     if(token == NULL){
         printFewParams(1, 2);
         return 0;
@@ -121,6 +145,7 @@ int interpretMarkErrors(char *token, enum Mode mode){
             return 0;
         }
         else{
+            check = isAllDigits(token);
             if (!check){
                 printNotANumber(1);
                 return 0;
@@ -133,7 +158,7 @@ int interpretMarkErrors(char *token, enum Mode mode){
                 }
                 else{
                     printWrongRangeInt(2, input, 1);
-                    printf("The parameter should be only 1 or 0\n");
+                    printf("The parameter should be only 1 or 0.\n");
                     return 0;
                 }
             }
@@ -230,7 +255,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
             } else {
                 if (!((arrInput[0] - 1 >= 0) && (arrInput[0] - 1 < len))) {
                     printWrongRangeInt(4, arrInput[0], 1);
-                    printf("The parameter should be an integer between 1 and %d.\n", len);
+                    printRangeInt(1, len, "positive");
                     return 0;
                 } else {
                     if (!arrCheck[1]) {
@@ -239,7 +264,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                     } else {
                         if (!(arrInput[1] - 1 >= 0 && arrInput[1] - 1 < len)) {
                             printWrongRangeInt(4, arrInput[1], 2);
-                            printf("The parameter should be an integer between 1 and %d.\n", len);
+                            printRangeInt(1, len, "positive");
                             return 0;
                         } else {
                             if (!arrCheck[2]) {
@@ -248,7 +273,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                             } else {
                                 if (!(isLegalCellValue(board, arrInput[2]))) {
                                     printWrongRangeInt(4, arrInput[2], 3);
-                                    printf("The parameter should be an integer between 0 and %d.\n", len);
+                                    printRangeInt(0, len, "non-negative");
                                     return 0;
                                 } else { /* All parameters are valid */
                                     return set(board, arrInput[0], arrInput[1], arrInput[2]);
@@ -296,7 +321,6 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
         return 0;
     }
     token = strtok(NULL, " \t\r\n");
-    check = isAFloat(token);
 
     if (token == NULL){ /* Not enough parameters */
         printFewParams(1, 6);
@@ -308,6 +332,7 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
             return 0;
         }
         else{
+            check = isAFloat(token);
             if (!check){ /*not a float*/
                 printNotAFloat(1);
                 return 0;
@@ -320,7 +345,7 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
             else{
                 if (!(input >=0 && input <= 1)){ /*Not in the correct range*/
                     printWrongRangeFloat(6, input, 1);
-                    printf("The parameter should be a float between 0 and 1.\n");
+                    printf("The parameter should be a non-negative float between 0 and 1.\n");
                     return 0;
                 }
                 else{
@@ -368,7 +393,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
             } else {
                 if (arrInput[0] < 0 || arrInput[0] > boardArea(*pBoard)) {
                     printWrongRangeInt(7, arrInput[0], 1);
-                    printf("The parameter should be an integer greater than or equal to 0.\n");
+                    printRangeInt(0, boardArea(*pBoard), "non-negative");
                     return 0;
                 } else {
                     if ((*pBoard)->emptyCells < arrInput[0]) { /* checking for number of empty cells */
@@ -381,7 +406,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
                         } else {
                             if (arrInput[1] <= 0 || arrInput[1] > boardArea(*pBoard)) {
                                 printWrongRangeInt(7, arrInput[1], 2);
-                                printf("The parameter should be an integer greater than 0.\n");
+                                printRangeInt(0, boardArea(*pBoard), "positive");
                                 return 0;
                             } else { /* All parameters are valid */
                                 return generate(pBoard, arrInput[0], arrInput[1]);
@@ -499,7 +524,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
             } else {
                 if (!(arrInput[0] - 1 >= 0 && arrInput[0] - 1 < len)) {
                     printWrongRangeInt(11, arrInput[0], 1);
-                    printf("The parameter should be an integer between 0 and %d.\n", len - 1);
+                    printRangeInt(1, len, "positive");
                     return 0;
                 } else {
                     if (!arrCheck[1]) {
@@ -508,7 +533,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
                     } else {
                         if (!(arrInput[1] - 1 >= 0 && arrInput[1] - 1 < len)) {
                             printWrongRangeInt(11, arrInput[1], 2);
-                            printf("The parameter should be an integer between 0 and %d.\n", len - 1);
+                            printRangeInt(1, len, "positive");
                             return 0;
                         } else { /* All parameters are valid */
                             if (isHint){
@@ -592,6 +617,17 @@ int interpretExit(char *token, struct sudokuManager *board, enum Mode mode) {
 }
 
 /*
+ * This function skips characters until we reach the next line or EOF.
+ */
+void skipLine(){
+    char tav;
+    tav = getc(stdin);
+    while (tav != EOF && tav != '\n'){
+        tav = getc(stdin);
+    }
+}
+
+/*
  * This method interprets the command the user entered and
  * executes it by calling to the proper method in Game.
  * It returns -1 if we need to terminate.
@@ -602,11 +638,14 @@ int interpret(char *command, struct sudokuManager **pBoard, enum Mode mode){
     char *token;
     struct sudokuManager *board = *pBoard;
     int index;
-
-    if (strlen(command) == LENGTH){
-        printf("Error: too many characters in a single line.\n"
-               "A line should contain up to 256 characters.\nPlease enter a new command.\n");
-        return 0;
+    int len = strlen(command);
+    if (len == LENGTH - 1){
+        if (command[len - 1] != '\n'){
+            printf("Error: too many characters in a single line.\n"
+                   "A line should contain up to 256 characters.\nPlease enter a new command.\n");
+            skipLine();
+            return 0;
+        }
     }
 
     token = strtok(command, " \t\r\n");

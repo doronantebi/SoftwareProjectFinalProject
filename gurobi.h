@@ -1,11 +1,17 @@
 
-#include "utilitiesBoardManager.h"
-#include "main_aux.h"
+/*
+ * This module is meant to deal everything that has to do with Gurobi.
+ * It creates variables and constraints meant to solve the sudoku board in different ways using Gurobi
+ * and has functions that use this solution in several ways.
+ */
 
-#include "solver.h"
 
 #ifndef SOFTWAREPROJECTFINALPROJECT_GUROBI_H
 #define SOFTWAREPROJECTFINALPROJECT_GUROBI_H
+
+#include "utilitiesBoardManager.h"
+#include "main_aux.h"
+#include "solver.h"
 
 typedef enum {
     BINARY = 0,

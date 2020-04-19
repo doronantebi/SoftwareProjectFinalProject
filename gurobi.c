@@ -1,4 +1,9 @@
 
+/*
+ * This module is meant to deal everything that has to do with Gurobi.
+ * It creates variables and constraints meant to solve the sudoku board in different ways using Gurobi
+ * and has functions that use this solution in several ways.
+ */
 
 #include "gurobi.h"
 #include <stdlib.h>
@@ -6,6 +11,7 @@
 #include "gurobi_c.h"
 #include "utilitiesBoardManager.h"
 #include <time.h>
+
 
 
 /*
@@ -639,7 +645,7 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
 
     error = GRBsetintparam(env, GRB_INT_PAR_LOGTOCONSOLE, 0);
     if (error) {
-        printf("ERROR %d GRBsetintattr(): %s\n", error, GRBgeterrormsg(env));
+        printf("ERROR %d GRBsetintparam(): %s\n", error, GRBgeterrormsg(env));
         freeGurobi(obj, vtype, env, model);
         return -1;
     }
@@ -748,10 +754,6 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
     }
 
 
-
-    /* print results */
-    printf("\nOptimization complete\n");
-
     /* solution found */
     if (optimstatus == GRB_OPTIMAL) {
         /* get the objective -- the optimal result of the function */
@@ -769,11 +771,6 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
             freeGurobi(obj, vtype, env, model);
             return -1;
         }
-        printf("Optimal objective: %.4e\n", objval);
-        for(i = 0; i < amountOfVariables ; i++){
-            printf("variable i=%d is equal to %.2f, \n", i, sol[i]);
-        }
-
         if (type != CONTINUOUS){
             for(i = 0; i < N; i++){
                 for(j = 0; j < N; j++){
@@ -802,14 +799,12 @@ int solveGurobi(struct sudokuManager *manager, GurobiOption type, int **retBoard
         /* no solution found */
     else{
         if (optimstatus == GRB_INF_OR_UNBD) {
-            printf("Model is infeasible or unbounded\n");
             freeGurobi(obj, vtype, env, model);
             return 0;
 
         }
             /* error or calculation stopped */
         else {
-            printf("Optimization was stopped early\n");
             freeGurobi(obj, vtype, env, model);
             return -1;
         }

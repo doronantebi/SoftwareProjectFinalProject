@@ -1,10 +1,19 @@
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
+
+
+/*
+ * This module handles everything that has to do with solving the board.
+ * It communicates with game.c and gurobi.c. game.c tells this module what command it wants to be done,
+ * and this module prepares everything needed to call functions from gurobi.c to solve the board, or validate it.
+ * In addition, it contains everything regarding the backtracking algorithm used to count the number of possible
+ * solutions to the current board.
+ */
 
 #ifndef SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 #define SOFTWAREPROJECTFINALPROJECT_SOLVER_H
 
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "utilitiesBoardManager.h"
 
 /* VALIDATE */

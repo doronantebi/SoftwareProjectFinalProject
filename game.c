@@ -1,3 +1,9 @@
+
+/*
+ * This module is meant to handle the game commands, and execute them.
+ * It runs the game and receives commands from the user.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "main_aux.h"
@@ -5,6 +11,8 @@
 #include "Parser.h"
 #include "utilitiesBoardManager.h"
 #include "utilitiesLinkedList.h"
+
+
 
 static enum Mode mode = Init;
 static int addMarks = 1;
@@ -23,6 +31,7 @@ void changeMode(enum Mode newMode){
  */
 void markErrors(int X){
     addMarks = X;
+    printf("mark_errors is now %d.\n", X);
 }
 
 /* FILE HANDELING - LOAD AND SAVE TO FILES */
@@ -90,6 +99,12 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
 
         board->m = m;
 
+        if (m <= 0){
+            printWrongRangeFilePositive(m);
+            fclose(file);
+            return -2;
+        }
+
         success = inputNumFromFile(file, &n);
         if(success == 0){ /*No integer was received*/
             fclose(file);
@@ -97,7 +112,14 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         }
 
         board->n = n;
+
+        if (n <= 0){
+            printWrongRangeFilePositive(n);
+            fclose(file);
+            return -2;
+        }
     }
+
 
     board->fixed = (int *)calloc(boardArea(board), sizeof(int));
     if (board->fixed == NULL) {
@@ -184,7 +206,7 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         copyFixedOnly(board, onlyFixed);
 
         if (updateErroneousBoard(onlyFixed, board->erroneous, board->m, board->n)) { /* the board is erroneous */
-            printBoardIsErroneous();
+            printBoardOnlyFixedIsErroneous();
             free(onlyFixed);
             fclose(file);
             return -2;
@@ -192,6 +214,7 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         free(onlyFixed);
     }
 
+    updateErroneousBoard(board->board, board->erroneous, m, n);
 
     fclose(file);
     return 0;
@@ -232,6 +255,7 @@ int loadFile(struct sudokuManager **pPrevBoard, char *fileName, enum Mode mode1)
             if (tmp != NULL) {
                 freeBoard(tmp);
             }
+            printFileLoadedSuccess();
             printBoard(board);
         }
     }
@@ -293,6 +317,7 @@ int save(struct sudokuManager *board, char* fileName){
             }
         }
         fclose(file);
+        printBoardSaved();
     } else if (valid == 0){
         printBoardNotValidError(); /* MUST SAVE ONLY VALID BOARD */
     }
@@ -316,9 +341,6 @@ int save(struct sudokuManager *board, char* fileName){
  */
 void undo(struct sudokuManager *board){
     int res, row, col;
-    if(board->linkedList == NULL){
-        printf("Error: linked list is NULL(in undo).\n");
-    }
     if (board->linkedList->prev == NULL){
         printNoPrevMoveError();
     }
@@ -346,9 +368,6 @@ void undo(struct sudokuManager *board){
  */
 void redo(struct sudokuManager *board){
     int res, row, col;
-    if(board->linkedList == NULL){
-        printf("Error: linked list is NULL(in redo).\n");
-    }
     if (board->linkedList->next == NULL){
         printNoNextMoveError();
     }
@@ -375,6 +394,7 @@ void redo(struct sudokuManager *board){
 void reset(struct sudokuManager *board){
     pointToFirstMoveInMovesList(board, 0);
     updateErroneousBoard(board->board, board->erroneous, board->m, board->n);
+    printReset();
     printBoard(board);
 }
 
@@ -400,6 +420,7 @@ int set(struct sudokuManager *manager, int col, int row, int val){
         goToNextNode(manager);
         updateErroneousBoardCell(manager->board, manager->erroneous,
                                 manager->m, manager->n, row, col);
+        printActionWasMade(row, col, manager->linkedList->prev->prevValue, val);
         printBoard(manager);
         return 0;
     }
@@ -580,6 +601,7 @@ int generate(struct sudokuManager **pManager, int X, int Y){
     }
     if (res == 0){
         printGenerateFailed();
+        free(retBoard);
     }
 
     return 0;
@@ -710,6 +732,7 @@ int startGame(){
     struct sudokuManager *board = NULL;
 
     printGameTitle();
+    printf("Please enter your command:\n");
     while (fgets(command, LENGTH, stdin) != NULL){  /* We have not reached EOF*/
         if (command[0] == '\n'){ /* Line is empty. */
             continue;
@@ -725,6 +748,7 @@ int startGame(){
         if (res == 2) { /* exit command was entered*/
             return 0;
         }
+        printf("Please enter your command:\n");
     }
     /* We have reached EOF, there are no more commands to execute*/
     return exitGame(board);

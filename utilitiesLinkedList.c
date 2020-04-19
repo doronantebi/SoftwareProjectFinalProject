@@ -1,4 +1,10 @@
 
+/*
+ * This module deals with everything that has to do with the movesList struct.
+ * It have methods regarding this struct which can be used by any module which includes utilitiesLinkedList.c
+ * and uses movesList struct.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "utilitiesLinkedList.h"
