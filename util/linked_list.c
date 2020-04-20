@@ -1,4 +1,3 @@
-
 /*
  * This module deals with everything that has to do with the movesList struct.
  * It have methods regarding this struct which can be used by any module which includes utilitiesLinkedList.c
@@ -7,9 +6,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "utilitiesLinkedList.h"
-#include "main_aux.h"
-
+#include "linked_list.h"
+#include "../main_aux.h"
 
 /*
  * This method initializes list with default values.
@@ -25,7 +23,6 @@ void initList(struct movesList *linkedList){
     linkedList->row = 0;
     linkedList->action = separator;
 }
-
 
 /*
  * This function destroys all the next moves the user have done.
@@ -45,10 +42,13 @@ void killNextMoves(struct sudokuManager *board){
 
 /*
  * This function creates a new node in the linked list of moves.
+ * Return values:
+ * -1: memory allocation failed.
+ *  0: node has been created successfully.
  */
 int createNextNode(struct sudokuManager *board, enum action action, int X, int Y, int Z, int prevVal){
-    board->linkedList->next = (struct movesList*)malloc(sizeof(struct movesList)); /* allocates memory for the new node,
-                                                                        * and point our current node to the next one */
+    board->linkedList->next = (struct movesList*)malloc(sizeof(struct movesList));
+    /* allocates memory for the new node, and point our current node to the next one */
     if (board->linkedList->next == NULL){
         return -1;
     }
@@ -64,7 +64,6 @@ int createNextNode(struct sudokuManager *board, enum action action, int X, int Y
     }
     return 0;
 }
-
 
 /*
  * This function goes to the next node. changes the pointer of the board to the linked list
@@ -83,7 +82,6 @@ void goToNextNode(struct sudokuManager *board){
 void goToPrevNode(struct sudokuManager *board){
     board->linkedList = board->linkedList->prev;
 }
-
 
 /*
  * This function changes the pointer of the linked list to the first move.
@@ -127,7 +125,7 @@ int undoCommand (struct sudokuManager *board, int isToPrint) {
 /*
  * This function updates the board to the previous command
  * assumes board->linkedlist->next != NULL
- * It returns the number of the cells we changed.
+ * Return values: returns the number of cells we changed.
  */
 int redoCommand (struct sudokuManager *board, int isToPrint){
     int m = board->m, n = board->n, count = 0;
@@ -149,9 +147,11 @@ int redoCommand (struct sudokuManager *board, int isToPrint){
     return count;
 }
 
-
 /*
- * This function will update the list of the board after "generate" and "guess"
+ * This function will update the list of the board after "generate" and "guess".
+ * Return values:
+ * -1: memory allocation failed.
+ *  0: update succeeded.
  */
 int updateBoardLinkedList(struct sudokuManager *manager,int *retBoard){
     int row, col, length = boardLen(manager), index;

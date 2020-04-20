@@ -1,4 +1,3 @@
-
 /*
  * This module is meant to handle the game commands, and execute them.
  * It runs the game and receives commands from the user.
@@ -8,11 +7,9 @@
 #include <stdlib.h>
 #include "main_aux.h"
 #include "game.h"
-#include "Parser.h"
-#include "utilitiesBoardManager.h"
-#include "utilitiesLinkedList.h"
-
-
+#include "parser.h"
+#include "util/board_manager.h"
+#include "util/linked_list.h"
 
 static enum Mode mode = Init;
 static int addMarks = 1;
@@ -77,15 +74,14 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
     initList(linkedList);
     board->linkedList = linkedList;
     linkedList->board = board;
-
     /* linkedList is allocated */
 
-    if((mode1 == Edit) && (fileName == NULL)) { /* we have been called by edit command and no fileName was received*/
+    if((mode1 == Edit) && (fileName == NULL)) {
+        /* we have been called by edit command and no fileName was received */
         board->n = 3, board->m = 3;
     }
     else{ /* we need to read a board from a file*/
         file = fopen(fileName, "r");
-
         if (file == NULL) {
             printFilePathIllegal();
             return -2;
@@ -98,7 +94,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         }
 
         board->m = m;
-
         if (m <= 0){
             printWrongRangeFilePositive(m);
             fclose(file);
@@ -112,14 +107,12 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         }
 
         board->n = n;
-
         if (n <= 0){
             printWrongRangeFilePositive(n);
             fclose(file);
             return -2;
         }
     }
-
 
     board->fixed = (int *)calloc(boardArea(board), sizeof(int));
     if (board->fixed == NULL) {
@@ -128,6 +121,7 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         }
         return -1;
     }
+
     board->board = (int *)calloc(boardArea(board), sizeof(int));
     if (board->board == NULL) {
         if (file != NULL){
@@ -145,7 +139,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
     }
 
     board->emptyCells = boardArea(board);
-
     /* all board's fields are initialized */
 
     if ((mode1 == Edit) && (fileName == NULL)){ /* we didn't receive a file path, we need to return board*/
@@ -153,7 +146,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
     }
 
     /* we need to read a board from a file*/
-
     for (i = 0; i < boardLen(board); i++) { /*Row*/
         for (j = 0; j < boardLen(board); j++) { /*Column*/
             success = inputNumFromFile(file, &value);
@@ -175,7 +167,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
                 fclose(file);
                 return -2;
             }
-
             if ((nextChar == '.') && (mode1 == Solve)) {
                 if (value != 0) {
                     changeCellValue(board->fixed, board->m, board->n, i, j, value);
@@ -187,7 +178,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
             }
         }
     }
-
     if (fscanf(file, "%c", &nextChar) != EOF){
         printTooLongFile();
         fclose(file);
@@ -195,9 +185,7 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
     }
 
     if (mode1 == Solve) {
-
         onlyFixed = (int *) (calloc(boardArea(board), sizeof(int)));
-
         if (onlyFixed == NULL) {
             fclose(file);
             return -1;
@@ -213,7 +201,6 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         }
         free(onlyFixed);
     }
-
     updateErroneousBoard(board->board, board->erroneous, m, n);
 
     fclose(file);
@@ -292,7 +279,7 @@ int save(struct sudokuManager *board, char* fileName){
     FILE *file;
     int valid;
     int N = boardLen(board), m=board->m, n=board->n, row, col, currVal;
-    if((mode == Solve)||((valid = validateBoard(board)) == 1)){ /* the board is valid or the mode == Solve*/
+    if((mode == Solve)||((valid = validateBoard(board)) == 1)){ /* the board is valid or the mode == Solve */
         file = fopen(fileName, "w");
         if(file == NULL){
             printFilePathIllegal();
@@ -303,6 +290,7 @@ int save(struct sudokuManager *board, char* fileName){
             for (col = 0; col < N; col++){
                 currVal = board->board[matIndex(m, n, row, col)];
                 if(((mode == Edit)||(isFixedCell(board, row, col))) && (currVal != 0)){
+                    /* fixed cells will be marked with '.' */
                     fprintf(file, "%d.", currVal);
                 }
                 else{
@@ -325,8 +313,7 @@ int save(struct sudokuManager *board, char* fileName){
         printAllocFailed();
         return -1;
     }
-    else{
-        if (valid == -2)/* gurobi failed */
+    else if (valid == -2){ /* Gurobi failed */
         printGurobiFailedTryAgain();
     }
     return 0;
@@ -359,7 +346,6 @@ void undo(struct sudokuManager *board){
         printBoard(board);
     }
 }
-
 
 /*
  * This function redoes a move previously undone by the user.
@@ -426,7 +412,6 @@ int set(struct sudokuManager *manager, int col, int row, int val){
     }
 }
 
-
 /*
  * This function automatically fill "obvious" values: cells which contain only a single legal value.
  * This function will print an error when used on erroneous board.
@@ -437,11 +422,12 @@ int autofill(struct sudokuManager *board){
         printBoardIsErroneous();
         return 0;
     }
-    /* else... */
+    /* else */
     if(updateAutofillValuesBoard(board)== -1){
         printAllocFailed();
         return -1;
-    } /* no erroneous cells and no allocation failure.  */
+    }
+    /* no erroneous cells and no allocation failure.  */
     printBoard(board);
     return 0;
 }
@@ -511,7 +497,7 @@ int hint(struct sudokuManager *board, int col, int row){
         printBoardNotValidError();
         return 0;
     }
-    else{  /* ret == 1 */
+    else{ /* ret == 1 */
         printHint(row, col, hint);
         return 0;
     }
@@ -541,7 +527,6 @@ int guess(struct sudokuManager *board, float X){
         free(retBoard);
         return -1;
     }
-
     if (res == -2){
         printGurobiFailedTryAgain();
         free(retBoard);
@@ -560,7 +545,6 @@ int guess(struct sudokuManager *board, float X){
         free(retBoard);
         printBoard(board);
     }
-
     return 0;
 }
 
@@ -578,6 +562,7 @@ int generate(struct sudokuManager **pManager, int X, int Y){
         printBoardIsErroneous();
         return 0;
     }
+
     retBoard = (int*)calloc(boardArea(*pManager), sizeof(int));
     if(retBoard == NULL){
         printAllocFailed();
@@ -603,11 +588,8 @@ int generate(struct sudokuManager **pManager, int X, int Y){
         printGenerateFailed();
         free(retBoard);
     }
-
     return 0;
 }
-
-
 
 /*
  * This function terminates the game, and frees used resources.
@@ -654,7 +636,7 @@ int guessHint(struct sudokuManager *board, int col, int row){
     int length, *cellValues = NULL, res;
     double *scores;
     col--, row--;
-    if (isAnyErroneousCell(board)){
+    if (isAnyErroneousCell(board)){ /* board is erroneous */
         printBoardIsErroneous();
         return 0;
     }
@@ -662,29 +644,27 @@ int guessHint(struct sudokuManager *board, int col, int row){
         printErrorCellXYIsFixed(row, col);
         return 0;
     }
-    if (board->board[matIndex(board->m, board->n, row, col)] != 0){
+    if (board->board[matIndex(board->m, board->n, row, col)] != 0){ /* cell is not empty */
         printErrorCellContainsValue(row, col);
         return 0;
     }
 
     res = doGuessHint(board, row, col, &cellValues, &scores, &length);
-
     if (res == -2){
         printGurobiFailedTryAgain();
         return 0;
     }
-
     if (res == -1){
         printAllocFailed();
         return -1;
     }
-
-    if (res == 1){ /* we have succeeded and we need to free cellValues and scores */
+    if (res == 1){
+        /* we have succeeded and we need to free cellValues and scores */
         printValuesAndScores(row, col, cellValues, scores, length);
         free(cellValues);
         free(scores);
         return 0;
-    }
+    } /* res == 0 */
     printBoardNotValidError();
     return 0;
 }

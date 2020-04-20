@@ -1,4 +1,3 @@
-
 /*
  * This modules deals with all the printings we need to have.
  * Whenever a module needs to print an error, it calls the right function in this module.
@@ -7,7 +6,7 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 #define SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 
-#include "utilitiesBoardManager.h"
+#include "util/board_manager.h"
 
 /* GENERAL GAME RELATED METHODS */
 
@@ -30,7 +29,6 @@ void printExitMessage();
  * This method prints the users board
  */
 void printSudokuGrid(struct sudokuManager *manager, enum Mode mode, int addMarks);
-
 
 /* PARSER METHODS*/
 

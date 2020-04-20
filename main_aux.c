@@ -1,9 +1,7 @@
-
 /*
  * This modules deals with all the printings we need to have.
  * Whenever a module needs to print an error, it calls the right function in this module.
  */
-
 
 #include <stdio.h>
 #include "main_aux.h"
@@ -17,8 +15,6 @@
 static char* commandList[] = {"solve", "edit", "mark_errors", "print_board", "set", "validate",
                               "guess", "generate", "undo", "redo", "save", "hint", "guess_hint",
                               "num_solutions", "autofill", "reset", "exit"};
-
-
 
 /* GENERAL GAME RELATED METHODS */
 
@@ -243,7 +239,6 @@ void printWrongRangeFloat(int indexCommand, float value, int indexParam){
     printf("Error: the value %f entered is in the wrong range "
            "for parameter number %d of the %s command.\n", value, indexParam, commandList[indexCommand]);
 }
-
 
 /*
  * This method prints a message to the user saying that

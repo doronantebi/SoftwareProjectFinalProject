@@ -1,5 +1,3 @@
-
-
 /*
  * This module handles everything that has to do with solving the board.
  * It communicates with game.c and gurobi.c. game.c tells this module what command it wants to be done,
@@ -14,7 +12,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "utilitiesBoardManager.h"
+#include "util/board_manager.h"
 
 /* VALIDATE */
 

@@ -1,5 +1,3 @@
-
-
 /*
  * This module handles everything that has to do with solving the board.
  * It communicates with game.c and gurobi.c. game.c tells this module what command it wants to be done,
@@ -11,20 +9,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "solver.h"
-#include "utilitiesBoardManager.h"
+#include "util/board_manager.h"
 #include "main_aux.h"
 #include "gurobi.h"
 
 #define NUM_ITERATIONS 1000
 
-
 /*
- * This function creates a helper manager for gurobi purposes.
- * It is a copy of manager which we autofill before sending to gurobi module.
+ * This function creates a helper manager for Gurobi purposes.
+ * It is a copy of manager which we autofill before sending to Gurobi module.
  * User needs to free *newManager iff return value == 0.
  */
 int helperManager(struct sudokuManager **newManager, struct sudokuManager *manager){
-
     int* erroneous = (int*)calloc(boardArea(manager), sizeof(int));
     int* fixed = (int*)calloc(boardArea(manager), sizeof(int));
     struct movesList *list = (struct movesList*) malloc(sizeof(struct movesList));
@@ -32,7 +28,7 @@ int helperManager(struct sudokuManager **newManager, struct sudokuManager *manag
     int m = manager->m, n = manager->n;
     *newManager = (struct sudokuManager*)malloc(sizeof(struct sudokuManager));
 
-    initNullBoard(*newManager);
+    initNullBoard(*newManager); /* sets all pointers in board to NULL */
 
     if((*newManager == NULL) || (newBoard == NULL) || (erroneous == NULL)
        || (fixed == NULL) || (list == NULL) || (newBoard == NULL)){
@@ -50,7 +46,7 @@ int helperManager(struct sudokuManager **newManager, struct sudokuManager *manag
     /* INITIALIZES NEW SUDOKU MANAGER */
     initBoardValues(*newManager, m, n, newBoard, erroneous, fixed, manager->emptyCells, list);
 
-    if(updateAutofillValuesBoard(*newManager) == -1){ /* autofilling values in the new manager */
+    if(updateAutofillValuesBoard(*newManager) == -1){ /* autofill values in the new manager */
         freeBoard(*newManager);
         return -1;
     }
@@ -78,9 +74,9 @@ int validateBoard(struct sudokuManager *manager){
 
     retBoard = newManager->board;
 
-    res = solveBoard(newManager, &retBoard);
+    res = solveBoard(newManager, &retBoard); /* running Gurobi */
     freeBoard(newManager);
-    if(res == -1){ /* gurobi error */
+    if(res == -1){ /* Gurobi error */
         return -2;
     }
     if (res == -2) { /* memory allocation error */
@@ -110,7 +106,7 @@ int doGuess(struct sudokuManager *manager, float threshold, int *retBoard){
     }
     duplicateBoard(newManager->board, retBoard, manager->m, manager->n);
 
-    res = guessSolution(newManager, threshold, retBoard);
+    res = guessSolution(newManager, threshold, retBoard); /* running Gurobi */
 
     freeBoard(newManager);
     if (res == -2){
@@ -141,15 +137,15 @@ int randRangeInt(int min, int max)
 int doGenerateFillNumRandomCells(struct sudokuManager *board, int *newBoard, int cellsToFill){
     int row, col, val, m = board->m, n = board->n;
     while (cellsToFill > 0) {
-        row = randRangeInt(0, boardLen(board)); /* MAKE SURE!!!!!! IT DOESNT INCLUDE THE UPPER BOUND */
+        row = randRangeInt(0, boardLen(board));
         col = randRangeInt(0, boardLen(board));
         if (newBoard[matIndex(m, n, row, col)] == 0) { /* if cell is empty */
             if (returnLegalValue(board->board, m, n, row, col) == -1){
                 return 0;
             }
-            val = randRangeInt(0, boardLen(board)) + 1;
+            val = randRangeInt(0, boardLen(board)) + 1; /* randomizes a value between 1 and N */
             while (neighbourContainsOnce(newBoard, m, n, row, col, val)) { /* as long as val is
-                                                                                * illegal for our curr cell */
+                                                                            * illegal for our curr cell */
                 val = randRangeInt(0, boardLen(board)) + 1; /* randomly choose different value  */
             }
             changeCellValue(newBoard, m, n, row, col, val); /* set the new value */
@@ -160,26 +156,29 @@ int doGenerateFillNumRandomCells(struct sudokuManager *board, int *newBoard, int
 }
 
 /*
- * This function removes from retBoard cellsToRemove cells
+ * This function removes from retBoard cellsToRemove cells.
  */
 void doGenerateRemoveNumRandomCells(struct sudokuManager *board, int *retBoard, int cellsToRemove){
     int row, col, m = board->m, n = board->n;
     while (cellsToRemove > 0){
         row = randRangeInt(0, boardLen(board));
         col = randRangeInt(0, boardLen(board));
-        if(retBoard[matIndex(m, n, row, col)] != 0){
-            changeCellValue(retBoard, m, n, row, col, 0);
+        if(retBoard[matIndex(m, n, row, col)] != 0){ /* the cell is not empty */
+            changeCellValue(retBoard, m, n, row, col, 0); /* empty it */
             cellsToRemove --;
         }
     }
 }
 
 /*
- * This function updates a retBoard to contain only Y cells.
- *  This method returns -1 if memory allocation failed,
- *  1 if board is solvable,
- *  and 0 if we didn't succeed in generating Y cells.
- *  if return value == 1, retBoard will have Y values.
+ * This function raffles X cells and fill it with legal values,
+ * solves the board and leave Y cells out of the solution,
+ * to generate a new board.
+ * It updates the new board into *retBoard.
+ * Return values:
+ * -1: memory allocation failed.
+ *  0: generating board failed after many attempts.
+ *  1: the board was successfully generated, and setted to *retBoard.
  */
 int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
     /* ALL ALLOCATIONS */
@@ -222,19 +221,18 @@ int doGenerate(struct sudokuManager *board, int X, int Y, int *retBoard){
         }
     }
     freeBoard(newManager);
-    return 0; /* after 1000 trys we return we didn't succeed*/
+    return 0; /* after 1000 attempts we return we didn't succeed*/
 }
-
-
 
 /* HINT */
 
 /*
- * This function fills in *hint a hint for cell <row,col>
- * returns 1 if succeeded solving the board.
- * returns -1 if allocation failed
- * returns -2 if gurobi failed.
- * returns 0 if board could not be solved
+ * This function fills in *hint a hint for cell <row,col>.
+ * Return values:
+ * -2: Gurobi failure.
+ * -1: memory allocation failed.
+ *  0: the board is invalid.
+ *  1: the board is valid and solving the board succeeded.
  */
 int getHint(struct sudokuManager *manager, int row, int col, int* hint){
     int res;
@@ -253,12 +251,12 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
         return -2;
     }
     else{
-        if(res == -2){ /* alloc failed in gurobi  */
+        if(res == -2){ /* allocation failed in Gurobi  */
             freeBoard(newManager);
             return -1;
         }
         else{
-            if(res == 0){/* the board is not valid */
+            if(res == 0){ /* the board is not valid */
                 freeBoard(newManager);
                 return 0;
             }
@@ -274,7 +272,7 @@ int getHint(struct sudokuManager *manager, int row, int col, int* hint){
 /* GUESS_HINT */
 
 /*
- * This function guesses a hint for cell (row, col) using LP.
+ * This function guesses a hint for cell <row, col> using LP.
  *  Return values:
  *  -2: there was a nonfatal error because of which we can't execute
  *      the command and need to continue.
@@ -406,7 +404,6 @@ int getNextIndex(struct sudokuManager *manager, int *pRow, int *pCol){
     if (isLastCellInMatrix(len, *pRow, *pCol)) { /* matrix is full and all cells are legal */
         return 1;
     }
-
     if (isLastInRow(len, *pCol)) { /* This is the last element in the row, now we need to begin the next row */
         *pRow = *pRow + 1;
         *pCol = 0;
@@ -426,8 +423,8 @@ int getNextIndex(struct sudokuManager *manager, int *pRow, int *pCol){
 int findNextFreeCell(struct sudokuManager *manager, int *pRow, int *pCol){
     int m = manager->m, n = manager->n;
 
-    while (isFixedCell(manager, *pRow, *pCol) || (manager->board[matIndex(m, n, *pRow, *pCol)] != 0)){
-        if (getNextIndex(manager, pRow, pCol)){ /* There is nowhere to go ahead, all cells are full*/
+    while ((isFixedCell(manager, *pRow, *pCol)) || (manager->board[matIndex(m, n, *pRow, *pCol)] != 0)){
+        if (getNextIndex(manager, pRow, pCol)){ /* There is nowhere to go ahead, all cells are full */
             return 1;
         }
     }
@@ -435,7 +432,7 @@ int findNextFreeCell(struct sudokuManager *manager, int *pRow, int *pCol){
 }
 
 /*
- * This method finds the next legal value in solutionBoard for cell (row, col)
+ * This method finds the next legal value in solutionBoard for cell <row, col>
  */
 int findNextLegalValue(int m, int n, int row, int col, int *solutionBoard){
     int i;
@@ -486,21 +483,19 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
     changeCellValue(solutionBoard, m, n, row, col, value);
 
     while (!isEmpty(s)) { /* while the stack is not empty and there are more
-                        * possible values for the current cell */
-
+                           * possible values for the current cell */
         node = top(s);
-
-        if (node->value == N + 1){ /* checking if there are more possible values for the current cell.
-                                    *node->value == N + 1 iff there are no more legal values to check for this cell*/
-            changeCellValue(solutionBoard, m, n, node->row, node->col, 0); /*deleting the value in this cell*/
-            pop(s); /*deleting the node from the stack*/
-            if (!isEmpty(s)){ /*if the stack is not empty, we need to advance the value of the next node*/
+        if (node->value == N + 1){ /* checking if there are more possible values for the current cell
+            * node->value == N + 1 iff there are no more legal values to check for this cell */
+            changeCellValue(solutionBoard, m, n, node->row, node->col, 0); /*deleting the value in this cell */
+            pop(s); /* deleting the node from the stack */
+            if (!isEmpty(s)){ /* if the stack is not empty, we need to advance the value of the next node */
                 node = top(s);
                 value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
                 changeCellValue(solutionBoard, m, n, node->row, node->col, value);
                 node->value = value;
             }
-            continue; /*continuing to the next iteration*/
+            continue; /* continuing to the next iteration */
         }
 
         *pRow = node->row;
@@ -514,14 +509,14 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
         }
         else{
             getNextIndex(manager, pRow, pCol); /* going to the next cell. If we are the last cell
-                                            * in the matrix, we stay put */
+                                                * in the matrix, we stay put */
             if (findNextFreeCell(manager, pRow, pCol)) { /* There are no more cells to fill */
                 numSolutions++;
                 value = findNextLegalValue(m, n, node->row, node->col, solutionBoard);
                 changeCellValue(solutionBoard, m, n, node->row, node->col, value);
                 node->value = value;
-            } else { /*cell (*pRow, *pCol) needs to be filled*/
-                value = findNextLegalValue(m, n, *pRow, *pCol, solutionBoard); /*finding value for (*pRow, *pCol)*/
+            } else { /* cell <*pRow, *pCol> needs to be filled */
+                value = findNextLegalValue(m, n, *pRow, *pCol, solutionBoard); /* finding value for <*pRow, *pCol> */
                 node = (Node *) malloc(sizeof(Node));
                 if (node == NULL) {
                     printAllocFailed();
@@ -529,7 +524,7 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
                 }
                 initNode(node, value, *pRow, *pCol);
                 changeCellValue(solutionBoard, m, n, node->row, node->col, value);
-                push(s, node); /*pushing this cell to the stack*/
+                push(s, node); /* pushing this cell to the stack */
             }
         }
     }
@@ -538,25 +533,22 @@ int recBacktracking(struct sudokuManager *manager, int *solutionBoard) {
 }
 
 /*
- * This method returns the number of possible solutions of the current board using the backtracking algorithm.
- * If there is memory allocation error, it returns -1.
+ * This function returns the number of possible solutions of the current board
+ * using the backtracking algorithm.
+ * Return values:
+ * -1: memory allocation failed.
+ * numSolutions: returns the number of solutions to the board >= 0.
  */
 int backtracking(struct sudokuManager *manager){
     int res, *solutionBoard;
-    if (isAnyErroneousCell(manager)){
-        return 0;
-    }
-
     solutionBoard = (int *)calloc(boardArea(manager), sizeof(int));
     if (solutionBoard == NULL){
         return -1;
     }
 
     duplicateBoard(manager->board, solutionBoard, manager->m, manager->n);
-
-    res = recBacktracking(manager, solutionBoard);
-
+    res = recBacktracking(manager, solutionBoard); /* perform backtracking */
     free(solutionBoard);
-
     return res;
 }
+

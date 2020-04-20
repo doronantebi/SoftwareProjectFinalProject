@@ -1,15 +1,13 @@
-
 /*
  * This module is meant to deal everything that has to do with Gurobi.
  * It creates variables and constraints meant to solve the sudoku board in different ways using Gurobi
  * and has functions that use this solution in several ways.
  */
 
-
 #ifndef SOFTWAREPROJECTFINALPROJECT_GUROBI_H
 #define SOFTWAREPROJECTFINALPROJECT_GUROBI_H
 
-#include "utilitiesBoardManager.h"
+#include "util/board_manager.h"
 #include "main_aux.h"
 #include "solver.h"
 
@@ -19,40 +17,42 @@ typedef enum {
     CONTINUOUS = 2
 } GurobiOption;
 
-
-
 /*
  * This method solves the current board using ILP.
  * The solution is returned through retBoard.
- * The method returns -1 if Gurobi had an error,
- * -2 if memory allocation failed
- * 1 if *retBoard is filled with a solution (the board is solvable),
- * and 0 if the board is unsolvable.
+ *  Return values:
+ * -2: memory allocation failed.
+ * -1: Gurobi had an error.
+ *  0: the board is invalid.
+ *  1: the board is valid, and *retBoard is filled with a solution.
  */
 int solveBoard(struct sudokuManager *manager, int **retBoard);
 
-/* This method solves the current board using LP.
-* The method returns -1 if Gurobi had an error,
- * -2 if memory allocation failed,
- * 1 if we succeeded in guessing the values (the board is solvable),
- * and 0 if the board is unsolvable.
- * It returns all the possible values of cell (row, col) through *pCellValues its score through *pScores.
+/*
+ * This function solves the current board using LP.
+ *  Return values:
+ * -2: memory allocation failed.
+ * -1: Gurobi had an error.
+ *  0: the board is invalid.
+ *  1: cell <row, col> values were successfully guessed.
+ *  It returns all the possible values of cell <row, col> through *pCellValues and their scores through *pScores.
  * The length of *pCellValues and *pScores is returned through *pLength.
  * User needs to free *pCellValues and *pScores iff return value == 1.
 */
 int guessCellValues(struct sudokuManager *manager, int row, int col,
                     int **pCellValues, double **pScores, int *pLength);
 
-/* This method solves the current board using LP.
+/*
+ * This function solves the current board using LP.
  * retBoard is a copy of manager->board.
-* The method returns -1 if Gurobi had an error,
- * -2 if memory allocation failed,
- * 1 if we succeeded in guessing the values (the board is solvable),
- * and 0 if the board is unsolvable.
  * It fills retBoard with the solution guessed iff return value == 1.
-*/
+ * Return values:
+ * -2: memory allocation failed.
+ * -1: Gurobi had an error.
+ *  0: the board is invalid.
+ *  1: the board was successfully guessed.
+ */
 int guessSolution(struct sudokuManager *manager,
                   float threshold, int *retBoard);
-
 
 #endif
