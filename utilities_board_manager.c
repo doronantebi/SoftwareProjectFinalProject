@@ -4,7 +4,7 @@
  * and uses sudokuManager struct.
  */
 
-#include "board_manager.h"
+#include "utilities_board_manager.h"
 #include <stdlib.h>
 
 /* GENERAL METHODS */

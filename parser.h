@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "util/board_manager.h"
+#include "utilities_board_manager.h"
 #include "main_aux.h"
 #include "game.h"
 

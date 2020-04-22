@@ -7,7 +7,7 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_LINKED_LIST_H
 #define SOFTWAREPROJECTFINALPROJECT_LINKED_LIST_H
 
-#include "board_manager.h"
+#include "utilities_board_manager.h"
 
 enum action{
     separator = 0,

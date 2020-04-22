@@ -10,7 +10,7 @@
 #include <string.h>
 #include "game.h"
 #include "main_aux.h"
-#include "util/board_manager.h"
+#include "utilities_board_manager.h"
 
 /*
  * This function checks that the token received is an integer.
@@ -159,7 +159,7 @@ int interpretMarkErrors(char *token, enum Mode mode){
                 }
                 else{
                     printWrongRangeInt(2, input, 1);
-                    printf("The parameter should be only 1 or 0.\n");
+                    printOnly1Or0();
                     return 0;
                 }
             }
@@ -258,7 +258,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
             } else {
                 if (!((arrInput[0] - 1 >= 0) && (arrInput[0] - 1 < len))) {
                     printWrongRangeInt(4, arrInput[0], 1);
-                    printRangeInt(1, len, "positive");
+                    printCorrectRange(1, len, "integer", "positive");
                     return 0;
                 } else {
                     if (!arrCheck[1]) {
@@ -267,7 +267,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                     } else {
                         if (!((arrInput[1] - 1 >= 0) && (arrInput[1] - 1 < len))) {
                             printWrongRangeInt(4, arrInput[1], 2);
-                            printRangeInt(1, len, "positive");
+                            printCorrectRange(1, len, "integer", "positive");
                             return 0;
                         } else {
                             if (!arrCheck[2]) {
@@ -276,7 +276,7 @@ int interpretSet(char *token, struct sudokuManager *board, enum Mode mode){
                             } else {
                                 if (!(isLegalCellValue(board, arrInput[2]))) {
                                     printWrongRangeInt(4, arrInput[2], 3);
-                                    printRangeInt(0, len, "non-negative");
+                                    printCorrectRange(0, len, "integer", "non-negative");
                                     return 0;
                                 } else { /* all parameters are valid */
                                     return set(board, arrInput[0], arrInput[1], arrInput[2]);
@@ -346,7 +346,7 @@ int interpretGuess(char *token, struct sudokuManager *board, enum Mode mode) {
             else{
                 if (!(input >=0 && input <= 1)){ /* not in the correct range */
                     printWrongRangeFloat(6, input, 1);
-                    printf("The parameter should be a non-negative float between 0 and 1.\n");
+                    printCorrectRange(0, 1, "float", "non-negative");
                     return 0;
                 }
                 else{
@@ -395,7 +395,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
             } else {
                 if (arrInput[0] < 0 || arrInput[0] > boardArea(*pBoard)) {
                     printWrongRangeInt(7, arrInput[0], 1);
-                    printRangeInt(0, boardArea(*pBoard), "non-negative");
+                    printCorrectRange(0, boardArea(*pBoard), "integer", "non-negative");
                     return 0;
                 } else {
                     if ((*pBoard)->emptyCells < arrInput[0]) { /* checking for number of empty cells */
@@ -408,7 +408,7 @@ int interpretGenerate(char *token, struct sudokuManager **pBoard, enum Mode mode
                         } else {
                             if (arrInput[1] <= 0 || arrInput[1] > boardArea(*pBoard)) {
                                 printWrongRangeInt(7, arrInput[1], 2);
-                                printRangeInt(0, boardArea(*pBoard), "positive");
+                                printCorrectRange(0, boardArea(*pBoard), "integer", "positive");
                                 return 0;
                             } else { /* All parameters are valid */
                                 return generate(pBoard, arrInput[0], arrInput[1]);
@@ -524,7 +524,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
             } else {
                 if (!(arrInput[0] - 1 >= 0 && arrInput[0] - 1 < len)) {
                     printWrongRangeInt(11, arrInput[0], 1);
-                    printRangeInt(1, len, "positive");
+                    printCorrectRange(1, len, "integer", "positive");
                     return 0;
                 } else {
                     if (!arrCheck[1]) {
@@ -533,7 +533,7 @@ int interpretHintOrGuessHint(char *token, struct sudokuManager *board, int isHin
                     } else {
                         if (!(arrInput[1] - 1 >= 0 && arrInput[1] - 1 < len)) {
                             printWrongRangeInt(11, arrInput[1], 2);
-                            printRangeInt(1, len, "positive");
+                            printCorrectRange(1, len, "integer", "positive");
                             return 0;
                         } else { /* all parameters are valid */
                             if (isHint){
@@ -640,8 +640,7 @@ int interpret(char *command, struct sudokuManager **pBoard, enum Mode mode){
     int len = strlen(command);
     if (len == LENGTH - 1){
         if (command[len - 1] != '\n'){
-            printf("Error: too many characters in a single line.\n"
-                   "A line should contain up to 256 characters.\nPlease enter a new command.\n");
+            printTooLongCommand();
             skipLine();
             return 0;
         }

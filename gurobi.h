@@ -7,7 +7,7 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_GUROBI_H
 #define SOFTWAREPROJECTFINALPROJECT_GUROBI_H
 
-#include "util/board_manager.h"
+#include "utilities_board_manager.h"
 #include "main_aux.h"
 #include "solver.h"
 

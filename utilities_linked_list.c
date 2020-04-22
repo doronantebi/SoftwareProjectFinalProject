@@ -6,8 +6,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "linked_list.h"
-#include "../main_aux.h"
+#include "utilities_linked_list.h"
+#include "main_aux.h"
 
 /*
  * This method initializes list with default values.

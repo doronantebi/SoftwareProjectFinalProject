@@ -6,17 +6,17 @@
 #ifndef SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 #define SOFTWAREPROJECTFINALPROJECT_MAIN_AUX_H
 
-#include "util/board_manager.h"
+#include "utilities_board_manager.h"
 
-/* GENERAL GAME RELATED METHODS */
+/* GENERAL GAME RELATED FUNCTIONS */
 
 /*
- * This method prints the game title
+ * This function prints the game title
  */
 void printGameTitle();
 
 /*
- * This message prints a message that the board is solved successfully!
+ * This function prints a message that the board is solved successfully!
  */
 void printBoardIsSolved();
 
@@ -26,18 +26,23 @@ void printBoardIsSolved();
 void printExitMessage();
 
 /*
- * This method prints the users board
+ * This function prints the users board
  */
 void printSudokuGrid(struct sudokuManager *manager, enum Mode mode, int addMarks);
 
-/* PARSER METHODS*/
+/* PARSER FUNCTIONS*/
 
 /*
- * This method receives a word and returns a number unique to the
+ * This function receives a word and returns a number unique to the
  * command if it is a legal command, or -1 if it is an invalid command.
  * It returns the index of the command in the array commandList.
  */
 int commandNum (char* word);
+
+/*
+ * This function prints a message saying the received command is too long.
+ */
+void printTooLongCommand();
 
 /*
  * The function prints a message to the user saying
@@ -58,7 +63,7 @@ void printExtraParamsExtend(int *arrNumOfParams, int len, int indexCommand);
 void printExtraParams(int numOfParams, int indexCommand);
 
 /*
- * This method returns a string description of the mode of the game.
+ * This function returns a string description of the mode of the game.
  */
 char* modeToString(enum Mode mode);
 
@@ -69,40 +74,44 @@ char* modeToString(enum Mode mode);
 void printUnavailableMode(int indexCommand, enum Mode mode, enum Mode *availableModes, int length);
 
 /*
- * This method prints a message to the user saying that the value entered is not in the correct range.
+ * This function prints a message to the user saying that the value entered is not in the correct range.
  */
 void printWrongRangeInt(int indexCommand, int value, int indexParam);
 
 /*
- * This function prints the wrong range for the parameter.
+ * This function prints the correct range for the parameter.
  * start - the start of the range,
  * end - the end of the range,
- * includingStart - 1 if the parameter can be equal to start, and 0 otherwise,
- * includingEnd - 1 if the parameter can be equal to end, and 0 otherwise,
+ * numType - can be "integer" or "float".
  * type - can be "positive" or "non-negative".
  */
-void printRangeInt(int start, int end, char *type);
+void printCorrectRange(int start, int end, char *numType, char *type);
 
 /*
- * This method prints a message to the user saying that
+ * This function prints a message saying that the parameter should be only 1 or 0.
+ */
+void printOnly1Or0();
+
+/*
+ * This function prints a message to the user saying that
  * the value entered is not in the correct range.
  */
 void printWrongRangeFloat(int indexCommand, float value, int indexParam);
 
 /*
- * This method prints a message to the user saying that
+ * This function prints a message to the user saying that
  * the received parameter is not a number.
  */
 void printNotANumber(int indexParam);
 
 /*
- * This method prints a message to the user saying that
+ * This function prints a message to the user saying that
  * the received parameter is not a number.
  */
 void printNotAFloat(int indexParam);
 
 /*
- * This method prints a message to the user saying that the command entered does not exist.
+ * This function prints a message to the user saying that the command entered does not exist.
  */
 void printInvalidCommand();
 
@@ -113,20 +122,20 @@ void printInvalidCommand();
  */
 void printGenerateInputError(int emptyCells, int X);
 
-/* END OF PARSER METHODS*/
+/* END OF PARSER FUNCTIONS*/
 
 /* ERRORS */
 
 /* MOVES LIST RELATED */
 
 /*
- * This method announces that there is no more next moves,
+ * This function announces that there is no more next moves,
  * can be called if the user tries to "Redo".
  */
 void printNoNextMoveError();
 
 /*
- * This method announces that there is no more next moves, can be called
+ * This function announces that there is no more next moves, can be called
  * if the user tries to "undo" of functions that uses it (e.g. "reset").
  */
 void printNoPrevMoveError();
@@ -227,6 +236,12 @@ void printHint(int row, int col, int hint);
 void printTooLongFile();
 
 /*
+ * This function prints an error to the user that the file path is illegal or
+ * that the required file does not exist.
+ */
+void printFileProblem();
+
+/*
  * This function prints an error to the user if the file path is illegal.
  */
 void printFilePathIllegal();
@@ -254,11 +269,6 @@ void printNotAnInteger();
  * The format of cell print is <col, row>, similar to "set".
  */
 void printErrorEmptyCellFixed(int row, int col);
-
-/*
- * This function prints that no input was received.
- */
-void printNoInput();
 
 /*
  * This function prints that not enough numbers were entered.

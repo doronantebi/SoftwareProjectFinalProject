@@ -5,11 +5,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "main_aux.h"
 #include "game.h"
 #include "parser.h"
-#include "util/board_manager.h"
-#include "util/linked_list.h"
+#include "utilities_board_manager.h"
+#include "utilities_linked_list.h"
 
 static enum Mode mode = Init;
 static int addMarks = 1;
@@ -35,20 +36,21 @@ void markErrors(int X){
 
 /*
  * This function attempts to receive an integer from file.
- * If it fails, it returns 0, otherwise it returns 1.
  * file: a valid pointer to an existing file.
  * pNum: a pointer to integer, in which we set the integer received from file.
+ * return value:
+ * 1 - if a number was received successfully.
+ * 0 - if we couldn't find an integer.
+ * -1 - if there is nothing to receive in the file.
  */
 int inputNumFromFile(FILE *file, int *pNum){
     int check;
     check = fscanf(file, "%d", pNum);
     if (check != 1) {
         if (check == EOF) {
-            printNoInput();
-            return 0;
+            return -1;
         }
         if (check == 0) {
-            printNotAnInteger();
             return 0;
         }
     }
@@ -83,12 +85,18 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
     else{ /* we need to read a board from a file*/
         file = fopen(fileName, "r");
         if (file == NULL) {
-            printFilePathIllegal();
+            printFileProblem();
             return -2;
         }
 
         success = inputNumFromFile(file, &m);
-        if(success == 0){ /*No integer was received*/
+        if(success == 0 || success == -1){ /*No integer was received*/
+            if (success == 0){
+                printNotAnInteger();
+            }
+            else{ /* success == -1 */
+                printNotEnoughNumbers();
+            }
             fclose(file);
             return -2;
         }
@@ -101,7 +109,13 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
         }
 
         success = inputNumFromFile(file, &n);
-        if(success == 0){ /*No integer was received*/
+        if(success == 0 || success == -1){ /*No integer was received*/
+            if (success == 0){
+                printNotAnInteger();
+            }
+            else{ /* success == -1 */
+                printNotEnoughNumbers();
+            }
             fclose(file);
             return -2;
         }
@@ -149,8 +163,13 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
     for (i = 0; i < boardLen(board); i++) { /*Row*/
         for (j = 0; j < boardLen(board); j++) { /*Column*/
             success = inputNumFromFile(file, &value);
-            if (success == 0) { /*No integer was received*/
-                printNotEnoughNumbers();
+            if (success == 0 || success == -1) { /*No integer was received*/
+                if (success == 0){
+                    printNotAnInteger();
+                }
+                else{ /* success == -1 */
+                    printNotEnoughNumbers();
+                }
                 fclose(file);
                 return -2;
             }
@@ -178,7 +197,7 @@ int createBoardFromFile(char *fileName, enum Mode mode1, struct sudokuManager *b
             }
         }
     }
-    if (fscanf(file, "%c", &nextChar) != EOF){
+    if (fscanf(file, "%s", &nextChar) != EOF && !isspace(nextChar)){
         printTooLongFile();
         fclose(file);
         return -2;

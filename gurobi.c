@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "gurobi_c.h"
-#include "util/board_manager.h"
+#include "utilities_board_manager.h"
 #include <time.h>
 
 /*
